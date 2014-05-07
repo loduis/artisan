@@ -1,0 +1,29 @@
+{
+    "name": "loduis/artisan",
+    "description": "If you like laravel, but not at the point of implementing it, but you want to keep your organized command, here is a version of artisan with minimum to run",
+    "require": {
+        "illuminate/console": "4.2.*@dev",
+        "illuminate/config": "4.2.*@dev",
+        "illuminate/events": "4.2.*@dev",
+        "illuminate/log": "4.2.*@dev",
+        "illuminate/exception": "4.2.*@dev",
+
+        "patchwork/utf8": "1.1.*"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Loduis Madariaga",
+            "email": "loduis@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": {"Illuminate": "src/"}
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "4.2-dev"
+        }
+    },
+    "minimum-stability": "dev"
+}
