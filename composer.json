@@ -1,15 +1,7 @@
 {
     "name": "loduis/artisan",
     "description": "If you like laravel, but not at the point of implementing it, but you want to keep your organized command, here is a version of artisan with minimum to run",
-    "require": {
-        "illuminate/console": "4.2.*@dev",
-        "illuminate/config": "4.2.*@dev",
-        "illuminate/events": "4.2.*@dev",
-        "illuminate/log": "4.2.*@dev",
-        "illuminate/exception": "4.2.*@dev",
-
-        "patchwork/utf8": "1.1.*"
-    },
+    "keywords": ["framework", "laravel", "artisan"],
     "license": "MIT",
     "authors": [
         {
@@ -17,8 +9,28 @@
             "email": "loduis@gmail.com"
         }
     ],
+    "require": {
+        "php": ">=5.4.0",
+        "filp/whoops": "1.0.10",
+        "patchwork/utf8": "1.1.*",
+        "monolog/monolog": "~1.6",
+        "symfony/console": "2.5.*"
+    },
+    "replace": {
+        "illuminate/config": "self.version",
+        "illuminate/console": "self.version",
+        "illuminate/container": "self.version",
+        "illuminate/events": "self.version",
+        "illuminate/exception": "self.version",
+        "illuminate/filesystem": "self.version",
+        "illuminate/foundation": "self.version",
+        "illuminate/log": "self.version"
+    },
     "autoload": {
-        "psr-0": {"Illuminate": "src/"}
+        "psr-0": {"Illuminate": "src/"},
+        "files": [
+            "src/Illuminate/Support/helpers.php"
+        ]
     },
     "extra": {
         "branch-alias": {
