@@ -24,7 +24,8 @@
         "illuminate/exception": "self.version",
         "illuminate/filesystem": "self.version",
         "illuminate/foundation": "self.version",
-        "illuminate/log": "self.version"
+        "illuminate/log": "self.version",
+        "illuminate/support": "self.version"
     },
     "autoload": {
         "psr-0": {"Illuminate": "src/"},
