@@ -1,3 +1,2 @@
 /vendor
-/src/Illuminate/*/.git
 composer.lock
