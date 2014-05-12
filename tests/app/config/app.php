@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'key' => 'QQEUU4RvLJwsIjEEJHspiNMrnQGUHT5c',
+    'key' => '64MAJDAcS4YPMY6c6pDfqNIFMmiLlfiO',
 
     /*
     |--------------------------------------------------------------------------

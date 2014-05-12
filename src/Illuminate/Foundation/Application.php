@@ -16,7 +16,7 @@ class Application extends Container implements ResponsePreparerInterface {
 	 *
 	 * @var string
 	 */
-	const VERSION = '4.2-dev';
+	const VERSION = '4.3-dev';
 
 	/**
 	 * Indicates if the application has "booted".
@@ -480,6 +480,16 @@ class Application extends Container implements ResponsePreparerInterface {
 	}
 
 	/**
+	 * Get the configuration loader instance.
+	 *
+	 * @return \Illuminate\Config\LoaderInterface
+	 */
+	public function getConfigLoader()
+	{
+		return new FileLoader(new Filesystem, $this['path'].'/config');
+	}
+
+	/**
 	 * Get the environment variables loader instance.
 	 *
 	 * @return \Illuminate\Config\EnvironmentVariablesLoaderInterface
@@ -512,15 +522,6 @@ class Application extends Container implements ResponsePreparerInterface {
 		$this->deferredServices = $services;
 	}
 
-	/**
-	 * Get the configuration loader instance.
-	 *
-	 * @return \Illuminate\Config\LoaderInterface
-	 */
-	public function getConfigLoader()
-	{
-		return new FileLoader(new Filesystem, $this['path'].'/config');
-	}
 
 
 	/**
