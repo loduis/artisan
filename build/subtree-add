@@ -1,5 +1,15 @@
 #!/bin/bash
 
+git remote add -f illuminate_config https://github.com/illuminate/config.git
+git remote add -f illuminate_console https://github.com/illuminate/console.git
+git remote add -f illuminate_container https://github.com/illuminate/container.git
+git remote add -f illuminate_events https://github.com/illuminate/events.git
+git remote add -f illuminate_exception https://github.com/illuminate/exception.git
+git remote add -f illuminate_filesystem https://github.com/illuminate/filesystem.git
+git remote add -f illuminate_log https://github.com/illuminate/log.git
+git remote add -f illuminate_support https://github.com/illuminate/support.git
+
+
 git subtree add --prefix=src/Illuminate/Config --squash illuminate_config master
 git subtree add --prefix=src/Illuminate/Console --squash illuminate_console master
 git subtree add --prefix=src/Illuminate/Container --squash illuminate_container master

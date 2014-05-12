@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
     /*
     |--------------------------------------------------------------------------
@@ -78,12 +78,12 @@ return array(
     |
     */
 
-    'providers' => array(
+    'providers' => [
         'Illuminate\Foundation\Providers\ArtisanServiceProvider',
         'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',
         'Illuminate\Filesystem\FilesystemServiceProvider',
         'Illuminate\Log\LogServiceProvider',
-    ),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -109,12 +109,11 @@ return array(
     |
     */
 
-    'aliases' => array(
-
-        'App'             => 'Illuminate\Support\Facades\App',
-        'Artisan'         => 'Illuminate\Support\Facades\Artisan',
-        'Config'          => 'Illuminate\Support\Facades\Config',
-        'File'            => 'Illuminate\Support\Facades\File'
-    ),
-
-);
+    'aliases' => [
+        'App'     => 'Illuminate\Support\Facades\App',
+        'Artisan' => 'Illuminate\Support\Facades\Artisan',
+        'Config'  => 'Illuminate\Support\Facades\Config',
+        'File'    => 'Illuminate\Support\Facades\File',
+        'Log'     => 'Illuminate\Support\Facades\Log'
+    ]
+];

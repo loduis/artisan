@@ -1,30 +1,10 @@
 #!/bin/bash
 
-# Illuminate/Config
-git fetch illuminate_config master
 git subtree pull --prefix src/Illuminate/Config illuminate_config master --squash
-
-# Illuminate/Container
-git fetch illuminate_container master
 git subtree pull --prefix src/Illuminate/Container illuminate_container master --squash
-
-# Illuminate/Console
-git fetch illuminate_console master
 git subtree pull --prefix src/Illuminate/Console illuminate_console master --squash
-
-# Illuminate/Events
-git fetch illuminate_events master
 git subtree pull --prefix src/Illuminate/Events illuminate_events master --squash
-
-# Illuminate/Exception
-git fetch illuminate_exception master
 git subtree pull --prefix src/Illuminate/Exception illuminate_exception master --squash
-
-# Illuminate/Filesystem
-git fetch illuminate_filesystem master
 git subtree pull --prefix src/Illuminate/Filesystem illuminate_filesystem master --squash
-
-
-# Illuminate/Log
-git fetch illuminate_log master
 git subtree pull --prefix src/Illuminate/Log illuminate_log master --squash
+git subtree pull --prefix src/Illuminate/Support illuminate_support master --squash
