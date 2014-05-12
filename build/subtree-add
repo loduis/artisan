@@ -1,0 +1,10 @@
+#!/bin/bash
+
+git subtree add --prefix=src/Illuminate/Config --squash illuminate_config master
+git subtree add --prefix=src/Illuminate/Console --squash illuminate_console master
+git subtree add --prefix=src/Illuminate/Container --squash illuminate_container master
+git subtree add --prefix=src/Illuminate/Events --squash illuminate_events master
+git subtree add --prefix=src/Illuminate/Exception --squash illuminate_exception master
+git subtree add --prefix=src/Illuminate/Filesystem --squash illuminate_filesystem master
+git subtree add --prefix=src/Illuminate/Log --squash illuminate_log master
+git subtree add --prefix=src/Illuminate/Support --squash illuminate_support master
