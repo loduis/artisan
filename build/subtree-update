@@ -1,10 +1,10 @@
 #!/bin/bash
 
-git subtree pull --prefix src/Illuminate/Config illuminate_config master --squash
-git subtree pull --prefix src/Illuminate/Container illuminate_container master --squash
-git subtree pull --prefix src/Illuminate/Console illuminate_console master --squash
-git subtree pull --prefix src/Illuminate/Events illuminate_events master --squash
-git subtree pull --prefix src/Illuminate/Exception illuminate_exception master --squash
-git subtree pull --prefix src/Illuminate/Filesystem illuminate_filesystem master --squash
-git subtree pull --prefix src/Illuminate/Log illuminate_log master --squash
-git subtree pull --prefix src/Illuminate/Support illuminate_support master --squash
+git subtree pull --prefix src/Illuminate/Config illuminate_config develop --squash
+git subtree pull --prefix src/Illuminate/Container illuminate_container develop --squash
+git subtree pull --prefix src/Illuminate/Console illuminate_console develop --squash
+git subtree pull --prefix src/Illuminate/Events illuminate_events develop --squash
+git subtree pull --prefix src/Illuminate/Exception illuminate_exception develop --squash
+git subtree pull --prefix src/Illuminate/Filesystem illuminate_filesystem develop --squash
+git subtree pull --prefix src/Illuminate/Log illuminate_log master --develop
+git subtree pull --prefix src/Illuminate/Support illuminate_support develop --squash
