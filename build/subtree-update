@@ -1,10 +1,11 @@
 #!/bin/bash
 
-git subtree pull --prefix src/Illuminate/Config illuminate_config develop --squash
-git subtree pull --prefix src/Illuminate/Container illuminate_container develop --squash
-git subtree pull --prefix src/Illuminate/Console illuminate_console develop --squash
-git subtree pull --prefix src/Illuminate/Events illuminate_events develop --squash
-git subtree pull --prefix src/Illuminate/Exception illuminate_exception develop --squash
-git subtree pull --prefix src/Illuminate/Filesystem illuminate_filesystem develop --squash
-git subtree pull --prefix src/Illuminate/Log illuminate_log master --develop
-git subtree pull --prefix src/Illuminate/Support illuminate_support develop --squash
+git subtree pull --squash --prefix src/Illuminate/Config illuminate_config master
+git subtree pull --squash --prefix src/Illuminate/Container illuminate_container master
+git subtree pull --squash --prefix src/Illuminate/Console illuminate_console master
+git subtree pull --squash --prefix src/Illuminate/Events illuminate_events master
+git subtree pull --squash --prefix src/Illuminate/Exception illuminate_exception master
+git subtree pull --squash --prefix src/Illuminate/Filesystem illuminate_filesystem master
+git subtree pull --squash --prefix src/Illuminate/Log illuminate_log master --master
+git subtree pull --squash --prefix src/Illuminate/Support illuminate_support master
+git subtree pull --squash --prefix=src/Illuminate/Foundation laravel_framework master

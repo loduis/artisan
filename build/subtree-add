@@ -8,3 +8,4 @@ git subtree add --prefix=src/Illuminate/Exception --squash illuminate_exceptionm
 git subtree add --prefix=src/Illuminate/Filesystem --squash illuminate_filesystem master
 git subtree add --prefix=src/Illuminate/Log --squash illuminate_log master
 git subtree add --prefix=src/Illuminate/Support --squash illuminate_support master
+git subtree add --prefix=src/Illuminate/Foundation --squash laravel_framework master
