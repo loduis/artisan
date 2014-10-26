@@ -18,8 +18,8 @@ class ConsoleSupportServiceProvider extends AggregateServiceProvider {
 	 */
 	protected $providers = [
 		'Illuminate\Auth\GeneratorServiceProvider',
-		//'Illuminate\Database\MigrationServiceProvider',
-		//'Illuminate\Database\SeedServiceProvider',
+		'Illuminate\Database\MigrationServiceProvider',
+		'Illuminate\Database\SeedServiceProvider',
 		'Illuminate\Foundation\Providers\ComposerServiceProvider',
 		'Illuminate\Foundation\Providers\PublisherServiceProvider',
 		//'Illuminate\Queue\FailConsoleServiceProvider',
