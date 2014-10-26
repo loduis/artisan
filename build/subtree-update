@@ -8,4 +8,4 @@ git subtree pull --squash --prefix src/Illuminate/Exception illuminate_exception
 git subtree pull --squash --prefix src/Illuminate/Filesystem illuminate_filesystem master
 git subtree pull --squash --prefix src/Illuminate/Log illuminate_log master --master
 git subtree pull --squash --prefix src/Illuminate/Support illuminate_support master
-git subtree pull --squash --prefix=src/Illuminate/Foundation laravel_framework master
+git subtree pull --squash --prefix src/Illuminate/Contracts illuminate_contracts master

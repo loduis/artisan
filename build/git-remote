@@ -8,4 +8,4 @@ git remote add -f illuminate_exception https://github.com/illuminate/exception.g
 git remote add -f illuminate_filesystem https://github.com/illuminate/filesystem.git
 git remote add -f illuminate_log https://github.com/illuminate/log.git
 git remote add -f illuminate_support https://github.com/illuminate/support.git
-git remote add -f laravel_framework https://github.com/laravel/framework.git
+git remote add -f illuminate_contracts https://github.com/illuminate/contracts.git
