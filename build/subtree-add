@@ -1,12 +1,13 @@
 #!/bin/bash
 
-git subtree add --prefix=src/Illuminate/Config --squash illuminate_config master
-git subtree add --prefix=src/Illuminate/Console --squash illuminate_console master
-git subtree add --prefix=src/Illuminate/Container --squash illuminate_container master
-git subtree add --prefix=src/Illuminate/Events --squash illuminate_events master
-git subtree add --prefix=src/Illuminate/Exception --squash illuminate_exceptionmaster
-git subtree add --prefix=src/Illuminate/Filesystem --squash illuminate_filesystem master
-git subtree add --prefix=src/Illuminate/Log --squash illuminate_log master
-git subtree add --prefix=src/Illuminate/Support --squash illuminate_support master
-git subtree add --prefix=src/Illuminate/Contracts --squash illuminate_contracts master
-git subtree add --prefix=src/Illuminate/Routing --squash illuminate_routing master
+git subtree add --squash --prefix=src/Illuminate/Config illuminate_config master
+git subtree add --squash --prefix=src/Illuminate/Console illuminate_console master
+git subtree add --squash --prefix=src/Illuminate/Container illuminate_container master
+git subtree add --squash --prefix=src/Illuminate/Events illuminate_events master
+git subtree add --squash --prefix=src/Illuminate/Exception illuminate_exceptionmaster
+git subtree add --squash --prefix=src/Illuminate/Filesystem illuminate_filesystem master
+git subtree add --squash --prefix=src/Illuminate/Log illuminate_log master
+git subtree add --squash --prefix=src/Illuminate/Support illuminate_support master
+git subtree add --squash --prefix=src/Illuminate/Contracts illuminate_contracts master
+git subtree add --squash --prefix=src/Illuminate/Routing illuminate_routing master
+git subtree add --squash --prefix=src/Illuminate/Auth illuminate_auth master

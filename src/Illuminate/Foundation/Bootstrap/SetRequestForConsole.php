@@ -15,7 +15,7 @@ class SetRequestForConsole {
 	{
 		$url = $app['config']->get('app.url', 'http://localhost');
 
-		$app->instance('request', Request::create($url, 'GET', [], [], [], $_SERVER));
+		// $app->instance('request', Request::create($url, 'GET', [], [], [], $_SERVER));
 	}
 
 }
