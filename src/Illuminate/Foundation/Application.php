@@ -21,12 +21,6 @@ class Application extends Container implements ApplicationContract {
 	 */
 	const VERSION = '5.0-dev';
 
-	/**
-	 * The base path for the Laravel installation.
-	 *
-	 * @var string
-	 */
-	protected $basePath;
 
 	/**
 	 * Indicates if the application has been bootstrapped before.
@@ -47,35 +41,35 @@ class Application extends Container implements ApplicationContract {
 	 *
 	 * @var array
 	 */
-	protected $bootingCallbacks = array();
+	protected $bootingCallbacks = [];
 
 	/**
 	 * The array of booted callbacks.
 	 *
 	 * @var array
 	 */
-	protected $bootedCallbacks = array();
+	protected $bootedCallbacks = [];
 
 	/**
 	 * All of the registered service providers.
 	 *
 	 * @var array
 	 */
-	protected $serviceProviders = array();
+	protected $serviceProviders = [];
 
 	/**
 	 * The names of the loaded service providers.
 	 *
 	 * @var array
 	 */
-	protected $loadedProviders = array();
+	protected $loadedProviders = [];
 
 	/**
 	 * The deferred services and their providers.
 	 *
 	 * @var array
 	 */
-	protected $deferredServices = array();
+	protected $deferredServices = [];
 
 	/**
 	 * Create a new Illuminate application instance.
@@ -83,7 +77,7 @@ class Application extends Container implements ApplicationContract {
 	 * @param  string|null  $basePath
 	 * @return void
 	 */
-	public function __construct($basePath = null)
+	public function __construct($basePath, array $paths = [])
 	{
 		$this->registerBaseBindings();
 
@@ -91,7 +85,7 @@ class Application extends Container implements ApplicationContract {
 
 		$this->registerCoreContainerAliases();
 
-		if ($basePath) $this->setBasePath($basePath);
+		$this->setBasePath($basePath, $paths);
 	}
 
 	/**
@@ -162,11 +156,21 @@ class Application extends Container implements ApplicationContract {
 	 * @param  string  $basePath
 	 * @return $this
 	 */
-	public function setBasePath($basePath)
+	public function setBasePath($basePath, array $userPaths = [])
 	{
-		$this->basePath = $basePath;
+		$frameWorkPaths = [
+			'app'      => 'app',
+			'config'   => 'config',
+			'database' => 'database',
+			'lang'     => 'resources/lang',
+			'views'    => 'resources/lang',
+			'public'   => 'public',
+			'storage'  => 'storage'
+		];
+		$frameWorkPaths['base'] = $basePath;
+		$frameWorkPaths = array_merge($frameWorkPaths, $userPaths);
 
-		$this->bindPathsInContainer();
+		$this->bindPathsInContainer($frameWorkPaths);
 
 		return $this;
 	}
@@ -176,14 +180,16 @@ class Application extends Container implements ApplicationContract {
 	 *
 	 * @return $this
 	 */
-	protected function bindPathsInContainer()
+	protected function bindPathsInContainer(array $paths)
 	{
-		$this->instance('path', $this->path());
 
-		foreach (['base', 'config', 'database', 'lang', 'public', 'storage'] as $path)
+		foreach (['config', 'database', 'lang', 'views', 'public', 'storage'] as $key)
 		{
-			$this->instance('path.'.$path, $this->{$path.'Path'}());
+			$this->instance('path.'.$key, $paths['base'] . '/' . $paths[$key]);
 		}
+
+		$this->instance('path', $paths['base'] . ($paths['app'] === null ? '/' . $paths['app'] : ''));
+		$this->instance('path.base', $paths['base']);
 	}
 
 	/**
@@ -193,7 +199,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function path()
 	{
-		return $this->basePath.'/app';
+		return $this['path'];
 	}
 
 	/**
@@ -203,7 +209,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function basePath()
 	{
-		return $this->basePath;
+		return $this['path.base'];
 	}
 
 	/**
@@ -213,7 +219,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function configPath()
 	{
-		return $this->basePath.'/config';
+		return $this['path.config'];
 	}
 
 	/**
@@ -223,7 +229,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function databasePath()
 	{
-		return $this->basePath.'/database';
+		return $this['path.database'];
 	}
 
 	/**
@@ -233,7 +239,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function langPath()
 	{
-		return $this->basePath.'/resources/lang';
+		return $this['path.lang'];
 	}
 
 	/**
@@ -243,7 +249,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function publicPath()
 	{
-		return $this->basePath.'/public';
+		return $this['path.public'];
 	}
 
 	/**
@@ -253,8 +259,10 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function storagePath()
 	{
-		return $this->basePath.'/storage';
+		return $this['path.storage'];
 	}
+
+
 
 	/**
 	 * Get or check the current application environment.
@@ -336,7 +344,7 @@ class Application extends Container implements ApplicationContract {
 	 * @param  bool   $force
 	 * @return \Illuminate\Support\ServiceProvider
 	 */
-	public function register($provider, $options = array(), $force = false)
+	public function register($provider, $options = [], $force = false)
 	{
 		if ($registered = $this->getProvider($provider) && ! $force)
                                      return $registered;
@@ -429,7 +437,7 @@ class Application extends Container implements ApplicationContract {
 			$this->loadDeferredProvider($service);
 		}
 
-		$this->deferredServices = array();
+		$this->deferredServices = [];
 	}
 
 	/**
@@ -485,7 +493,7 @@ class Application extends Container implements ApplicationContract {
 	 * @param  array   $parameters
 	 * @return mixed
 	 */
-	public function make($abstract, $parameters = array())
+	public function make($abstract, $parameters = [])
 	{
 		$abstract = $this->getAlias($abstract);
 

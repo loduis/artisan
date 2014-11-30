@@ -15,7 +15,7 @@ define('LARAVEL_START', microtime(true));
 |
 */
 
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__.'/vendor/autoload.php';
 
 
 /*
@@ -30,7 +30,12 @@ require __DIR__.'/../vendor/autoload.php';
 */
 
 $app = new Illuminate\Foundation\Application(
-    realpath(__DIR__.'/app')
+    __DIR__ . '/tests',
+    [
+        'app'     => null,
+        'config'  => 'config',
+        'storage' => 'storage'
+    ]
 );
 
 /*
