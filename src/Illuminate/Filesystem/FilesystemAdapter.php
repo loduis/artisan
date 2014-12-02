@@ -68,7 +68,7 @@ class FilesystemAdapter implements FilesystemContract, CloudFilesystemContract {
 	 */
 	public function put($path, $contents, $visibility = null)
 	{
-		return $this->driver->put($path, $contents, $this->parseVisibility($visibility));
+		return $this->driver->put($path, $contents, ['visibility' => $this->parseVisibility($visibility)]);
 	}
 
 	/**
@@ -282,7 +282,7 @@ class FilesystemAdapter implements FilesystemContract, CloudFilesystemContract {
 			return $value['path'];
 		});
 
-        return $contents->values()->all();
+		return $contents->values()->all();
 	}
 
 	/**
@@ -294,7 +294,7 @@ class FilesystemAdapter implements FilesystemContract, CloudFilesystemContract {
 	 */
 	protected function parseVisibility($visibility)
 	{
-		if (is_null($visibility)) return null;
+		if (is_null($visibility)) return;
 
 		switch ($visibility)
 		{
