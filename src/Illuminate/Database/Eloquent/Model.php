@@ -338,7 +338,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
-	 * Get a global scope registered with the modal.
+	 * Get a global scope registered with the model.
 	 *
 	 * @param  \Illuminate\Database\Eloquent\ScopeInterface  $scope
 	 * @return \Illuminate\Database\Eloquent\ScopeInterface|null
@@ -413,6 +413,23 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 				throw new MassAssignmentException($key);
 			}
 		}
+
+		return $this;
+	}
+
+	/**
+	 * Fill the model with an array of attributes. Force mass assignment.
+	 *
+	 * @param  array  $attributes
+	 * @return $this
+	 */
+	public function forceFill(array $attributes)
+	{
+		static::unguard();
+
+		$this->fill($attributes);
+
+		static::reguard();
 
 		return $this;
 	}
@@ -526,6 +543,23 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		$model = new static($attributes);
 
 		$model->save();
+
+		return $model;
+	}
+
+	/**
+	 * Save a new model and return the instance. Allow mass-assignment.
+	 *
+	 * @param  array  $attributes
+	 * @return static
+	 */
+	public static function forceCreate(array $attributes)
+	{
+		static::unguard();
+
+		$model = static::create($attributes);
+
+		static::reguard();
 
 		return $model;
 	}
@@ -2397,6 +2431,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 			{
 				$attributes[$key] = $relation;
 			}
+
+			unset($relation);
 		}
 
 		return $attributes;
