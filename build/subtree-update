@@ -11,3 +11,4 @@ git subtree pull --squash --prefix src/Illuminate/Support illuminate_support mas
 git subtree pull --squash --prefix src/Illuminate/Contracts illuminate_contracts master
 git subtree pull --squash --prefix=src/Illuminate/Routing illuminate_routing master
 git subtree pull --squash --prefix=src/Illuminate/Auth illuminate_auth master
+git subtree pull --squash --prefix=src/Illuminate/Database illuminate_database master
