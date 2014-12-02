@@ -1,6 +1,5 @@
 <?php namespace Illuminate\Events\Annotations;
 
-use SplFileInfo;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Annotations\AnnotationRegistry;
@@ -91,9 +90,12 @@ class Scanner {
 
 		foreach ($this->scan as $class)
 		{
-			try {
+			try
+			{
 				$classes[] = new ReflectionClass($class);
-			} catch (\Exception $e) {
+			}
+			catch (\Exception $e)
+			{
 				//
 			}
 		}
