@@ -8,10 +8,8 @@ use Illuminate\Routing\Matching\UriValidator;
 use Illuminate\Routing\Matching\HostValidator;
 use Illuminate\Routing\Matching\MethodValidator;
 use Illuminate\Routing\Matching\SchemeValidator;
-use Illuminate\Routing\Controller as BaseController;
 use Symfony\Component\Routing\Route as SymfonyRoute;
 use Illuminate\Http\Exception\HttpResponseException;
-use Illuminate\Routing\RouteDependencyResolverTrait;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Route {
@@ -668,9 +666,13 @@ class Route {
 	 */
 	protected function addFilters($type, $filters)
 	{
+		$filters = static::explodeFilters($filters);
+
 		if (isset($this->action[$type]))
 		{
-			$this->action[$type] .= '|'.$filters;
+			$existing = static::explodeFilters($this->action[$type]);
+
+			$this->action[$type] = array_merge($existing, $filters);
 		}
 		else
 		{
@@ -946,6 +948,17 @@ class Route {
 		unset($this->container);
 
 		unset($this->compiled);
+	}
+
+	/**
+	 * Dynamically access route parameters.
+	 *
+	 * @param  string  $key
+	 * @return mixed
+	 */
+	public function __get($key)
+	{
+		return $this->parameter($key);
 	}
 
 }
