@@ -5,8 +5,9 @@ trait AppNamespaceDetectorTrait {
 	/**
 	 * Get the application namespace from the Composer file.
 	 *
-	 * @param  string  $namespacePath
 	 * @return string
+	 *
+	 * @throws \RuntimeException
 	 */
 	protected function getAppNamespace()
 	{
@@ -14,7 +15,10 @@ trait AppNamespaceDetectorTrait {
 
 		foreach ((array) data_get($composer, 'autoload.psr-4') as $namespace => $path)
 		{
-			if (realpath(app_path()) == realpath(base_path().'/'.$path)) return $namespace;
+			foreach ((array) $path as $pathChoice)
+			{
+				if (realpath(app_path()) == realpath(base_path().'/'.$pathChoice)) return $namespace;
+			}
 		}
 
 		throw new \RuntimeException("Unable to detect application namespace.");
