@@ -1,7 +1,7 @@
 <?php namespace Illuminate\Foundation\Testing;
 
 use Illuminate\Http\Request;
-use Illuminate\Contracts\Auth\User as UserContract;
+use Illuminate\Contracts\Auth\Authenticatable as UserContract;
 
 trait ApplicationTrait {
 
@@ -59,7 +59,7 @@ trait ApplicationTrait {
 	{
 		$uri = 'https://localhost/'.ltrim($uri, '/');
 
-		return $this->call($method, $uri, $parameters, $files, $server, $content);
+		return $this->call($method, $uri, $parameters, $cookies, $files, $server, $content);
 	}
 
 	/**
@@ -69,6 +69,7 @@ trait ApplicationTrait {
 	 * @param  string  $action
 	 * @param  array   $wildcards
 	 * @param  array   $parameters
+	 * @param  array   $cookies
 	 * @param  array   $files
 	 * @param  array   $server
 	 * @param  string  $content
@@ -98,7 +99,7 @@ trait ApplicationTrait {
 	{
 		$uri = $this->app['url']->route($name, $routeParameters);
 
-		return $this->call($method, $uri, $parameters, $cookies, $files, $server, $content, $changeHistory);
+		return $this->call($method, $uri, $parameters, $cookies, $files, $server, $content);
 	}
 
 	/**
@@ -145,7 +146,7 @@ trait ApplicationTrait {
 	/**
 	 * Set the currently logged in user for the application.
 	 *
-	 * @param  \Illuminate\Contracts\Auth\User  $user
+	 * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
 	 * @param  string  $driver
 	 * @return void
 	 */
@@ -162,7 +163,7 @@ trait ApplicationTrait {
 	 */
 	public function seed($class = 'DatabaseSeeder')
 	{
-		$this->app['artisan']->call('db:seed', array('--class' => $class));
+		$this->app['Illuminate\Contracts\Console\Kernel']->call('db:seed', array('--class' => $class));
 	}
 
 }

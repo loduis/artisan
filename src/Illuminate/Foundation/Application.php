@@ -1,15 +1,13 @@
 <?php namespace Illuminate\Foundation;
 
 use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Container\Container;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Events\EventServiceProvider;
 use Illuminate\Routing\RoutingServiceProvider;
-use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Contracts\Foundation\Application as ApplicationContract;
 
 class Application extends Container implements ApplicationContract {
@@ -20,7 +18,6 @@ class Application extends Container implements ApplicationContract {
 	 * @var string
 	 */
 	const VERSION = '5.0-dev';
-
 
 	/**
 	 * Indicates if the application has been bootstrapped before.
@@ -72,12 +69,27 @@ class Application extends Container implements ApplicationContract {
 	protected $deferredServices = [];
 
 	/**
+	 * Default paths for the laravel.
+	 *
+	 * @var array
+	 */
+	private static $DEFAULT_PATHS = [
+		'app'      => 'app',
+		'config'   => 'config',
+		'database' => 'database',
+		'lang'     => 'resources/lang',
+		'views'    => 'resources/views',
+		'public'   => 'public',
+		'storage'  => 'storage'
+	];
+
+	/**
 	 * Create a new Illuminate application instance.
 	 *
 	 * @param  string|null  $basePath
 	 * @return void
 	 */
-	public function __construct($basePath, array $paths = [])
+	public function __construct($basePath, array $userPaths = [])
 	{
 		$this->registerBaseBindings();
 
@@ -85,7 +97,7 @@ class Application extends Container implements ApplicationContract {
 
 		$this->registerCoreContainerAliases();
 
-		$this->setBasePath($basePath, $paths);
+		$this->setPaths($basePath, $userPaths);
 	}
 
 	/**
@@ -151,26 +163,19 @@ class Application extends Container implements ApplicationContract {
 	}
 
 	/**
-	 * Set the base path for the application.
+	 * Set the paths for the application.
 	 *
 	 * @param  string  $basePath
+	 * @param array $userPaths
 	 * @return $this
 	 */
-	public function setBasePath($basePath, array $userPaths = [])
+	public function setPaths($basePath, array $userPaths = [])
 	{
-		$frameWorkPaths = [
-			'app'      => 'app',
-			'config'   => 'config',
-			'database' => 'database',
-			'lang'     => 'resources/lang',
-			'views'    => 'resources/lang',
-			'public'   => 'public',
-			'storage'  => 'storage'
-		];
-		$frameWorkPaths['base'] = $basePath;
-		$frameWorkPaths = array_merge($frameWorkPaths, $userPaths);
+		$paths         = self::$DEFAULT_PATHS;
+		$paths['base'] = $basePath;
+		$paths         = array_merge($paths, $userPaths);
 
-		$this->bindPathsInContainer($frameWorkPaths);
+		$this->bindPathsInContainer($paths);
 
 		return $this;
 	}
@@ -182,14 +187,14 @@ class Application extends Container implements ApplicationContract {
 	 */
 	protected function bindPathsInContainer(array $paths)
 	{
-
+		// the app is the root path
+		$app = is_null($paths['app']) ? '/' . $paths['app'] : '';
+		$this->instance('path.base', $paths['base']);
+		$this->instance('path', $paths['base'] . $app);
 		foreach (['config', 'database', 'lang', 'views', 'public', 'storage'] as $key)
 		{
 			$this->instance('path.'.$key, $paths['base'] . '/' . $paths[$key]);
 		}
-
-		$this->instance('path', $paths['base'] . ($paths['app'] === null ? '/' . $paths['app'] : ''));
-		$this->instance('path.base', $paths['base']);
 	}
 
 	/**
@@ -262,8 +267,6 @@ class Application extends Container implements ApplicationContract {
 		return $this['path.storage'];
 	}
 
-
-
 	/**
 	 * Get or check the current application environment.
 	 *
@@ -272,9 +275,19 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function environment()
 	{
-		if (count(func_get_args()) > 0)
+		if (func_num_args() > 0)
 		{
-			return in_array($this['env'], func_get_args());
+			$patterns = is_array(func_get_arg(0)) ? func_get_arg(0) : func_get_args();
+
+			foreach ($patterns as $pattern)
+			{
+				if (str_is($pattern, $this['env']))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		return $this['env'];
@@ -333,7 +346,7 @@ class Application extends Container implements ApplicationContract {
 		$manifestPath = $this['path.storage'].'/framework/services.json';
 
 		(new ProviderRepository($this, new Filesystem, $manifestPath))
-		            ->load($this->config['app.providers']);
+					->load($this->config['app.providers']);
 	}
 
 	/**
@@ -347,7 +360,7 @@ class Application extends Container implements ApplicationContract {
 	public function register($provider, $options = [], $force = false)
 	{
 		if ($registered = $this->getProvider($provider) && ! $force)
-                                     return $registered;
+									 return $registered;
 
 		// If the given "provider" is a string, we will resolve it, passing in the
 		// application instance automatically for the developer. This is simply
@@ -673,17 +686,6 @@ class Application extends Container implements ApplicationContract {
 	}
 
 	/**
-	 * Handle the given request and get the response.
-	 *
-	 * @param  \Symfony\Component\HttpFoundation\Request  $request
-	 * @return \Symfony\Component\HttpFoundation\Response
-	 */
-	protected function run(SymfonyRequest $request)
-	{
-		return $this->make('Illuminate\Contracts\Http\Kernel')->run(Request::createFromBase($request));
-	}
-
-	/**
 	 * Call the booting callbacks for the application.
 	 *
 	 * @param  array  $callbacks
@@ -716,6 +718,26 @@ class Application extends Container implements ApplicationContract {
 	public function down(Closure $callback)
 	{
 		$this['events']->listen('illuminate.app.down', $callback);
+	}
+
+	/**
+	 * Throw an HttpException with the given data.
+	 *
+	 * @param  int     $code
+	 * @param  string  $message
+	 * @param  array   $headers
+	 * @return void
+	 *
+	 * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+	 */
+	public function abort($code, $message = '', array $headers = array())
+	{
+		if ($code == 404)
+		{
+			throw new NotFoundHttpException($message);
+		}
+
+		throw new HttpException($code, $message, null, $headers);
 	}
 
 	/**
@@ -793,7 +815,6 @@ class Application extends Container implements ApplicationContract {
 			'cache.store'    => ['Illuminate\Cache\Repository', 'Illuminate\Contracts\Cache\Repository'],
 			'config'         => ['Illuminate\Config\Repository', 'Illuminate\Contracts\Config\Repository'],
 			'cookie'         => ['Illuminate\Cookie\CookieJar', 'Illuminate\Contracts\Cookie\Factory', 'Illuminate\Contracts\Cookie\QueueingFactory'],
-			'exception'      => 'Illuminate\Contracts\Exception\Handler',
 			'encrypter'      => ['Illuminate\Encryption\Encrypter', 'Illuminate\Contracts\Encryption\Encrypter'],
 			'db'             => 'Illuminate\Database\DatabaseManager',
 			'events'         => ['Illuminate\Events\Dispatcher', 'Illuminate\Contracts\Events\Dispatcher'],

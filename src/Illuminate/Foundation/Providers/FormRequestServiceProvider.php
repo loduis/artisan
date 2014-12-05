@@ -35,7 +35,6 @@ class FormRequestServiceProvider extends ServiceProvider {
 					$this->initializeRequest($resolved, $app['request']);
 
 					$resolved->setContainer($app)
-                             ->setRoute($app['Illuminate\Routing\Route'])
                              ->setRedirector($app['Illuminate\Routing\Redirector']);
 				}
 			});
@@ -59,6 +58,9 @@ class FormRequestServiceProvider extends ServiceProvider {
 			$current->query->all(), $current->request->all(), $current->attributes->all(),
 			$current->cookies->all(), $files, $current->server->all(), $current->getContent()
 		);
+
+		if ($session = $current->getSession())
+			$form->setSession($session);
 
 		$form->setUserResolver($current->getUserResolver());
 

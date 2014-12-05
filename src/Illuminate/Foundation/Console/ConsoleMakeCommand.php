@@ -1,6 +1,5 @@
 <?php namespace Illuminate\Foundation\Console;
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
@@ -60,7 +59,7 @@ class ConsoleMakeCommand extends GeneratorCommand {
 	 */
 	protected function getDefaultNamespace($rootNamespace)
 	{
-		return $rootNamespace.'\Console';
+		return $rootNamespace.'\Console\Commands';
 	}
 
 	/**

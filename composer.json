@@ -29,12 +29,17 @@
         "illuminate/support": "self.version"
     },
     "autoload": {
-        "psr-0": {"Illuminate": "src/"},
+        "psr-0": {
+            "Illuminate": "src/"
+        },
         "files": [
             "src/Illuminate/Foundation/helpers.php",
             "src/Illuminate/Support/helpers.php"
         ]
     },
+    "bin": [
+        "artisan"
+    ],
     "extra": {
         "branch-alias": {
             "dev-master": "4.3-dev"
