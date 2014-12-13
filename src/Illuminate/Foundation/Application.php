@@ -25,13 +25,13 @@ class Application extends Container implements ApplicationContract {
 	 * @var array
 	 */
 	private static $DEFAULT_PATHS = [
-		'config'   => 'config',
-		'database' => 'database',
-		'lang'     => 'lang',
-		'views'    => 'views',
+		'config'   => 'resources/config',
+		'database' => 'resources/database',
+		'lang'     => 'resources/lang',
+		'views'    => 'resources/templates',
+		'assets'   => 'resourcess/assets',
 		'public'   => 'public',
 		'storage'  => 'storage',
-		'assets'   => 'assets',
 		'commands' => 'app/Console/Commands'
 	];
 
