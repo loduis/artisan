@@ -17,15 +17,14 @@ class ConsoleSupportServiceProvider extends AggregateServiceProvider {
 	 * @var array
 	 */
 	protected $providers = [
-		//'Illuminate\Auth\GeneratorServiceProvider',
-		//'Illuminate\Database\MigrationServiceProvider',
-		//'Illuminate\Database\SeedServiceProvider',
+		'Illuminate\Auth\GeneratorServiceProvider',
+		'Illuminate\Console\ScheduleServiceProvider',
+		'Illuminate\Database\MigrationServiceProvider',
+		'Illuminate\Database\SeedServiceProvider',
 		'Illuminate\Foundation\Providers\ComposerServiceProvider',
-		//'Illuminate\Foundation\Providers\PublisherServiceProvider',
-		//'Illuminate\Queue\FailConsoleServiceProvider',
-		//'Illuminate\Routing\GeneratorServiceProvider',
-		//'Illuminate\Session\CommandsServiceProvider',
-		// 'Illuminate\Workbench\WorkbenchServiceProvider',
+		'Illuminate\Queue\FailConsoleServiceProvider',
+		'Illuminate\Routing\GeneratorServiceProvider',
+		'Illuminate\Session\CommandsServiceProvider',
 	];
 
 }

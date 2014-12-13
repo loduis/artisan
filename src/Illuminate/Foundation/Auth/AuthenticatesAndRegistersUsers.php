@@ -24,6 +24,10 @@ trait AuthenticatesAndRegistersUsers {
 	 * Create a new authentication controller instance.
 	 *
 	 * @param  Guard  $auth
+<<<<<<< HEAD
+=======
+	 * @param  Registrar  $registrar
+>>>>>>> 9deeb26fe6c14e68dc53136370d75d5d25100231
 	 * @return void
 	 */
 	public function __construct(Guard $auth, Registrar $registrar)

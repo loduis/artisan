@@ -6,7 +6,6 @@ use Illuminate\Foundation\Console\DownCommand;
 use Illuminate\Foundation\Console\FreshCommand;
 use Illuminate\Foundation\Console\TinkerCommand;
 use Illuminate\Foundation\Console\AppNameCommand;
-use Illuminate\Foundation\Console\ChangesCommand;
 use Illuminate\Foundation\Console\OptimizeCommand;
 use Illuminate\Foundation\Console\RouteListCommand;
 use Illuminate\Foundation\Console\RouteScanCommand;
@@ -36,23 +35,22 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 */
 	protected $commands = [
 		'AppName' => 'command.app.name',
-		'Changes' => 'command.changes',
-		//'ClearCompiled' => 'command.clear-compiled',
+		'ClearCompiled' => 'command.clear-compiled',
 		'ConsoleMake' => 'command.console.make',
-		//'Down' => 'command.down',
+		'Down' => 'command.down',
 		'Environment' => 'command.environment',
-		//'EventScan' => 'command.event.scan',
+		'EventScan' => 'command.event.scan',
 		'Fresh' => 'command.fresh',
-		//'KeyGenerate' => 'command.key.generate',
-		//'Optimize' => 'command.optimize',
-		//'ProviderMake' => 'command.provider.make',
-		//'RequestMake' => 'command.request.make',
-		//'RouteCache' => 'command.route.cache',
-		//'RouteClear' => 'command.route.clear',
-		//'RouteList' => 'command.route.list',
-		//'RouteScan' => 'command.route.scan',
+		'KeyGenerate' => 'command.key.generate',
+		'Optimize' => 'command.optimize',
+		'ProviderMake' => 'command.provider.make',
+		'RequestMake' => 'command.request.make',
+		'RouteCache' => 'command.route.cache',
+		'RouteClear' => 'command.route.clear',
+		'RouteList' => 'command.route.list',
+		'RouteScan' => 'command.route.scan',
 		'Tinker' => 'command.tinker',
-		//'Up' => 'command.up',
+		'Up' => 'command.up',
 	];
 
 	/**
@@ -82,19 +80,6 @@ class ArtisanServiceProvider extends ServiceProvider {
 		$this->app->singleton('command.app.name', function($app)
 		{
 			return new AppNameCommand($app['composer'], $app['files']);
-		});
-	}
-
-	/**
-	 * Register the command.
-	 *
-	 * @return void
-	 */
-	protected function registerChangesCommand()
-	{
-		$this->app->singleton('command.changes', function()
-		{
-			return new ChangesCommand;
 		});
 	}
 

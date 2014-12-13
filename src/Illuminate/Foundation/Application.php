@@ -20,6 +20,22 @@ class Application extends Container implements ApplicationContract {
 	const VERSION = '5.0-dev';
 
 	/**
+	 * Default paths for the laravel.
+	 *
+	 * @var array
+	 */
+	private static $DEFAULT_PATHS = [
+		'config'   => 'resources/config',
+		'database' => 'resources/database',
+		'lang'     => 'resources/lang',
+		'views'    => 'resources/templates',
+		'assets'   => 'resourcess/assets',
+		'public'   => 'public',
+		'storage'  => 'storage',
+		'commands' => 'app/Console/Commands'
+	];
+
+	/**
 	 * Indicates if the application has been bootstrapped before.
 	 *
 	 * @var bool
@@ -68,20 +84,6 @@ class Application extends Container implements ApplicationContract {
 	 */
 	protected $deferredServices = [];
 
-	/**
-	 * Default paths for the laravel.
-	 *
-	 * @var array
-	 */
-	private static $DEFAULT_PATHS = [
-		'app'      => 'app',
-		'config'   => 'config',
-		'database' => 'database',
-		'lang'     => 'resources/lang',
-		'views'    => 'resources/views',
-		'public'   => 'public',
-		'storage'  => 'storage'
-	];
 
 	/**
 	 * Create a new Illuminate application instance.
@@ -346,7 +348,7 @@ class Application extends Container implements ApplicationContract {
 		$manifestPath = $this['path.storage'].'/framework/services.json';
 
 		(new ProviderRepository($this, new Filesystem, $manifestPath))
-					->load($this->config['app.providers']);
+		            ->load($this->config['app.providers']);
 	}
 
 	/**
@@ -360,7 +362,7 @@ class Application extends Container implements ApplicationContract {
 	public function register($provider, $options = [], $force = false)
 	{
 		if ($registered = $this->getProvider($provider) && ! $force)
-									 return $registered;
+                                     return $registered;
 
 		// If the given "provider" is a string, we will resolve it, passing in the
 		// application instance automatically for the developer. This is simply
