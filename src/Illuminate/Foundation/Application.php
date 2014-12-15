@@ -25,6 +25,7 @@ class Application extends Container implements ApplicationContract {
 	 * @var array
 	 */
 	private static $DEFAULT_PATHS = [
+		'path'     => 'app',
 		'config'   => 'resources/config',
 		'database' => 'resources/database',
 		'lang'     => 'resources/lang',
@@ -190,10 +191,13 @@ class Application extends Container implements ApplicationContract {
 	protected function bindPathsInContainer(array $paths)
 	{
 		// the app is the root path
-		$app = is_null($paths['app']) ? '/' . $paths['app'] : '';
 		$this->instance('path.base', $paths['base']);
-		$this->instance('path', $paths['base'] . $app);
-		foreach (['config', 'database', 'lang', 'views', 'public', 'storage'] as $key)
+		$this->instance('path', $paths['base'] . '/' . $paths['path']);
+		$keys = array_keys(self::$DEFAULT_PATHS);
+
+		unset($keys['path']);
+
+		foreach ($keys as $key)
 		{
 			$this->instance('path.'.$key, $paths['base'] . '/' . $paths[$key]);
 		}
@@ -226,6 +230,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function configPath()
 	{
+		echo 'CONFIG PATHC..';
 		return $this['path.config'];
 	}
 
@@ -510,6 +515,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function make($abstract, $parameters = [])
 	{
+		echo $abstract, PHP_EOL;
 		$abstract = $this->getAlias($abstract);
 
 		if (isset($this->deferredServices[$abstract]))

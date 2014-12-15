@@ -3,21 +3,5 @@
         "psr-4": {
             "Myabakus\\": ""
         }
-    },
-    "laravel": {
-        "app": {
-            "base"    : "app",
-            "config"  : "config",
-            "storage" : "storage",
-            "commands": "commands",
-            "views"   : "views"
-        },
-        "admin": {
-            "config"  : "config",
-            "storage" : "storage",
-            "commands": "commands",
-            "views"   : "views"
-        },
-        "public": "public"
     }
 }

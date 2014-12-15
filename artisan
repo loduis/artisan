@@ -2,6 +2,7 @@
 <?php
 
 define('LARAVEL_START', microtime(true));
+
 /*
 |--------------------------------------------------------------------------
 | Register The Composer Auto Loader
@@ -15,13 +16,21 @@ define('LARAVEL_START', microtime(true));
 */
 require __DIR__.'/vendor/autoload.php';
 
+/*
+|--------------------------------------------------------------------------
+| Get the current basePath
+|--------------------------------------------------------------------------
+*/
 
-Illuminate\Foundation\Artisan::config();
+$basePath = getcwd();
 
+/*
+|--------------------------------------------------------------------------
+| Run artisan for extract config for app
+|--------------------------------------------------------------------------
+*/
 
-exit;
-
-
+$config   = Illuminate\Artisan\Application::make($basePath)->run();
 
 /*
 |--------------------------------------------------------------------------
@@ -34,30 +43,30 @@ exit;
 |
 */
 
-$app = new Illuminate\Foundation\Application(
-    __DIR__ . '/tests',
-    [
-        'app'     => null,
-        'config'  => 'config',
-        'storage' => 'storage'
-    ]
-);
+$app = new Illuminate\Foundation\Application($basePath, $config->get('paths'));
 
 /*
 |--------------------------------------------------------------------------
-| Create The Application
+| Bind Important Interfaces
 |--------------------------------------------------------------------------
 |
-| The first thing we will do is create a new Laravel application instance
-| which serves as the "glue" for all the components of Laravel, and is
-| the IoC container for the system binding all of the various parts.
+| Next, we need to bind some important interfaces into the container so
+| we will be able to resolve them when needed. The kernels serve the
+| incoming requests to this application from both the web and CLI.
 |
 */
-
 
 $app->singleton(
+    'Illuminate\Contracts\Http\Kernel',
+    'Illuminate\Foundation\Http\Kernel'
+);
+$app->singleton(
     'Illuminate\Contracts\Console\Kernel',
-    'Illuminate\Console\Kernel'
+    'Illuminate\Foundation\Console\Kernel'
+);
+$app->singleton(
+    'Illuminate\Contracts\Debug\ExceptionHandler',
+    'Illuminate\Foundation\Exceptions\Handler'
 );
 
 /*
@@ -70,7 +79,6 @@ $app->singleton(
 | or another output device for the developers. Here goes nothing!
 |
 */
-
 $status = $app->make('Illuminate\Contracts\Console\Kernel')->handle(
     new Symfony\Component\Console\Input\ArgvInput,
     new Symfony\Component\Console\Output\ConsoleOutput
@@ -86,5 +94,4 @@ $status = $app->make('Illuminate\Contracts\Console\Kernel')->handle(
 | down the process. This is the last thing to happen to the request.
 |
 */
-
 exit($status);

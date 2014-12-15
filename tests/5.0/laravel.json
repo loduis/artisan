@@ -1,0 +1,12 @@
+{
+    "apps": [
+        {
+            "name": "app",
+            "description": "This is the main application"
+        },
+        {
+            "name": "admin",
+            "description": "This is the main application"
+        }
+    ]
+}
