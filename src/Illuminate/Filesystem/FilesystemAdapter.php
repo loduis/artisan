@@ -1,8 +1,10 @@
 <?php namespace Illuminate\Filesystem;
 
+use InvalidArgumentException;
 use Illuminate\Support\Collection;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FileNotFoundException;
 use Illuminate\Contracts\Filesystem\Filesystem as FilesystemContract;
 use Illuminate\Contracts\Filesystem\Cloud as CloudFilesystemContract;
 use Illuminate\Contracts\Filesystem\FileNotFoundException as ContractFileNotFoundException;
@@ -52,7 +54,7 @@ class FilesystemAdapter implements FilesystemContract, CloudFilesystemContract {
 		{
 			return $this->driver->read($path);
 		}
-		catch (\League\Flysystem\FileNotFoundException $e)
+		catch (FileNotFoundException $e)
 		{
 			throw new ContractFileNotFoundException($path, $e->getCode(), $e);
 		}
@@ -305,7 +307,7 @@ class FilesystemAdapter implements FilesystemContract, CloudFilesystemContract {
 				return AdapterInterface::VISIBILITY_PRIVATE;
 		}
 
-		throw new \InvalidArgumentException('Unknown visibility: '.$visibility);
+		throw new InvalidArgumentException('Unknown visibility: '.$visibility);
 	}
 
 }
