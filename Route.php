@@ -433,7 +433,7 @@ class Route {
 			}, $this->parameters);
 		}
 
-		throw new \LogicException("Route is not bound.");
+		throw new LogicException("Route is not bound.");
 	}
 
 	/**
@@ -597,19 +597,19 @@ class Route {
 		// across into the "uses" property that will get fired off by this route.
 		elseif ( ! isset($action['uses']))
 		{
-			$action['uses'] = $this->findClosure($action);
+			$action['uses'] = $this->findCallable($action);
 		}
 
 		return $action;
 	}
 
 	/**
-	 * Find the Closure in an action array.
+	 * Find the callable in an action array.
 	 *
 	 * @param  array  $action
-	 * @return \Closure
+	 * @return callable
 	 */
-	protected function findClosure(array $action)
+	protected function findCallable(array $action)
 	{
 		return array_first($action, function($key, $value)
 		{
@@ -942,7 +942,7 @@ class Route {
 	{
 		if ($this->action['uses'] instanceof Closure)
 		{
-			throw new \LogicException("Unable to prepare route [{$this->uri}] for serialization. Uses Closure.");
+			throw new LogicException("Unable to prepare route [{$this->uri}] for serialization. Uses Closure.");
 		}
 
 		unset($this->container);
