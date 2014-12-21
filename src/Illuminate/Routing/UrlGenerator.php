@@ -43,6 +43,13 @@ class UrlGenerator implements UrlGeneratorContract {
 	protected $rootNamespace;
 
 	/**
+	 * The session resolver callable.
+	 *
+	 * @var callable
+	 */
+	protected $sessionResolver;
+
+	/**
 	 * Characters that should not be URL encoded.
 	 *
 	 * @var array
@@ -58,6 +65,10 @@ class UrlGenerator implements UrlGeneratorContract {
 		'%21' => '!',
 		'%2A' => '*',
 		'%7C' => '|',
+		'%3F' => '?',
+		'%26' => '&',
+		'%23' => '#',
+		'%25' => '%',
 	);
 
 	/**
@@ -101,7 +112,11 @@ class UrlGenerator implements UrlGeneratorContract {
 	 */
 	public function previous()
 	{
-		return $this->to($this->request->headers->get('referer'));
+		$referrer = $this->request->headers->get('referer');
+
+		$url = $referrer ? $this->to($referrer) : $this->getPreviousUrlFromSession();
+
+		return $url ?: $this->to('/');
 	}
 
 	/**
@@ -251,10 +266,10 @@ class UrlGenerator implements UrlGeneratorContract {
 
 		$domain = $this->getRouteDomain($route, $parameters);
 
-		$uri = strtr(rawurlencode($this->trimUrl(
+		$uri = strtr(rawurlencode($this->addQueryString($this->trimUrl(
 			$root = $this->replaceRoot($route, $domain, $parameters),
 			$this->replaceRouteParameters($route->uri(), $parameters)
-		)), $this->dontEncode).$this->getRouteQueryString($parameters);
+		), $parameters)), $this->dontEncode);
 
 		return $absolute ? $uri : '/'.ltrim(str_replace($root, '', $uri), '/');
 	}
@@ -305,6 +320,28 @@ class UrlGenerator implements UrlGeneratorContract {
 			return isset($parameters[$m[1]]) ? array_pull($parameters, $m[1]) : $m[0];
 
 		}, $path);
+	}
+
+	/**
+	 * Add a query string to the URI.
+	 *
+	 * @param  string  $uri
+	 * @param  array  $parameters
+	 * @return mixed|string
+	 */
+	protected function addQueryString($uri, array $parameters)
+	{
+		// If the URI has a fragmnet, we will move it to the end of the URI since it will
+		// need to come after any query string that may be added to the URL else it is
+		// not going to be available. We will remove it then append it back on here.
+		if ( ! is_null($fragment = parse_url($uri, PHP_URL_FRAGMENT)))
+		{
+			$uri = preg_replace('/#.*/', '', $uri);
+		}
+
+		$uri .= $this->getRouteQueryString($parameters);
+
+		return is_null($fragment) ? $uri : $uri."#{$fragment}";
 	}
 
 	/**
@@ -534,7 +571,7 @@ class UrlGenerator implements UrlGeneratorContract {
 	 */
 	public function isValidUrl($path)
 	{
-		if (starts_with($path, array('#', '//', 'mailto:', 'tel:'))) return true;
+		if (starts_with($path, ['#', '//', 'mailto:', 'tel:', 'http://', 'https://'])) return true;
 
 		return filter_var($path, FILTER_VALIDATE_URL) !== false;
 	}
@@ -582,6 +619,41 @@ class UrlGenerator implements UrlGeneratorContract {
 	public function setRoutes(RouteCollection $routes)
 	{
 		$this->routes = $routes;
+
+		return $this;
+	}
+
+	/**
+	 * Get the previous URL from the session if possible.
+	 *
+	 * @return string|null
+	 */
+	protected function getPreviousUrlFromSession()
+	{
+		$session = $this->getSession();
+
+		return $session ? $session->previousUrl() : null;
+	}
+
+	/**
+	 * Get the session implementation from the resolver.
+	 *
+	 * @return \Illuminate\Session\Store
+	 */
+	protected function getSession()
+	{
+		return call_user_func($this->sessionResolver ?: function() {});
+	}
+
+	/**
+	 * Set the session resolver for the generator.
+	 *
+	 * @param  callable  $sessionResolver
+	 * @return $this
+	 */
+	public function setSessionResolver(callable $sessionResolver)
+	{
+		$this->sessionResolver = $sessionResolver;
 
 		return $this;
 	}
