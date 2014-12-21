@@ -1,5 +1,6 @@
 <?php namespace Illuminate\Auth;
 
+use RuntimeException;
 use Illuminate\Contracts\Events\Dispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -154,6 +155,8 @@ class Guard implements GuardContract {
 		if (is_null($user) && ! is_null($recaller))
 		{
 			$user = $this->getUserByRecaller($recaller);
+
+			if ($user) $this->fireLoginEvent($user, true);
 		}
 
 		return $this->user = $user;
@@ -168,7 +171,14 @@ class Guard implements GuardContract {
 	{
 		if ($this->loggedOut) return;
 
-		return $this->session->get($this->getName(), $this->getRecallerId());
+		$id = $this->session->get($this->getName(), $this->getRecallerId());
+
+		if (is_null($id) && $this->user())
+		{
+			$id = $this->user()->getAuthIdentifier();
+		}
+
+		return $id;
 	}
 
 	/**
@@ -423,12 +433,24 @@ class Guard implements GuardContract {
 		// If we have an event dispatcher instance set we will fire an event so that
 		// any listeners will hook into the authentication events and run actions
 		// based on the login and logout events fired from the guard instances.
+		$this->fireLoginEvent($user, $remember);
+
+		$this->setUser($user);
+	}
+
+	/**
+	 * Fire the login event if the dispatcher is set.
+	 *
+	 * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
+	 * @param  bool  $remember
+	 * @return void
+	 */
+	protected function fireLoginEvent($user, $remember = false)
+	{
 		if (isset($this->events))
 		{
 			$this->events->fire('auth.login', [$user, $remember]);
 		}
-
-		$this->setUser($user);
 	}
 
 	/**
@@ -583,7 +605,7 @@ class Guard implements GuardContract {
 	{
 		if ( ! isset($this->cookie))
 		{
-			throw new \RuntimeException("Cookie jar has not been set.");
+			throw new RuntimeException("Cookie jar has not been set.");
 		}
 
 		return $this->cookie;
