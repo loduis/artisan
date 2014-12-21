@@ -42,7 +42,7 @@ class RouteListCommand extends Command {
 	 * @var array
 	 */
 	protected $headers = array(
-		'Domain', 'URI', 'Name', 'Action', 'Middleware'
+		'Domain', 'Method', 'URI', 'Name', 'Action', 'Middleware'
 	);
 
 	/**
@@ -94,17 +94,15 @@ class RouteListCommand extends Command {
 	/**
 	 * Get the route information for a given route.
 	 *
-	 * @param  string  $name
 	 * @param  \Illuminate\Routing\Route  $route
 	 * @return array
 	 */
 	protected function getRouteInformation(Route $route)
 	{
-		$uri = implode('|', $route->methods()).' '.$route->uri();
-
 		return $this->filterRoute(array(
 			'host'   => $route->domain(),
-			'uri'    => $uri,
+			'method' => implode('|', $route->methods()),
+			'uri'    => $route->uri(),
 			'name'   => $route->getName(),
 			'action' => $route->getActionName(),
 			'middleware' => $this->getMiddleware($route)

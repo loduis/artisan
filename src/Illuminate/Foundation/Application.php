@@ -85,7 +85,6 @@ class Application extends Container implements ApplicationContract {
 	 */
 	protected $deferredServices = [];
 
-
 	/**
 	 * Create a new Illuminate application instance.
 	 *
@@ -536,29 +535,6 @@ class Application extends Container implements ApplicationContract {
 	public function bound($abstract)
 	{
 		return isset($this->deferredServices[$abstract]) || parent::bound($abstract);
-	}
-
-	/**
-	 * "Extend" an abstract type in the container.
-	 *
-	 * (Overriding Container::extend)
-	 *
-	 * @param  string   $abstract
-	 * @param  \Closure  $closure
-	 * @return void
-	 *
-	 * @throws \InvalidArgumentException
-	 */
-	public function extend($abstract, Closure $closure)
-	{
-		$abstract = $this->getAlias($abstract);
-
-		if (isset($this->deferredServices[$abstract]))
-		{
-			$this->loadDeferredProvider($abstract);
-		}
-
-		return parent::extend($abstract, $closure);
 	}
 
 	/**

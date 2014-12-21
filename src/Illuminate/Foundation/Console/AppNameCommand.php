@@ -78,6 +78,8 @@ class AppNameCommand extends Command {
 
 		$this->setComposerNamespace();
 
+		$this->setPhpSpecNamespace();
+
 		$this->info('Application namespace set!');
 
 		$this->composer->dumpAutoloads();
@@ -103,21 +105,23 @@ class AppNameCommand extends Command {
 	/**
 	 * Replace the App namespace at the given path.
 	 *
-	 * @param  string  $path;
+	 * @param  string  $path
 	 */
 	protected function replaceNamespace($path)
 	{
-		$this->replaceIn(
-			$path, 'namespace '.$this->currentRoot.';', 'namespace '.$this->argument('name').';'
-		);
+		$search = [
+			'namespace '.$this->currentRoot.';',
+			'namespace '.$this->currentRoot.'\\',
+			$this->currentRoot.'\\',
+		];
 
-		$this->replaceIn(
-			$path, 'namespace '.$this->currentRoot.'\\', 'namespace '.$this->argument('name').'\\'
-		);
+		$replace = [
+			'namespace '.$this->argument('name').';',
+			'namespace '.$this->argument('name').'\\',
+			$this->argument('name').'\\',
+		];
 
-		$this->replaceIn(
-			$path, $this->currentRoot.'\\', $this->argument('name').'\\'
-		);
+		$this->replaceIn($path, $search, $replace);
 	}
 
 	/**
@@ -127,17 +131,19 @@ class AppNameCommand extends Command {
 	 */
 	protected function setBootstrapNamespaces()
 	{
-		$this->replaceIn(
-			$this->getBootstrapPath(), $this->currentRoot.'\\Http', $this->argument('name').'\\Http'
-		);
+		$search = [
+			$this->currentRoot.'\\Http',
+			$this->currentRoot.'\\Console',
+			$this->currentRoot.'\\Exceptions',
+		];
 
-		$this->replaceIn(
-			$this->getBootstrapPath(), $this->currentRoot.'\\Console', $this->argument('name').'\\Console'
-		);
-		
-		$this->replaceIn(
-			$this->getBootstrapPath(), $this->currentRoot.'\\Exceptions', $this->argument('name').'\\Exceptions'
-		);
+		$replace = [
+			$this->argument('name').'\\Http',
+			$this->argument('name').'\\Console',
+			$this->argument('name').'\\Exceptions',
+		];
+
+		$this->replaceIn($this->getBootstrapPath(), $search, $replace);
 	}
 
 	/**
@@ -171,13 +177,17 @@ class AppNameCommand extends Command {
 	 */
 	protected function setAppConfigNamespaces()
 	{
-		$this->replaceIn(
-			$this->getConfigPath('app'), $this->currentRoot.'\\Providers', $this->argument('name').'\\Providers'
-		);
+		$search = [
+			$this->currentRoot.'\\Providers',
+			$this->currentRoot.'\\Http\\Controllers\\',
+		];
 
-		$this->replaceIn(
-			$this->getConfigPath('app'), $this->currentRoot.'\\Http\\Controllers\\', $this->argument('name').'\\Http\\Controllers\\'
-		);
+		$replace = [
+			$this->argument('name').'\\Providers',
+			$this->argument('name').'\\Http\\Controllers\\',
+		];
+
+		$this->replaceIn($this->getConfigPath('app'), $search, $replace);
 	}
 
 	/**
@@ -193,11 +203,24 @@ class AppNameCommand extends Command {
 	}
 
 	/**
+	 * Set the PHPSpec configuration namespace.
+	 *
+	 * @return void
+	 */
+	protected function setPhpSpecNamespace()
+	{
+		if ($this->files->exists($path = $this->getPhpSpecConfigPath()))
+		{
+			$this->replaceIn($path, $this->currentRoot, $this->argument('name'));
+		}
+	}
+
+	/**
 	 * Replace the given string in the given file.
 	 *
 	 * @param  string  $path
-	 * @param  string  $search
-	 * @param  string  $replace
+	 * @param  string|array  $search
+	 * @param  string|array  $replace
 	 * @return void
 	 */
 	protected function replaceIn($path, $search, $replace)
@@ -254,6 +277,16 @@ class AppNameCommand extends Command {
 	protected function getAuthConfigPath()
 	{
 		return $this->getConfigPath('auth');
+	}
+
+	/**
+	 * Get the path to the PHPSpec configuration file.
+	 *
+	 * @return string
+	 */
+	protected function getPhpSpecConfigPath()
+	{
+		return $this->laravel['path.base'].'/phpspec.yml';
 	}
 
 	/**

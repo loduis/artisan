@@ -18,7 +18,7 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 	/**
 	 * The container instance.
 	 *
-	 * @var  Container  $container
+	 * @var Container
 	 */
 	protected $container;
 
@@ -28,6 +28,13 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 	 * @var Redirector
 	 */
 	protected $redirector;
+
+	/**
+	 * The sanitized input.
+	 *
+	 * @var array
+	 */
+	protected $sanitized;
 
 	/**
 	 * The URI to redirect to if validation fails.
@@ -51,6 +58,13 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 	protected $redirectAction;
 
 	/**
+	 * The key to be used for the view error bag.
+	 *
+	 * @var string
+	 */
+	protected $errorBag = 'default';
+
+	/**
 	 * The input keys that should not be flashed on redirect.
 	 *
 	 * @var array
@@ -72,18 +86,37 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 		}
 
 		return $factory->make(
-			$this->formatInput(), $this->container->call([$this, 'rules']), $this->messages()
+			$this->sanitizeInput(), $this->container->call([$this, 'rules']), $this->messages()
 		);
 	}
 
 	/**
-	 * Get the input that should be fed to the validator.
+	 * Sanitize the input.
 	 *
 	 * @return array
 	 */
-	protected function formatInput()
+	protected function sanitizeInput()
 	{
+		if (method_exists($this, 'sanitize'))
+		{
+			return $this->sanitized = $this->container->call([$this, 'sanitize']);
+		}
+
 		return $this->all();
+	}
+
+	/**
+	 * Get sanitized input.
+	 *
+	 * @param  string  $key
+	 * @param  mixed  $default
+	 * @return mixed
+	 */
+	public function sanitized($key = null, $default = null)
+	{
+		$input = is_null($this->sanitized) ? $this->all() : $this->sanitized;
+
+		return array_get($input, $key, $default);
 	}
 
 	/**
@@ -139,7 +172,7 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 
 		return $this->redirector->to($this->getRedirectUrl())
                                         ->withInput($this->except($this->dontFlash))
-                                        ->withErrors($errors);
+                                        ->withErrors($errors, $this->errorBag);
 	}
 
 	/**
