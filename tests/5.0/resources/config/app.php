@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'key' => 'YourSecretKey!!!',
+    'key' => '4xdlFmruWQwIP1AHui6Dd6Esqud7ol6k',
 
     'cipher' => MCRYPT_RIJNDAEL_128,
 
@@ -113,33 +113,34 @@ return [
         /*
          * Application Service Providers...
          */
-        'App\Providers\AppServiceProvider',
-        'App\Providers\EventServiceProvider',
-        'App\Providers\RouteServiceProvider',
+        // 'App\Providers\AppServiceProvider',
+        // 'App\Providers\EventServiceProvider',
+        // 'App\Providers\RouteServiceProvider',
 
         /*
          * Laravel Framework Service Providers...
          */
+        'Illuminate\Foundation\Providers\ComposerServiceProvider',
         'Illuminate\Foundation\Providers\ArtisanServiceProvider',
-        'Illuminate\Auth\AuthServiceProvider',
-        'Illuminate\Cache\CacheServiceProvider',
-        'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',
-        'Illuminate\Routing\ControllerServiceProvider',
-        'Illuminate\Cookie\CookieServiceProvider',
-        'Illuminate\Database\DatabaseServiceProvider',
-        'Illuminate\Encryption\EncryptionServiceProvider',
+        // 'Illuminate\Auth\AuthServiceProvider',
+        // 'Illuminate\Cache\CacheServiceProvider',
+        // 'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',
+        // 'Illuminate\Routing\ControllerServiceProvider',
+        // 'Illuminate\Cookie\CookieServiceProvider',
+        // 'Illuminate\Database\DatabaseServiceProvider',
+        // 'Illuminate\Encryption\EncryptionServiceProvider',
         'Illuminate\Filesystem\FilesystemServiceProvider',
-        'Illuminate\Foundation\Providers\FoundationServiceProvider',
-        'Illuminate\Hashing\HashServiceProvider',
-        'Illuminate\Mail\MailServiceProvider',
-        'Illuminate\Pagination\PaginationServiceProvider',
-        'Illuminate\Queue\QueueServiceProvider',
-        'Illuminate\Redis\RedisServiceProvider',
-        'Illuminate\Auth\Passwords\PasswordResetServiceProvider',
-        'Illuminate\Session\SessionServiceProvider',
-        'Illuminate\Translation\TranslationServiceProvider',
-        'Illuminate\Validation\ValidationServiceProvider',
-        'Illuminate\View\ViewServiceProvider',
+        // 'Illuminate\Foundation\Providers\FoundationServiceProvider',
+        // 'Illuminate\Hashing\HashServiceProvider',
+        // 'Illuminate\Mail\MailServiceProvider',
+        // 'Illuminate\Pagination\PaginationServiceProvider',
+        // 'Illuminate\Queue\QueueServiceProvider',
+        // 'Illuminate\Redis\RedisServiceProvider',
+        // 'Illuminate\Auth\Passwords\PasswordResetServiceProvider',
+        // 'Illuminate\Session\SessionServiceProvider',
+        // 'Illuminate\Translation\TranslationServiceProvider',
+        // 'Illuminate\Validation\ValidationServiceProvider',
+        // 'Illuminate\View\ViewServiceProvider',
 
     ],
 

@@ -2,9 +2,6 @@
 
 class Application
 {
-
-    private $basePath;
-
     private $config;
 
     /**

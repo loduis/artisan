@@ -135,8 +135,9 @@ class Application extends Container implements ApplicationContract {
 	protected function registerBaseServiceProviders()
 	{
 		$this->register(new EventServiceProvider($this));
-
-		$this->register(new RoutingServiceProvider($this));
+		// This is not necesary for applicacion
+		// With no base laravel
+		// $this->register(new RoutingServiceProvider($this));
 	}
 
 	/**
@@ -230,7 +231,6 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function configPath()
 	{
-		echo 'CONFIG PATHC..';
 		return $this['path.config'];
 	}
 
@@ -515,7 +515,6 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function make($abstract, $parameters = [])
 	{
-		echo $abstract, PHP_EOL;
 		$abstract = $this->getAlias($abstract);
 
 		if (isset($this->deferredServices[$abstract]))

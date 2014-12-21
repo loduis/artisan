@@ -46,6 +46,14 @@ class Kernel implements KernelContract {
 		'Illuminate\Foundation\Bootstrap\BootProviders',
 	];
 
+    /**
+     * The Artisan commands provided by your application.
+     *
+     * @var array
+     */
+    protected $commands = [
+    ];
+
 	/**
 	 * Create a new console kernel instance.
 	 *

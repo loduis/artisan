@@ -34,7 +34,6 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 * @var array
 	 */
 	protected $commands = [
-	/*
 		'AppName' => 'command.app.name',
 		'ClearCompiled' => 'command.clear-compiled',
 		'ConsoleMake' => 'command.console.make',
@@ -51,7 +50,7 @@ class ArtisanServiceProvider extends ServiceProvider {
 		'RouteList' => 'command.route.list',
 		'RouteScan' => 'command.route.scan',
 		'Tinker' => 'command.tinker',
-		'Up' => 'command.up',*/
+		'Up' => 'command.up',
 	];
 
 	/**
