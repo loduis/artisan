@@ -1,5 +1,6 @@
 <?php namespace Illuminate\Http;
 
+use BadMethodCallException;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -46,13 +47,11 @@ class RedirectResponse extends \Symfony\Component\HttpFoundation\RedirectRespons
 	 */
 	public function with($key, $value = null)
 	{
-		if (is_array($key))
+		$key = is_array($key) ? $key : [$key => $value];
+
+		foreach ($key as $k => $v)
 		{
-			foreach ($key as $k => $v) $this->with($k, $v);
-		}
-		else
-		{
-			$this->session->flash($key, $value);
+			$this->session->flash($k, $v);
 		}
 
 		return $this;
@@ -200,7 +199,7 @@ class RedirectResponse extends \Symfony\Component\HttpFoundation\RedirectRespons
 			return $this->with(snake_case(substr($method, 4)), $parameters[0]);
 		}
 
-		throw new \BadMethodCallException("Method [$method] does not exist on Redirect.");
+		throw new BadMethodCallException("Method [$method] does not exist on Redirect.");
 	}
 
 }
