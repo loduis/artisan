@@ -196,6 +196,21 @@ if ( ! function_exists('array_get'))
 	}
 }
 
+if ( ! function_exists('array_has'))
+{
+	/**
+	 * Check if an item exists in an array using "dot" notation.
+	 *
+	 * @param  array   $array
+	 * @param  string  $key
+	 * @return bool
+	 */
+	function array_has($array, $key)
+	{
+		return Arr::has($array, $key);
+	}
+}
+
 if ( ! function_exists('array_only'))
 {
 	/**
@@ -402,6 +417,15 @@ if ( ! function_exists('data_get'))
 
 				$target = $target[$segment];
 			}
+			elseif ($target instanceof ArrayAccess)
+			{
+				if ( ! isset($target[$segment]))
+				{
+					return value($default);
+				}
+
+				$target = $target[$segment];
+			}
 			elseif (is_object($target))
 			{
 				if ( ! isset($target->{$segment}))
@@ -461,6 +485,39 @@ if ( ! function_exists('ends_with'))
 	function ends_with($haystack, $needles)
 	{
 		return Str::endsWith($haystack, $needles);
+	}
+}
+
+if ( ! function_exists('env'))
+{
+	/**
+	 * Gets the value of an environment variable. Supports boolean, empty and null.
+	 *
+	 * @param  string  $key
+	 * @return mixed
+	 */
+	function env($key)
+	{
+		$value = getenv($key);
+
+		switch (strtolower($value))
+		{
+			case 'true':
+			case '(true)':
+				return true;
+
+			case 'false':
+			case '(false)':
+				return false;
+
+			case '(null)':
+				return null;
+
+			case '(empty)':
+				return '';
+		}
+
+		return $value;
 	}
 }
 
@@ -694,6 +751,21 @@ if ( ! function_exists('str_singular'))
 	function str_singular($value)
 	{
 		return Str::singular($value);
+	}
+}
+
+if ( ! function_exists('str_slug'))
+{
+	/**
+	 * Generate a URL friendly "slug" from a given string.
+	 *
+	 * @param  string  $title
+	 * @param  string  $separator
+	 * @return string
+	 */
+	function str_slug($title, $separator = '-')
+	{
+		return Str::slug($title, $separator);
 	}
 }
 

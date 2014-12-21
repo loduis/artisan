@@ -1,6 +1,6 @@
 <?php namespace Illuminate\Support;
 
-use ReflectionClass;
+use BadMethodCallException;
 
 abstract class ServiceProvider {
 
@@ -108,7 +108,7 @@ abstract class ServiceProvider {
 	{
 		if ($method == 'boot') return;
 
-		throw new \BadMethodCallException("Call to undefined method [{$method}]");
+		throw new BadMethodCallException("Call to undefined method [{$method}]");
 	}
 
 }
