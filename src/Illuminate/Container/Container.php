@@ -6,6 +6,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use ReflectionFunction;
 use ReflectionParameter;
+use InvalidArgumentException;
 use Illuminate\Contracts\Container\Container as ContainerContract;
 
 class Container implements ArrayAccess, ContainerContract {
@@ -44,6 +45,13 @@ class Container implements ArrayAccess, ContainerContract {
 	 * @var array
 	 */
 	protected $aliases = array();
+
+	/**
+	 * The extension closures for services.
+	 *
+	 * @var array
+	 */
+	protected $extenders = [];
 
 	/**
 	 * All of the registered tags.
@@ -130,7 +138,7 @@ class Container implements ArrayAccess, ContainerContract {
 	/**
 	 * Determine if the given abstract type has been resolved.
 	 *
-	 * @param  string $abstract
+	 * @param  string  $abstract
 	 * @return bool
 	 */
 	public function resolved($abstract)
@@ -302,11 +310,6 @@ class Container implements ArrayAccess, ContainerContract {
 	 */
 	public function extend($abstract, Closure $closure)
 	{
-		if ( ! isset($this->bindings[$abstract]))
-		{
-			throw new \InvalidArgumentException("Type {$abstract} is not bound.");
-		}
-
 		if (isset($this->instances[$abstract]))
 		{
 			$this->instances[$abstract] = $closure($this->instances[$abstract], $this);
@@ -315,30 +318,8 @@ class Container implements ArrayAccess, ContainerContract {
 		}
 		else
 		{
-			$extender = $this->getExtender($abstract, $closure);
-
-			$this->bind($abstract, $extender, $this->isShared($abstract));
+			$this->extenders[$abstract][] = $closure;
 		}
-	}
-
-	/**
-	 * Get an extender Closure for resolving a type.
-	 *
-	 * @param  string    $abstract
-	 * @param  \Closure  $closure
-	 * @return \Closure
-	 */
-	protected function getExtender($abstract, Closure $closure)
-	{
-		// To "extend" a binding, we will grab the old "resolver" Closure and pass it
-		// into a new one. The old resolver will be called first and the result is
-		// handed off to the "new" resolver, along with this container instance.
-		$resolver = $this->bindings[$abstract]['concrete'];
-
-		return function($container) use ($resolver, $closure)
-		{
-			return $closure($resolver($container), $container);
-		};
 	}
 
 	/**
@@ -525,7 +506,7 @@ class Container implements ArrayAccess, ContainerContract {
 	 */
 	public function call($callback, array $parameters = array(), $defaultMethod = null)
 	{
-		if (is_string($callback))
+		if ($this->isCallableWithAtSign($callback) || $defaultMethod)
 		{
 			return $this->callClass($callback, $parameters, $defaultMethod);
 		}
@@ -536,10 +517,23 @@ class Container implements ArrayAccess, ContainerContract {
 	}
 
 	/**
+	 * Determine if the given string is in Class@method syntax.
+	 *
+	 * @param  mixed  $callback
+	 * @return bool
+	 */
+	protected function isCallableWithAtSign($callback)
+	{
+		if ( ! is_string($callback)) return false;
+
+		return strpos($callback, '@') !== false;
+	}
+
+	/**
 	 * Get all dependencies for a given method.
 	 *
-	 * @param \Closure|array  $callback
-	 * @param array  $parameters
+	 * @param  callable|string  $callback
+	 * @param  array  $parameters
 	 * @return array
 	 */
 	protected function getMethodDependencies($callback, $parameters = [])
@@ -557,11 +551,16 @@ class Container implements ArrayAccess, ContainerContract {
 	/**
 	 * Get the proper reflection instance for the given callback.
 	 *
-	 * @param  \Closure|array  $callback
+	 * @param  callable|string  $callback
 	 * @return \ReflectionFunctionAbstract
 	 */
 	protected function getCallReflector($callback)
 	{
+		if (is_string($callback) && strpos($callback, '::') !== false)
+		{
+			$callback = explode('::', $callback);
+		}
+
 		if (is_array($callback))
 		{
 			return new ReflectionMethod($callback[0], $callback[1]);
@@ -615,7 +614,7 @@ class Container implements ArrayAccess, ContainerContract {
 
 		if (is_null($method))
 		{
-			throw new \InvalidArgumentException("Method not provided.");
+			throw new InvalidArgumentException("Method not provided.");
 		}
 
 		return $this->call([$this->make($segments[0]), $method], $parameters);
@@ -654,6 +653,14 @@ class Container implements ArrayAccess, ContainerContract {
 			$object = $this->make($concrete, $parameters);
 		}
 
+		// If we defined any extenders for this type, we'll need to spin through them
+		// and apply them to the object being built. This allows for the extension
+		// of services, such as changing configuration or decorating the object.
+		foreach ($this->getExtenders($abstract) as $extender)
+		{
+			$object = $extender($object, $this);
+		}
+
 		// If the requested type is registered as a singleton we'll want to cache off
 		// the instances in "memory" so we can return it later without creating an
 		// entirely new instance of an object on each subsequent request for it.
@@ -687,7 +694,8 @@ class Container implements ArrayAccess, ContainerContract {
 		// since the container should be able to resolve concretes automatically.
 		if ( ! isset($this->bindings[$abstract]))
 		{
-			if ($this->missingLeadingSlash($abstract) && isset($this->bindings['\\'.$abstract]))
+			if ($this->missingLeadingSlash($abstract) &&
+				isset($this->bindings['\\'.$abstract]))
 			{
 				$abstract = '\\'.$abstract;
 			}
@@ -721,6 +729,22 @@ class Container implements ArrayAccess, ContainerContract {
 	protected function missingLeadingSlash($abstract)
 	{
 		return is_string($abstract) && strpos($abstract, '\\') !== 0;
+	}
+
+	/**
+	 * Get the extender callbacks for a given type.
+	 *
+	 * @param  string  $abstract
+	 * @return array
+	 */
+	protected function getExtenders($abstract)
+	{
+		if (isset($this->extenders[$abstract]))
+		{
+			return $this->extenders[$abstract];
+		}
+
+		return [];
 	}
 
 	/**
@@ -1070,10 +1094,10 @@ class Container implements ArrayAccess, ContainerContract {
 	/**
 	 * Set the shared instance of the container.
 	 *
-	 * @param  static  $container
+	 * @param  \Illuminate\Contracts\Container\Container  $container
 	 * @return void
 	 */
-	public static function setInstance(Container $container)
+	public static function setInstance(ContainerContract $container)
 	{
 		static::$instance = $container;
 	}
