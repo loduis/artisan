@@ -2,6 +2,7 @@
 
 use FilesystemIterator;
 use Symfony\Component\Finder\Finder;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 class Filesystem {
 
@@ -22,7 +23,7 @@ class Filesystem {
 	 * @param  string  $path
 	 * @return string
 	 *
-	 * @throws FileNotFoundException
+	 * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
 	 */
 	public function get($path)
 	{
@@ -37,7 +38,7 @@ class Filesystem {
 	 * @param  string  $path
 	 * @return mixed
 	 *
-	 * @throws FileNotFoundException
+	 * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
 	 */
 	public function getRequire($path)
 	{
@@ -137,6 +138,17 @@ class Filesystem {
 	public function copy($path, $target)
 	{
 		return copy($path, $target);
+	}
+
+	/**
+	 * Extract the file name from a file path.
+	 *
+	 * @param  string  $path
+	 * @return string
+	 */
+	public function name($path)
+	{
+		return pathinfo($path, PATHINFO_FILENAME);
 	}
 
 	/**
