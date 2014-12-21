@@ -11,7 +11,7 @@ class MySqlGrammar extends Grammar {
 	 *
 	 * @var array
 	 */
-	protected $modifiers = array('Unsigned', 'Nullable', 'Default', 'Increment', 'After', 'Comment');
+	protected $modifiers = array('Unsigned', 'Nullable', 'Default', 'Increment', 'Comment', 'After');
 
 	/**
 	 * The possible column serials
@@ -436,6 +436,17 @@ class MySqlGrammar extends Grammar {
 	protected function typeEnum(Fluent $column)
 	{
 		return "enum('".implode("', '", $column->allowed)."')";
+	}
+
+	/**
+	 * Create the column definition for a json type.
+	 *
+	 * @param  \Illuminate\Support\Fluent  $column
+	 * @return string
+	 */
+	protected function typeJson(Fluent $column)
+	{
+		return 'text';
 	}
 
 	/**

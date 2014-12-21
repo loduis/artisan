@@ -1,6 +1,8 @@
 <?php namespace Illuminate\Database\Query;
 
 use Closure;
+use BadMethodCallException;
+use InvalidArgumentException;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\ConnectionInterface;
@@ -129,6 +131,27 @@ class Builder {
 	public $unions;
 
 	/**
+	 * The maximum number of union records to return.
+	 *
+	 * @var int
+	 */
+	public $unionLimit;
+
+	/**
+	 * The number of union records to skip.
+	 *
+	 * @var int
+	 */
+	public $unionOffset;
+
+	/**
+	 * The orderings for the union query.
+	 *
+	 * @var array
+	 */
+	public $unionOrders;
+
+	/**
 	 * Indicates whether row locking is being used.
 	 *
 	 * @var string|bool
@@ -154,6 +177,13 @@ class Builder {
 		'rlike', 'regexp', 'not regexp',
 		'~', '~*', '!~', '!~*',
 	);
+
+	/**
+	 * Whether use write pdo for select.
+	 *
+	 * @var bool
+	 */
+	protected $useWritePdo = false;
 
 	/**
 	 * Create a new query builder instance.
@@ -232,7 +262,7 @@ class Builder {
 		}
 		else
 		{
-			throw new \InvalidArgumentException;
+			throw new InvalidArgumentException;
 		}
 
 		return $this->selectRaw('('.$query.') as '.$this->grammar->wrap($as), $bindings);
@@ -423,7 +453,7 @@ class Builder {
 		}
 		elseif ($this->invalidOperatorAndValue($operator, $value))
 		{
-			throw new \InvalidArgumentException("Value must be provided.");
+			throw new InvalidArgumentException("Value must be provided.");
 		}
 
 		// If the columns is actually a Closure instance, we will assume the developer
@@ -986,6 +1016,7 @@ class Builder {
 	/**
 	 * Add a "group by" clause to the query.
 	 *
+	 * @param  array|string  $column,...
 	 * @return $this
 	 */
 	public function groupBy()
@@ -1071,9 +1102,10 @@ class Builder {
 	 */
 	public function orderBy($column, $direction = 'asc')
 	{
+		$property = $this->unions ? 'unionOrders' : 'orders';
 		$direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 
-		$this->orders[] = compact('column', 'direction');
+		$this->{$property}[] = compact('column', 'direction');
 
 		return $this;
 	}
@@ -1126,7 +1158,9 @@ class Builder {
 	 */
 	public function offset($value)
 	{
-		$this->offset = max(0, $value);
+		$property = $this->unions ? 'unionOffset' : 'offset';
+
+		$this->$property = max(0, $value);
 
 		return $this;
 	}
@@ -1150,7 +1184,9 @@ class Builder {
 	 */
 	public function limit($value)
 	{
-		if ($value > 0) $this->limit = $value;
+		$property = $this->unions ? 'unionLimit' : 'limit';
+
+		if ($value > 0) $this->$property = $value;
 
 		return $this;
 	}
@@ -1182,7 +1218,7 @@ class Builder {
 	 * Add a union statement to the query.
 	 *
 	 * @param  \Illuminate\Database\Query\Builder|\Closure  $query
-	 * @param  bool $all
+	 * @param  bool  $all
 	 * @return \Illuminate\Database\Query\Builder|static
 	 */
 	public function union($query, $all = false)
@@ -1314,6 +1350,21 @@ class Builder {
 	}
 
 	/**
+	 * Run the query as a "select" statement against the connection.
+	 *
+	 * @return array
+	 */
+	protected function runSelect()
+	{
+		if ($this->useWritePdo)
+		{
+			return $this->connection->select($this->toSql(), $this->getBindings(), false);
+		}
+
+		return $this->connection->select($this->toSql(), $this->getBindings());
+	}
+
+	/**
 	 * Paginate the given query into a simple paginator.
 	 *
 	 * @param  int  $perPage
@@ -1397,16 +1448,6 @@ class Builder {
 		}
 
 		$this->backups = [];
-	}
-
-	/**
-	 * Run the query as a "select" statement against the connection.
-	 *
-	 * @return array
-	 */
-	protected function runSelect()
-	{
-		return $this->connection->select($this->toSql(), $this->getBindings());
 	}
 
 	/**
@@ -1510,7 +1551,13 @@ class Builder {
 	 */
 	public function exists()
 	{
-		return $this->count() > 0;
+		$limit = $this->limit;
+
+		$result = $this->limit(1)->count() > 0;
+
+		$this->limit($limit);
+
+		return $result;
 	}
 
 	/**
@@ -1833,7 +1880,7 @@ class Builder {
 	{
 		if ( ! array_key_exists($type, $this->bindings))
 		{
-			throw new \InvalidArgumentException("Invalid binding type: {$type}.");
+			throw new InvalidArgumentException("Invalid binding type: {$type}.");
 		}
 
 		$this->bindings[$type] = $bindings;
@@ -1854,7 +1901,7 @@ class Builder {
 	{
 		if ( ! array_key_exists($type, $this->bindings))
 		{
-			throw new \InvalidArgumentException("Invalid binding type: {$type}.");
+			throw new InvalidArgumentException("Invalid binding type: {$type}.");
 		}
 
 		if (is_array($value))
@@ -1913,6 +1960,18 @@ class Builder {
 	}
 
 	/**
+	 * Use the write pdo for query.
+	 *
+	 * @return $this
+	 */
+	public function useWritePdo()
+	{
+		$this->useWritePdo = true;
+
+		return $this;
+	}
+
+	/**
 	 * Handle dynamic method calls into the method.
 	 *
 	 * @param  string  $method
@@ -1930,7 +1989,7 @@ class Builder {
 
 		$className = get_class($this);
 
-		throw new \BadMethodCallException("Call to undefined method {$className}::{$method}()");
+		throw new BadMethodCallException("Call to undefined method {$className}::{$method}()");
 	}
 
 }
