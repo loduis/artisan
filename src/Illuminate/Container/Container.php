@@ -103,6 +103,20 @@ class Container implements ArrayAccess, ContainerContract {
 	protected $globalAfterResolvingCallbacks = array();
 
 	/**
+	 * All of the after resolving callbacks by class type.
+	 *
+	 * @var array
+	 */
+	protected $resolvingCallbacksByType = array();
+
+	/**
+	 * All of the after resolving callbacks by class type.
+	 *
+	 * @var array
+	 */
+	protected $afterResolvingCallbacksByType = array();
+
+	/**
 	 * Define a contextual binding.
 	 *
 	 * @param  string  $concrete
@@ -951,6 +965,24 @@ class Container implements ArrayAccess, ContainerContract {
 	}
 
 	/**
+	 * @param  $type
+	 * @param  callable  $callback
+	 */
+	public function resolvingType($type, Closure $callback)
+	{
+		$this->resolvingCallbacksByType[$type][] = $callback;
+	}
+
+	/**
+	 * @param  $type
+	 * @param  callable  $callback
+	 */
+	public function afterResolvingType($type, Closure $callback)
+	{
+		$this->afterResolvingCallbacksByType[$type][] = $callback;
+	}
+
+	/**
 	 * Fire all of the resolving callbacks.
 	 *
 	 * @param  string  $abstract
@@ -966,7 +998,42 @@ class Container implements ArrayAccess, ContainerContract {
 
 		$this->fireCallbackArray($object, $this->globalResolvingCallbacks);
 
+		$this->fireCallbackArray(
+			$object, $this->getCallbacksForType(
+				$object, $this->resolvingCallbacksByType
+			)
+		);
+
 		$this->fireCallbackArray($object, $this->globalAfterResolvingCallbacks);
+
+		$this->fireCallbackArray(
+			$object, $this->getCallbacksForType(
+				$object, $this->afterResolvingCallbacksByType
+			)
+		);
+	}
+
+	/**
+	 * Get all callbacks for a givne type.
+	 *
+	 * @param  object  $object
+	 * @param  array  $callbacksPerType
+	 *
+	 * @return array
+	 */
+	protected function getCallbacksForType($object, array $callbacksPerType)
+	{
+		$results = [];
+
+		foreach ($callbacksPerType as $type => $callbacks)
+		{
+			if ($object instanceof $type)
+			{
+				$results = array_merge($results, $callbacks);
+			}
+		}
+
+		return $results;
 	}
 
 	/**
