@@ -9,5 +9,4 @@ git remote add -f illuminate_log https://github.com/illuminate/log.git
 git remote add -f illuminate_support https://github.com/illuminate/support.git
 git remote add -f illuminate_contracts https://github.com/illuminate/contracts.git
 git remote add -f illuminate_routing https://github.com/illuminate/routing.git
-git remote add -f illuminate_auth https://github.com/illuminate/auth.git
 git remote add -f illuminate_http https://github.com/illuminate/http.git

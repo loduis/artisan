@@ -9,5 +9,4 @@ git subtree add --squash --prefix=src/Illuminate/Log illuminate_log master
 git subtree add --squash --prefix=src/Illuminate/Support illuminate_support master
 git subtree add --squash --prefix=src/Illuminate/Contracts illuminate_contracts master
 git subtree add --squash --prefix=src/Illuminate/Routing illuminate_routing master
-git subtree add --squash --prefix=src/Illuminate/Auth illuminate_auth master
 git subtree add --squash --prefix=src/Illuminate/Http illuminate_http master
