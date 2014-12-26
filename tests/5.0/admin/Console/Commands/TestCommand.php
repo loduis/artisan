@@ -1,4 +1,4 @@
-<?php namespace App\Console\Commands;
+<?php namespace Admin\Console\Commands;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;

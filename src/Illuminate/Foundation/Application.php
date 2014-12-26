@@ -24,16 +24,14 @@ class Application extends Container implements ApplicationContract {
 	 *
 	 * @var array
 	 */
-	private static $DEFAULT_PATHS = [
-		'path'     => 'app',
-		'config'   => 'resources/config',
-		'database' => 'resources/database',
-		'lang'     => 'resources/lang',
-		'views'    => 'resources/templates',
-		'assets'   => 'resourcess/assets',
-		'public'   => 'public',
-		'storage'  => 'storage',
-		'commands' => 'app/Console/Commands'
+	private $paths = [
+		'path'           => 'app',
+		'path.config'    => 'config',
+		'path.database'  => 'database',
+		'path.lang'      => 'resources/lang',
+		'path.public'    => 'public',
+		'path.storage'   => 'storage',
+		'path.commands'  => 'app/Console/Commands'
 	];
 
 	/**
@@ -91,7 +89,7 @@ class Application extends Container implements ApplicationContract {
 	 * @param  string|null  $basePath
 	 * @return void
 	 */
-	public function __construct($basePath, array $userPaths = [])
+	public function __construct($basePath)
 	{
 		$this->registerBaseBindings();
 
@@ -99,7 +97,7 @@ class Application extends Container implements ApplicationContract {
 
 		$this->registerCoreContainerAliases();
 
-		$this->setPaths($basePath, $userPaths);
+		$this->setBasePath($basePath);
 	}
 
 	/**
@@ -134,9 +132,8 @@ class Application extends Container implements ApplicationContract {
 	protected function registerBaseServiceProviders()
 	{
 		$this->register(new EventServiceProvider($this));
-		// This is not necesary for applicacion
-		// With no base laravel
-		// $this->register(new RoutingServiceProvider($this));
+
+		$this->register(new RoutingServiceProvider($this));
 	}
 
 	/**
@@ -166,19 +163,16 @@ class Application extends Container implements ApplicationContract {
 	}
 
 	/**
-	 * Set the paths for the application.
+	 * Set the base path for the application.
 	 *
 	 * @param  string  $basePath
-	 * @param array $userPaths
 	 * @return $this
 	 */
-	public function setPaths($basePath, array $userPaths = [])
+	public function setBasePath($basePath)
 	{
-		$paths         = self::$DEFAULT_PATHS;
-		$paths['base'] = $basePath;
-		$paths         = array_merge($paths, $userPaths);
+		$this->basePath = $basePath;
 
-		$this->bindPathsInContainer($paths);
+		$this->bindPathsInContainer();
 
 		return $this;
 	}
@@ -188,18 +182,12 @@ class Application extends Container implements ApplicationContract {
 	 *
 	 * @return $this
 	 */
-	protected function bindPathsInContainer(array $paths)
+	protected function bindPathsInContainer()
 	{
-		// the app is the root path
-		$this->instance('path.base', $paths['base']);
-		$this->instance('path', $paths['base'] . '/' . $paths['path']);
-		$keys = array_keys(self::$DEFAULT_PATHS);
+		$this->instance('path.base', $this->basePath);
 
-		unset($keys['path']);
-
-		foreach ($keys as $key)
-		{
-			$this->instance('path.'.$key, $paths['base'] . '/' . $paths[$key]);
+		foreach ($this->paths as $key => $path) {
+			$this->instance($key, $this->basePath . '/' . $path);
 		}
 	}
 
@@ -220,7 +208,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function basePath()
 	{
-		return $this['path.base'];
+		return $this->basePath;
 	}
 
 	/**

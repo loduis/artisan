@@ -1,4 +1,4 @@
-<?php namespace Illuminate\Artisan;
+<?php namespace Illuminate\Foundation\Console;
 
 use Illuminate\Support\Collection;
 
@@ -9,7 +9,7 @@ class Config
      *
      * @type string
      */
-    const LARAVEL_CONFIG_FILE = 'laravel.json';
+    const LARAVEL_CONFIG_FILE = 'composer.json';
 
     /**
      * Path where laravel is install
@@ -43,7 +43,7 @@ class Config
             $content = file_get_contents($file);
 
             $config = json_decode($content, true);
-
+            $config = isset($config['laravel']) ? $config['laravel'] : [];
             if (!is_array($config)) {
                 $config = [];
             }

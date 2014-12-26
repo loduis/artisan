@@ -1,10 +1,22 @@
-<?php namespace Illuminate\Artisan;
+<?php namespace Illuminate\Foundation;
 
 use Symfony\Component\Finder\Finder;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Console\Config;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
-class Application
+class Console
 {
     private $config;
+
+    private $app;
+
+    private $binds = [
+        'Illuminate\Contracts\Http\Kernel' => 'Illuminate\Foundation\Http\Kernel',
+        'Illuminate\Contracts\Console\Kernel' => 'Illuminate\Foundation\Console\Kernel',
+        'Illuminate\Contracts\Debug\ExceptionHandler' => 'Illuminate\Foundation\Exceptions\Handler'
+    ];
 
     /**
      * Create a new Illuminate artisan instance.
@@ -14,20 +26,7 @@ class Application
         $this->config   = new Config($basePath);
     }
 
-    private function getAppNameFromFirstArgument()
-    {
-        if (count($_SERVER['argv']) >= 2) {
-            $name     =  $_SERVER['argv'][1];
-            unset($_SERVER['argv'][1]);
-
-            $_SERVER['argv'] = array_values($_SERVER['argv']);
-            $_SERVER['argc'] = count($_SERVER['argv']);
-
-            return $name;
-        }
-    }
-
-    public function config()
+    private function config()
     {
         $apps    = $this->config->applications();
         if ($apps->isEmpty()) {
@@ -54,7 +53,7 @@ class Application
         return $config;
     }
 
-    public function scan($app)
+    public function scanCommands($app)
     {
         $files = Finder::create()
                             ->in($app['path.commands'])
@@ -100,5 +99,61 @@ class Application
         $events->listen('artisan.start', function ($artisan) use ($commands) {
             $artisan->resolveCommands($commands);
         });
+    }
+
+    private function getAppNameFromFirstArgument()
+    {
+        if (count($_SERVER['argv']) >= 2) {
+            $name     =  $_SERVER['argv'][1];
+            unset($_SERVER['argv'][1]);
+
+            $_SERVER['argv'] = array_values($_SERVER['argv']);
+            $_SERVER['argc'] = count($_SERVER['argv']);
+
+            return $name;
+        }
+    }
+    /**
+     * [setPaths description]
+     * @param [type] $app    [description]
+     * @param [type] $config [description]
+     */
+    public static function userPaths($app, $config)
+    {
+        foreach ($config->get('paths') as $key => $path) {
+            $app[$key == 'path' ? $key : 'path.' . $key] = $path;
+        }
+    }
+
+    public function start($app)
+    {
+        foreach ($this->binds as $name => $value) {
+            $app->singleton($name, $value);
+        }
+
+        $status = $app->make('Illuminate\Contracts\Console\Kernel')->handle(new ArgvInput, new ConsoleOutput);
+
+        exit($status);
+    }
+
+    public static function run($basePath)
+    {
+        $console = new static($basePath);
+
+        $config  = $console->config();
+
+        $app     = new Application($basePath);
+
+        // Coloca los paths personalizados por el usuario
+
+        $console->userPaths($app, $config);
+
+        // Escanea los comando personalizado por el usuario
+
+        $console->scanCommands($app);
+
+        // Start console listen
+
+        $console->start($app);
     }
 }

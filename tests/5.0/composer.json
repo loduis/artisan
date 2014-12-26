@@ -1,11 +1,31 @@
 {
     "autoload": {
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Web\\": "web/",
+            "Admin\\": "admin/"
         }
     },
     "laravel": {
-        "base"  : "app",
-        "public": "public"
+        "apps": [
+            {
+                "name": "app",
+                "description": "This is the main application"
+            },
+            {
+                "name": "admin",
+                "description": "This is the admin application",
+                "paths" : {
+                    "commands": "admin/Console/Commands"
+                }
+            },
+            {
+                "name": "web",
+                "description": "This is the web application",
+                "paths" : {
+                    "commands": "web/Console/Commands"
+                }
+            }
+        ]
     }
 }
