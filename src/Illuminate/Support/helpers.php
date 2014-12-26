@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Support\Debug\Dumper;
 
 if ( ! function_exists('append_config'))
 {
@@ -455,7 +456,9 @@ if ( ! function_exists('dd'))
 	 */
 	function dd()
 	{
-		array_map(function($x) { var_dump($x); }, func_get_args()); die;
+		array_map(function($x) { (new Dumper)->dump($x); }, func_get_args());
+
+		die;
 	}
 }
 
