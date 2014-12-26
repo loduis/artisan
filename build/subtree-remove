@@ -4,7 +4,6 @@ git rm -r src/Illuminate/Config
 git rm -r src/Illuminate/Console
 git rm -r src/Illuminate/Container
 git rm -r src/Illuminate/Events
-git rm -r src/Illuminate/Exception
 git rm -r src/Illuminate/Filesystem
 git rm -r src/Illuminate/Log
 git rm -r src/Illuminate/Support

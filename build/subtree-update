@@ -4,7 +4,6 @@ git subtree pull --squash --prefix src/Illuminate/Config illuminate_config maste
 git subtree pull --squash --prefix src/Illuminate/Container illuminate_container master
 git subtree pull --squash --prefix src/Illuminate/Console illuminate_console master
 git subtree pull --squash --prefix src/Illuminate/Events illuminate_events master
-git subtree pull --squash --prefix src/Illuminate/Exception illuminate_exception master
 git subtree pull --squash --prefix src/Illuminate/Filesystem illuminate_filesystem master
 git subtree pull --squash --prefix src/Illuminate/Log illuminate_log master
 git subtree pull --squash --prefix src/Illuminate/Support illuminate_support master
