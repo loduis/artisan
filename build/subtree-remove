@@ -10,6 +10,5 @@ git rm -r src/Illuminate/Log
 git rm -r src/Illuminate/Support
 git rm -r src/Illuminate/Contracts
 git rm -r src/Illuminate/Http
-git rm -r src/Illuminate/Database
 
 git commit -m "Remove subtree."

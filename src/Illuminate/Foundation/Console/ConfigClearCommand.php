@@ -1,22 +1,23 @@
 <?php namespace Illuminate\Foundation\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
 
-class UpCommand extends Command {
+class ConfigClearCommand extends Command {
 
 	/**
 	 * The console command name.
 	 *
 	 * @var string
 	 */
-	protected $name = 'up';
+	protected $name = 'config:clear';
 
 	/**
 	 * The console command description.
 	 *
 	 * @var string
 	 */
-	protected $description = "Bring the application out of maintenance mode";
+	protected $description = 'Remove the configuration cache file';
 
 	/**
 	 * Execute the console command.
@@ -25,9 +26,9 @@ class UpCommand extends Command {
 	 */
 	public function fire()
 	{
-		@unlink($this->laravel->storagePath().'/framework/down');
+		@unlink($this->laravel->getCachedConfigPath());
 
-		$this->info('Application is now live.');
+		$this->info('Configuration cache cleared!');
 	}
 
 }

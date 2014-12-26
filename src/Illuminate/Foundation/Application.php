@@ -20,6 +20,13 @@ class Application extends Container implements ApplicationContract {
 	const VERSION = '5.0-dev';
 
 	/**
+	 * The base path for the Laravel installation.
+	 *
+	 * @var string
+	 */
+	protected $basePath;
+
+	/**
 	 * Default paths for the laravel.
 	 *
 	 * @var array
@@ -29,6 +36,7 @@ class Application extends Container implements ApplicationContract {
 		'path.config'    => 'config',
 		'path.database'  => 'database',
 		'path.lang'      => 'resources/lang',
+		'path.assets'    => 'resources/assets',
 		'path.public'    => 'public',
 		'path.storage'   => 'storage',
 		'path.commands'  => 'app/Console/Commands'
@@ -337,7 +345,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function registerConfiguredProviders()
 	{
-		$manifestPath = $this['path.storage'].'/framework/services.json';
+		$manifestPath = $this->storagePath().'/framework/services.json';
 
 		(new ProviderRepository($this, new Filesystem, $manifestPath))
 		            ->load($this->config['app.providers']);
@@ -597,6 +605,26 @@ class Application extends Container implements ApplicationContract {
 	}
 
 	/**
+	 * Determine if the application configuration is cached.
+	 *
+	 * @return bool
+	 */
+	public function configurationIsCached()
+	{
+		return $this['files']->exists($this->getCachedConfigPath());
+	}
+
+	/**
+	 * Get the path to the configuration cache file.
+	 *
+	 * @return string
+	 */
+	public function getCachedConfigPath()
+	{
+		return $this['path.storage'].'/framework/config.php';
+	}
+
+	/**
 	 * Determine if the application routes are cached.
 	 *
 	 * @return bool
@@ -677,7 +705,7 @@ class Application extends Container implements ApplicationContract {
 	 */
 	public function isDownForMaintenance()
 	{
-		return file_exists($this['config']['app.manifest'].'/down');
+		return file_exists($this->storagePath().'/framework/down');
 	}
 
 	/**
