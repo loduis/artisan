@@ -20,12 +20,7 @@ class Console
     ];
 
     private $commands = [
-        'command.console.make' => [
-            'class' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-            'params' => [
-                'files'
-            ]
-        ]
+        'command.console.make' => 'Illuminate\Foundation\Console\ConsoleMakeCommand'
     ];
 
     /**
@@ -44,26 +39,30 @@ class Console
 
     public function registerCustomCommands($commands)
     {
-        $names = [];
-        foreach ($commands as $name => $command) {
-            if (!starts_with($name, 'command.')) {
-                $name = "command.$name";
+        $commandNames = [];
+        foreach ($commands as $commandName => $commandClass) {
+            if (!starts_with($commandName, 'command.')) {
+                $name = "command.$commandName";
             }
-            $this->app->singleton($name, function ($app) use ($command) {
-                $class  = $command['class'];
+            $this->app->singleton($commandName, function ($app) use ($commandClass) {
                 $params = [];
-                if (isset($command['params']) && is_array($command['params'])) {
-                    foreach ($command['params'] as $name) {
-                        $params[] = $this->app[$name];
+                $class       = new ReflectionClass($commandClass);
+                $constructor = $class->getConstructor();
+                foreach ($constructor->getParameters() as $parameter) {
+                    $paramClass = $parameter->getClass()->name;
+                    if ($paramClass) {
+                        $value = $this->app->make($paramClass);
+                        $params[$parameter->getPosition()] = $value;
                     }
                 }
 
-                return (new ReflectionClass($class))->newInstanceArgs($params);
+                return $class->newInstanceArgs($params);
             });
-            $names[] = $name;
+
+            $commandNames[] = $commandName;
         }
 
-        $this->registerCommands($names);
+        $this->registerCommands($commandNames);
     }
 
     private function config()

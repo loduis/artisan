@@ -12,9 +12,7 @@
                 "name": "app",
                 "description": "This is the main application",
                 "commands": {
-                    "tinker" : {
-                        "class": "Illuminate\\Foundation\\Console\\TinkerCommand"
-                    }
+                    "tinker" : "Illuminate\\Foundation\\Console\\TinkerCommand"
                 }
             },
             {
