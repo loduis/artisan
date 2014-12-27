@@ -10,7 +10,12 @@
         "apps": [
             {
                 "name": "app",
-                "description": "This is the main application"
+                "description": "This is the main application",
+                "commands": {
+                    "tinker" : {
+                        "class": "Illuminate\\Foundation\\Console\\TinkerCommand"
+                    }
+                }
             },
             {
                 "name": "admin",

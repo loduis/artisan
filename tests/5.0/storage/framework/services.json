@@ -1,37 +1,16 @@
 {
     "providers": [
         "Illuminate\\Foundation\\Providers\\ComposerServiceProvider",
-        "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
         "Illuminate\\Filesystem\\FilesystemServiceProvider"
     ],
     "eager": [
         "Illuminate\\Filesystem\\FilesystemServiceProvider"
     ],
     "deferred": {
-        "composer": "Illuminate\\Foundation\\Providers\\ComposerServiceProvider",
-        "command.app.name": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.clear-compiled": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.console.make": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.down": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.environment": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.event.scan": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.fresh": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.key.generate": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.optimize": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.provider.make": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.request.make": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.route.cache": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.route.clear": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.route.list": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.route.scan": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.tinker": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider",
-        "command.up": "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider"
+        "composer": "Illuminate\\Foundation\\Providers\\ComposerServiceProvider"
     },
     "when": {
         "Illuminate\\Foundation\\Providers\\ComposerServiceProvider": [
-
-        ],
-        "Illuminate\\Foundation\\Providers\\ArtisanServiceProvider": [
 
         ]
     }

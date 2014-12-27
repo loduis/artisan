@@ -121,7 +121,7 @@ return [
          * Laravel Framework Service Providers...
          */
         'Illuminate\Foundation\Providers\ComposerServiceProvider',
-        'Illuminate\Foundation\Providers\ArtisanServiceProvider',
+        // 'Illuminate\Foundation\Providers\ArtisanServiceProvider',
         // 'Illuminate\Auth\AuthServiceProvider',
         // 'Illuminate\Cache\CacheServiceProvider',
         // 'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',

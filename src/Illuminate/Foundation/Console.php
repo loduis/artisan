@@ -1,5 +1,6 @@
 <?php namespace Illuminate\Foundation;
 
+use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Console\Config;
@@ -13,9 +14,18 @@ class Console
     private $app;
 
     private $binds = [
-        'Illuminate\Contracts\Http\Kernel' => 'Illuminate\Foundation\Http\Kernel',
-        'Illuminate\Contracts\Console\Kernel' => 'Illuminate\Foundation\Console\Kernel',
+        'Illuminate\Contracts\Http\Kernel'            => 'Illuminate\Foundation\Http\Kernel',
+        'Illuminate\Contracts\Console\Kernel'         => 'Illuminate\Foundation\Console\Kernel',
         'Illuminate\Contracts\Debug\ExceptionHandler' => 'Illuminate\Foundation\Exceptions\Handler'
+    ];
+
+    private $commands = [
+        'command.console.make' => [
+            'class' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
+            'params' => [
+                'files'
+            ]
+        ]
     ];
 
     /**
@@ -23,7 +33,37 @@ class Console
      */
     public function __construct($basePath)
     {
-        $this->config   = new Config($basePath);
+        $this->app    = new Application($basePath);
+        $this->config = new Config($basePath);
+    }
+
+    public function registerDefaultCommands()
+    {
+        $this->registerCustomCommands($this->commands);
+    }
+
+    public function registerCustomCommands($commands)
+    {
+        $names = [];
+        foreach ($commands as $name => $command) {
+            if (!starts_with($name, 'command.')) {
+                $name = "command.$name";
+            }
+            $this->app->singleton($name, function ($app) use ($command) {
+                $class  = $command['class'];
+                $params = [];
+                if (isset($command['params']) && is_array($command['params'])) {
+                    foreach ($command['params'] as $name) {
+                        $params[] = $this->app[$name];
+                    }
+                }
+
+                return (new ReflectionClass($class))->newInstanceArgs($params);
+            });
+            $names[] = $name;
+        }
+
+        $this->registerCommands($names);
     }
 
     private function config()
@@ -53,26 +93,26 @@ class Console
         return $config;
     }
 
-    public function scanCommands($app)
+    public function scanCommands()
     {
         $files = Finder::create()
-                            ->in($app['path.commands'])
+                            ->in($this->app['path.commands'])
                             ->name('*.php');
         $commands = [];
         foreach ($files as $file) {
-            $commands[]   = $this->registerCommand($app, $file);
+            $commands[]   = $this->registerScanCommand($file);
         }
 
-        $this->registerScanCommands($app, $commands);
+        $this->registerCommands($commands);
     }
 
-    private function registerCommand($app, $file)
+    private function registerScanCommand($file)
     {
         $commandClass = $this->getCommandClassName($file);
         $command      = new $commandClass();
         $name         = 'command.' . $command->getName();
 
-        $app->singleton($name, function () use ($command) {
+        $this->app->singleton($name, function () use ($command) {
             return $command;
         });
 
@@ -88,19 +128,24 @@ class Console
         return end($currentClass);
     }
 
-    private function registerScanCommands($app, $commands)
+    private function registerCommands($commands)
     {
         // To register the commands with Artisan, we will grab each of the arguments
         // passed into the method and listen for Artisan "start" event which will
         // give us the Artisan console instance which we will give commands to.
 
-        $events = $app['events'];
+        $events = $this->app['events'];
 
         $events->listen('artisan.start', function ($artisan) use ($commands) {
             $artisan->resolveCommands($commands);
         });
     }
 
+    /**
+     * Extract the application name from first argument
+     *
+     * @return string|null
+     */
     private function getAppNameFromFirstArgument()
     {
         if (count($_SERVER['argv']) >= 2) {
@@ -118,42 +163,47 @@ class Console
      * @param [type] $app    [description]
      * @param [type] $config [description]
      */
-    public static function userPaths($app, $config)
+    public static function userPaths($config)
     {
         foreach ($config->get('paths') as $key => $path) {
-            $app[$key == 'path' ? $key : 'path.' . $key] = $path;
+            $this->app[$key == 'path' ? $key : 'path.' . $key] = $path;
         }
     }
 
-    public function start($app)
+    public function start()
     {
         foreach ($this->binds as $name => $value) {
-            $app->singleton($name, $value);
+            $this->app->singleton($name, $value);
         }
 
-        $status = $app->make('Illuminate\Contracts\Console\Kernel')->handle(new ArgvInput, new ConsoleOutput);
+        $status = $this->app->make('Illuminate\Contracts\Console\Kernel')->handle(new ArgvInput, new ConsoleOutput);
 
         exit($status);
     }
 
     public static function run($basePath)
     {
+
         $console = new static($basePath);
 
         $config  = $console->config();
 
-        $app     = new Application($basePath);
-
         // Coloca los paths personalizados por el usuario
 
-        $console->userPaths($app, $config);
+        $console->userPaths($config);
+
+        $console->registerDefaultCommands();
+
+        if ($config->has('commands')) {
+            $console->registerCustomCommands($config->get('commands'));
+        }
 
         // Escanea los comando personalizado por el usuario
 
-        $console->scanCommands($app);
+        $console->scanCommands();
 
         // Start console listen
 
-        $console->start($app);
+        $console->start();
     }
 }

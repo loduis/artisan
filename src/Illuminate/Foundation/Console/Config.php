@@ -21,7 +21,7 @@ class Config
     /**
      * keep the laravel config
      *
-     * @var Illuminate\Support
+     * @var Illuminate\Collection
      */
     private $data;
 
