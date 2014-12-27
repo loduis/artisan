@@ -1,13 +1,14 @@
 <?php namespace Illuminate\Foundation;
 
 use ReflectionClass;
+use ArrayAccess;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Console\Config;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-class Console
+class Console implements ArrayAccess
 {
     private $config;
 
@@ -65,7 +66,7 @@ class Console
         $this->registerCommands($commandNames);
     }
 
-    private function config()
+    public function config()
     {
         $apps    = $this->config->applications();
         if ($apps->isEmpty()) {
@@ -96,7 +97,7 @@ class Console
     {
         $files = Finder::create()
                             ->in($this->app['path.commands'])
-                            ->name('*.php');
+                            ->name('*Command.php');
         $commands = [];
         foreach ($files as $file) {
             $commands[]   = $this->registerScanCommand($file);
@@ -166,7 +167,7 @@ class Console
     {
         foreach ($config->get('paths') as $key => $path) {
             $key = $key == 'path' ? $key : 'path.' . $key;
-            $this->app[$key] = $path;
+            $this->app[$key] = realpath($this->app->basePath() . '/' . $path);
         }
     }
 
@@ -205,5 +206,50 @@ class Console
         // Start console listen
 
         $console->start();
+    }
+
+    /**
+     * Get the value at a given offset.
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function offsetGet($key)
+    {
+        return $this->app[$key];
+    }
+
+    /**
+     * Determine if a given offset exists.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    public function offsetExists($key)
+    {
+        return isset($this->app[$key]);
+    }
+
+    /**
+     * Set the value at a given offset.
+     *
+     * @param  string  $key
+     * @param  mixed   $value
+     * @return void
+     */
+    public function offsetSet($key, $value)
+    {
+        $this->app[$key] = $value;
+    }
+
+    /**
+     * Unset the value at a given offset.
+     *
+     * @param  string  $key
+     * @return void
+     */
+    public function offsetUnset($key)
+    {
+        unset($this->app[$key]);
     }
 }
