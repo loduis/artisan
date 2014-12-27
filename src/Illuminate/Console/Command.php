@@ -109,7 +109,9 @@ class Command extends \Symfony\Component\Console\Command\Command {
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		return $this->laravel->call([$this, 'fire']);
+		$method = method_exists($this, 'handle') ? 'handle' : 'fire';
+
+		return $this->laravel->call([$this, $method]);
 	}
 
 	/**
