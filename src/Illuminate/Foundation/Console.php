@@ -162,10 +162,11 @@ class Console
      * @param [type] $app    [description]
      * @param [type] $config [description]
      */
-    public static function userPaths($config)
+    public function userPaths($config)
     {
         foreach ($config->get('paths') as $key => $path) {
-            $this->app[$key == 'path' ? $key : 'path.' . $key] = $path;
+            $key = $key == 'path' ? $key : 'path.' . $key;
+            $this->app[$key] = $path;
         }
     }
 

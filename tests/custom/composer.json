@@ -1,7 +1,19 @@
 {
     "autoload": {
         "psr-4": {
-            "Myabakus\\": ""
+            "App\\": "app/"
         }
+    },
+    "laravel": {
+        "apps": [
+            {
+                "name": "app",
+                "description": "This is the main application",
+                "paths": {
+                    "config": "app/config",
+                    "storage": "app/storage"
+                }
+            }
+        ]
     }
 }

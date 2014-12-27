@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'debug' => true,
+    'debug' => (bool) getenv('APP_DEBUG') ?: false,
 
     /*
     |--------------------------------------------------------------------------
@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Fallback Locale
+    |--------------------------------------------------------------------------
+    |
+    | The fallback locale determines the locale to use when the current one
+    | is not available. You may change the value to correspond to any of
+    | the language folders that are provided through your application.
+    |
+    */
+
+    'fallback_locale' => 'en',
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |
@@ -65,7 +78,24 @@ return [
     |
     */
 
-    'key' => '64MAJDAcS4YPMY6c6pDfqNIFMmiLlfiO',
+    'key' => '4xdlFmruWQwIP1AHui6Dd6Esqud7ol6k',
+
+    'cipher' => MCRYPT_RIJNDAEL_128,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logging Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the log settings for your application. Out of
+    | the box, Laravel uses the Monolog PHP logging library. This gives
+    | you a variety of powerful log handlers / formatters to utilize.
+    |
+    | Available Settings: "single", "daily", "syslog"
+    |
+    */
+
+    'log' => 'daily',
 
     /*
     |--------------------------------------------------------------------------
@@ -79,10 +109,39 @@ return [
     */
 
     'providers' => [
-        'Illuminate\Foundation\Providers\ArtisanServiceProvider',
-        'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',
+
+        /*
+         * Application Service Providers...
+         */
+        // 'App\Providers\AppServiceProvider',
+        // 'App\Providers\EventServiceProvider',
+        // 'App\Providers\RouteServiceProvider',
+
+        /*
+         * Laravel Framework Service Providers...
+         */
+        'Illuminate\Foundation\Providers\ComposerServiceProvider',
+        // 'Illuminate\Foundation\Providers\ArtisanServiceProvider',
+        // 'Illuminate\Auth\AuthServiceProvider',
+        // 'Illuminate\Cache\CacheServiceProvider',
+        // 'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',
+        // 'Illuminate\Routing\ControllerServiceProvider',
+        // 'Illuminate\Cookie\CookieServiceProvider',
+        // 'Illuminate\Database\DatabaseServiceProvider',
+        // 'Illuminate\Encryption\EncryptionServiceProvider',
         'Illuminate\Filesystem\FilesystemServiceProvider',
-        'Illuminate\Log\LogServiceProvider',
+        // 'Illuminate\Foundation\Providers\FoundationServiceProvider',
+        // 'Illuminate\Hashing\HashServiceProvider',
+        // 'Illuminate\Mail\MailServiceProvider',
+        // 'Illuminate\Pagination\PaginationServiceProvider',
+        // 'Illuminate\Queue\QueueServiceProvider',
+        // 'Illuminate\Redis\RedisServiceProvider',
+        // 'Illuminate\Auth\Passwords\PasswordResetServiceProvider',
+        // 'Illuminate\Session\SessionServiceProvider',
+        // 'Illuminate\Translation\TranslationServiceProvider',
+        // 'Illuminate\Validation\ValidationServiceProvider',
+        // 'Illuminate\View\ViewServiceProvider',
+
     ],
 
     /*
@@ -96,7 +155,7 @@ return [
     |
     */
 
-    'manifest' => storage_path().'/meta',
+    'manifest' => storage_path().'/framework',
 
     /*
     |--------------------------------------------------------------------------
@@ -110,10 +169,38 @@ return [
     */
 
     'aliases' => [
-        'App'     => 'Illuminate\Support\Facades\App',
-        'Artisan' => 'Illuminate\Support\Facades\Artisan',
-        'Config'  => 'Illuminate\Support\Facades\Config',
-        'File'    => 'Illuminate\Support\Facades\File',
-        'Log'     => 'Illuminate\Support\Facades\Log'
-    ]
+
+        'App'       => 'Illuminate\Support\Facades\App',
+        'Artisan'   => 'Illuminate\Support\Facades\Artisan',
+        'Auth'      => 'Illuminate\Support\Facades\Auth',
+        'Blade'     => 'Illuminate\Support\Facades\Blade',
+        'Cache'     => 'Illuminate\Support\Facades\Cache',
+        'Config'    => 'Illuminate\Support\Facades\Config',
+        'Cookie'    => 'Illuminate\Support\Facades\Cookie',
+        'Crypt'     => 'Illuminate\Support\Facades\Crypt',
+        'DB'        => 'Illuminate\Support\Facades\DB',
+        'Event'     => 'Illuminate\Support\Facades\Event',
+        'File'      => 'Illuminate\Support\Facades\File',
+        'Hash'      => 'Illuminate\Support\Facades\Hash',
+        'Input'     => 'Illuminate\Support\Facades\Input',
+        'Inspiring' => 'Illuminate\Foundation\Inspiring',
+        'Lang'      => 'Illuminate\Support\Facades\Lang',
+        'Log'       => 'Illuminate\Support\Facades\Log',
+        'Mail'      => 'Illuminate\Support\Facades\Mail',
+        'Paginator' => 'Illuminate\Support\Facades\Paginator',
+        'Password'  => 'Illuminate\Support\Facades\Password',
+        'Queue'     => 'Illuminate\Support\Facades\Queue',
+        'Redirect'  => 'Illuminate\Support\Facades\Redirect',
+        'Redis'     => 'Illuminate\Support\Facades\Redis',
+        'Request'   => 'Illuminate\Support\Facades\Request',
+        'Response'  => 'Illuminate\Support\Facades\Response',
+        'Route'     => 'Illuminate\Support\Facades\Route',
+        'Schema'    => 'Illuminate\Support\Facades\Schema',
+        'Session'   => 'Illuminate\Support\Facades\Session',
+        'URL'       => 'Illuminate\Support\Facades\URL',
+        'Validator' => 'Illuminate\Support\Facades\Validator',
+        'View'      => 'Illuminate\Support\Facades\View',
+
+    ],
+
 ];

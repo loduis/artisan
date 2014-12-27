@@ -1,17 +1,17 @@
-<?php namespace Myabakus\Console;
+<?php namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
-class TestCommand2 extends Command {
+class TestCommand extends Command {
 
 	/**
 	 * The console command name.
 	 *
 	 * @var string
 	 */
-	protected $name = 'test';
+	protected $name = 'command:name';
 
 	/**
 	 * The console command description.
@@ -47,9 +47,9 @@ class TestCommand2 extends Command {
 	 */
 	protected function getArguments()
 	{
-		return array(
-			array('example', InputArgument::REQUIRED, 'An example argument.'),
-		);
+		return [
+			['example', InputArgument::REQUIRED, 'An example argument.'],
+		];
 	}
 
 	/**
@@ -59,9 +59,9 @@ class TestCommand2 extends Command {
 	 */
 	protected function getOptions()
 	{
-		return array(
-			array('example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null),
-		);
+		return [
+			['example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null],
+		];
 	}
 
 }
