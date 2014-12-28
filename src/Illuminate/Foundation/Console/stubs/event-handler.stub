@@ -1,20 +1,29 @@
 <?php namespace {{namespace}};
 
-use {{rootNamespace}}Commands\Command;
+use {{fullEvent}};
 
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Bus\SelfHandling;
 use Illuminate\Contracts\Queue\ShouldBeQueued;
 
-class {{class}} extends Command {
+class {{class}} {
 
 	/**
-	 * Create a new command instance.
+	 * Create the event handler.
 	 *
 	 * @return void
 	 */
 	public function __construct()
+	{
+		//
+	}
+
+	/**
+	 * Handle the event.
+	 *
+	 * @param  {{event}}
+	 * @return void
+	 */
+	public function handle({{event}} $command)
 	{
 		//
 	}
