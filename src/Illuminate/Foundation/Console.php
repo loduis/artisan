@@ -1,6 +1,8 @@
 <?php namespace Illuminate\Foundation;
 
 use ReflectionClass;
+use ReflectionMethod;
+use InvalidArgumentException;
 use Symfony\Component\Finder\Finder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Console\Config;
@@ -40,7 +42,8 @@ class Console
      * @var array
      */
     private $commands = [
-        'command.console.make' => 'Illuminate\Foundation\Console\ConsoleMakeCommand'
+        'command.console.make' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
+        'command.environment' => 'Illuminate\Foundation\Console\EnvironmentCommand'
     ];
 
     private $output;
@@ -134,6 +137,22 @@ class Console
     }
 
     /**
+     * Register command in container
+     *
+     * @param  string $commandName
+     * @param  string|Illuminate\Console\Command $commandClass
+     * @return void
+     */
+    protected function registerCommand($commandName, $commandClass)
+    {
+        $this->app->singleton($commandName, function () use ($commandClass) {
+            return $this->instanceCommand($commandClass);
+        });
+
+        return $commandName;
+    }
+
+    /**
      * Create one instance for command class
      *
      * @param  string|Illuminate\Console\Command $command
@@ -146,17 +165,33 @@ class Console
         }
 
         $class       = new ReflectionClass($command);
-        $constructor = $class->getConstructor();
+
+        return $class->newInstanceArgs($this->resolveCommandParameters($class->getConstructor()));
+    }
+
+    /**
+     * Resolve the parameters in the constructor
+     *
+     * @param  ReflectionMethod $constructor
+     * @return array
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function resolveCommandParameters(ReflectionMethod $constructor)
+    {
         $params      = [];
         foreach ($constructor->getParameters() as $parameter) {
-            $paramClass = $parameter->getClass()->name;
-            if ($paramClass) {
-                $value = $this->app->make($paramClass);
-                $params[$parameter->getPosition()] = $value;
+            $paramClass = $parameter->getClass();
+            if (!is_null($paramClass)) {
+                $paramClass   = $paramClass->name;
+                $value        = $this->app->make($paramClass);
+                $pos          = $parameter->getPosition();
+                $params[$pos] = $value;
+            } else {
+                throw new InvalidArgumentException("The parameter: '" . $parameter->name . "' there is not valid class");
             }
         }
-
-        return $class->newInstanceArgs($params);
+        return $params;
     }
 
     /**
@@ -245,14 +280,9 @@ class Console
     {
 
         $commands = [];
+
         foreach ($this->getAllCommands() as $name => $command) {
-            $name = $this->getCommandName($name);
-
-            $this->app->singleton($name, function () use ($command) {
-                return $this->instanceCommand($command);
-            });
-
-            $commands[] = $name;
+            $commands[] = $this->registerCommand($this->getCommandName($name), $command);
         }
 
         // To register the commands with Artisan, we will grab each of the arguments
