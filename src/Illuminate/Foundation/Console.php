@@ -62,7 +62,7 @@ class Console
     }
 
     /**
-     * Start console
+     * Start console listen commands
      *
      * @return void
      */
@@ -155,16 +155,12 @@ class Console
     /**
      * Create one instance for command class
      *
-     * @param  string|Illuminate\Console\Command $command
+     * @param  string $commandClass
      * @return Illuminate\Console\Command
      */
-    private function instanceCommand($command)
+    private function instanceCommand($commandClass)
     {
-        if ($command instanceof Command) {
-            return $command;
-        }
-
-        $class       = new ReflectionClass($command);
+        $class       = new ReflectionClass($commandClass);
 
         return $class->newInstanceArgs($this->resolveCommandParameters($class->getConstructor()));
     }
@@ -191,6 +187,7 @@ class Console
                 throw new InvalidArgumentException("The parameter: '" . $parameter->name . "' there is not valid class");
             }
         }
+
         return $params;
     }
 
@@ -207,10 +204,7 @@ class Console
         $commands = [];
 
         foreach ($files as $file) {
-            $commandClass    = $this->getCommandClass($file);
-            $command         = $this->instanceCommand($commandClass);
-            $name            = $command->getName();
-            $commands[$name] = $command;
+            $commands = array_merge($commands, $this->getCommandFromSource($file));
         }
 
         return $commands;
@@ -237,13 +231,51 @@ class Console
      * @param  string|Symfony\Component\Finder\SplFileInfo $file
      * @return string
      */
-    private function getCommandClass($file)
+    private function getCommandFromSource($file)
     {
-        require_once $file->getRealPath();
+        $tokens       = token_get_all($file->getContents());
+        $count        = count($tokens);
+        $commandClass = '';
+        $namespace    = '';
+        $commandName  = '';
 
-        $currentClass = get_declared_classes();
+        for ($i = 0; $i < $count; $i ++) {
+            if (!$commandClass) {
+                if ($tokens[$i][0] == T_NAMESPACE) {
+                    for ($j = $i+1; $j < $count; ++ $j) {
+                        if ($tokens[$j][0] == T_STRING) {
+                            $namespace .= "\\" . $tokens[$j][1];
+                        } elseif ($tokens[$j] == '{' or $tokens[$j] == ';') {
+                            break;
+                        }
+                    }
+                }
+                if ($tokens[$i][0] == T_CLASS) {
+                    for ($j = $i + 1; $j < $count; ++$j) {
+                        if ($tokens[$j] == '{') {
+                            $commandClass .= $namespace."\\".$tokens[$i+2][1];
+                            break;
+                        }
+                    }
+                }
+            } else if ($tokens[$i][0] == T_PROTECTED && isset($tokens[$i + 2])) {
+                $token = $tokens[$i + 2];
+                if ($token[0]  == T_VARIABLE && $token[1] == '$name') {
+                    for ($j = $i + 3; $j < $count; ++ $j) {
+                        if ($tokens[$j][0] == T_CONSTANT_ENCAPSED_STRING) {
+                            $commandName = $tokens[$j][1];
+                            $commandName = trim($commandName, "'");
+                            $commandName = trim($commandName, '"');
+                            break;
+                        } elseif ($tokens[$j] == ';') {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-        return end($currentClass);
+        return [$commandName => $commandClass];
     }
 
     /**
