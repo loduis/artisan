@@ -203,7 +203,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
 	 */
 	public function forget($key)
 	{
-		unset($this->items[$key]);
+		$this->offsetUnset($key);
 	}
 
 	/**
@@ -418,7 +418,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
 	 */
 	public function push($value)
 	{
-		$this->items[] = $value;
+		$this->offsetSet(null, $value);
 	}
 
 	/**
@@ -442,7 +442,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
 	 */
 	public function put($key, $value)
 	{
-		$this->items[$key] = $value;
+		$this->offsetSet($key, $value);
 	}
 
 	/**
@@ -650,11 +650,16 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
 	/**
 	 * Get the sum of the given values.
 	 *
-	 * @param  \Closure  $callback
+	 * @param  \Closure|null  $callback
 	 * @return mixed
 	 */
-	public function sum($callback)
+	public function sum($callback = null)
 	{
+		if (is_null($callback))
+		{
+			return array_sum($this->items);
+		}
+
 		if (is_string($callback))
 		{
 			$callback = $this->valueRetriever($callback);
