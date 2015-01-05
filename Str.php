@@ -1,12 +1,12 @@
 <?php namespace Illuminate\Support;
 
-use Patchwork\Utf8;
 use RuntimeException;
-use Illuminate\Support\Traits\MacroableTrait;
+use Stringy\StaticStringy;
+use Illuminate\Support\Traits\Macroable;
 
 class Str {
 
-	use MacroableTrait;
+	use Macroable;
 
 	/**
 	 * The cache of snake-cased words.
@@ -37,7 +37,7 @@ class Str {
 	 */
 	public static function ascii($value)
 	{
-		return Utf8::toAscii($value);
+		return StaticStringy::toAscii($value);
 	}
 
 	/**
