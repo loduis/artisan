@@ -6,12 +6,15 @@ use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Routing\Registrar as RegistrarContract;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Router implements RegistrarContract {
+
+	use Macroable;
 
 	/**
 	 * The event dispatcher instance.
@@ -867,7 +870,7 @@ class Router implements RegistrarContract {
 	 *
 	 * @param  string  $key
 	 * @param  string  $class
-	 * @param  \Closure  $callback
+	 * @param  \Closure|null  $callback
 	 * @return void
 	 *
 	 * @throws NotFoundHttpException
