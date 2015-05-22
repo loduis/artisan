@@ -146,9 +146,9 @@ class Str {
 	 */
 	public static function limit($value, $limit = 100, $end = '...')
 	{
-		if (mb_strlen($value) <= $limit) return $value;
+		if (mb_strwidth($value, 'UTF-8') <= $limit) return $value;
 
-		return rtrim(mb_substr($value, 0, $limit, 'UTF-8')).$end;
+		return rtrim(mb_strimwidth($value, 0, $limit, '', 'UTF-8')).$end;
 	}
 
 	/**
@@ -213,12 +213,18 @@ class Str {
 	 */
 	public static function random($length = 16)
 	{
-		if ( ! function_exists('openssl_random_pseudo_bytes'))
+		if (function_exists('random_bytes'))
 		{
-			throw new RuntimeException('OpenSSL extension is required.');
+			$bytes = random_bytes($length * 2);
 		}
-
-		$bytes = openssl_random_pseudo_bytes($length * 2);
+		elseif (function_exists('openssl_random_pseudo_bytes'))
+		{
+			$bytes = openssl_random_pseudo_bytes($length * 2);
+		}
+		else
+		{
+			throw new RuntimeException('OpenSSL extension is required for PHP 5 users.');
+		}
 
 		if ($bytes === false)
 		{
@@ -310,9 +316,11 @@ class Str {
 	 */
 	public static function snake($value, $delimiter = '_')
 	{
-		if (isset(static::$snakeCache[$value.$delimiter]))
+		$key = $value.$delimiter;
+
+		if (isset(static::$snakeCache[$key]))
 		{
-			return static::$snakeCache[$value.$delimiter];
+			return static::$snakeCache[$key];
 		}
 
 		if ( ! ctype_lower($value))
@@ -320,7 +328,7 @@ class Str {
 			$value = strtolower(preg_replace('/(.)(?=[A-Z])/', '$1'.$delimiter, $value));
 		}
 
-		return static::$snakeCache[$value.$delimiter] = $value;
+		return static::$snakeCache[$key] = $value;
 	}
 
 	/**
@@ -348,14 +356,16 @@ class Str {
 	 */
 	public static function studly($value)
 	{
-		if (isset(static::$studlyCache[$value]))
+		$key = $value;
+
+		if (isset(static::$studlyCache[$key]))
 		{
-			return static::$studlyCache[$value];
+			return static::$studlyCache[$key];
 		}
 
 		$value = ucwords(str_replace(array('-', '_'), ' ', $value));
 
-		return static::$studlyCache[$value] = str_replace(' ', '', $value);
+		return static::$studlyCache[$key] = str_replace(' ', '', $value);
 	}
 
 }

@@ -1,9 +1,9 @@
 <?php namespace Illuminate\Support\Facades;
 
 /**
- * @see \Illuminate\Foundation\Application
+ * @see \Illuminate\Filesystem\FilesystemManager
  */
-class App extends Facade {
+class Storage extends Facade {
 
 	/**
 	 * Get the registered name of the component.
@@ -12,7 +12,7 @@ class App extends Facade {
 	 */
 	protected static function getFacadeAccessor()
 	{
-		return 'app';
+		return 'filesystem';
 	}
 
 }
