@@ -22,7 +22,7 @@ class UrlGenerator implements UrlGeneratorContract {
 	protected $request;
 
 	/**
-	 * The force URL root.
+	 * The forced URL root.
 	 *
 	 * @var string
 	 */
@@ -34,6 +34,20 @@ class UrlGenerator implements UrlGeneratorContract {
 	 * @var string
 	 */
 	protected $forceSchema;
+
+	/**
+	 * A cached copy of the URL root for the current request.
+	 *
+	 * @var string|null
+	 */
+	protected $cachedRoot;
+
+	/**
+	 * A cached copy of the URL schema for the current request.
+	 *
+	 * @var string|null
+	 */
+	protected $cachedSchema;
 
 	/**
 	 * The root namespace being applied to controller actions.
@@ -215,7 +229,12 @@ class UrlGenerator implements UrlGeneratorContract {
 	{
 		if (is_null($secure))
 		{
-			return $this->forceSchema ?: $this->request->getScheme().'://';
+			if (is_null($this->cachedSchema))
+			{
+				$this->cachedSchema = $this->forceSchema ?: $this->request->getScheme().'://';
+			}
+
+			return $this->cachedSchema;
 		}
 
 		return $secure ? 'https://' : 'http://';
@@ -229,6 +248,8 @@ class UrlGenerator implements UrlGeneratorContract {
 	 */
 	public function forceSchema($schema)
 	{
+		$this->cachedSchema = null;
+
 		$this->forceSchema = $schema.'://';
 	}
 
@@ -331,7 +352,7 @@ class UrlGenerator implements UrlGeneratorContract {
 	 */
 	protected function addQueryString($uri, array $parameters)
 	{
-		// If the URI has a fragmnet, we will move it to the end of the URI since it will
+		// If the URI has a fragment, we will move it to the end of the URI since it will
 		// need to come after any query string that may be added to the URL else it is
 		// not going to be available. We will remove it then append it back on here.
 		if ( ! is_null($fragment = parse_url($uri, PHP_URL_FRAGMENT)))
@@ -518,6 +539,8 @@ class UrlGenerator implements UrlGeneratorContract {
 	 * @param  mixed   $parameters
 	 * @param  bool    $absolute
 	 * @return string
+	 *
+	 * @throws \InvalidArgumentException
 	 */
 	public function action($action, $parameters = array(), $absolute = true)
 	{
@@ -530,7 +553,12 @@ class UrlGenerator implements UrlGeneratorContract {
 			$action = trim($action, '\\');
 		}
 
-		return $this->toRoute($this->routes->getByAction($action), $parameters, $absolute);
+		if ( ! is_null($route = $this->routes->getByAction($action)))
+		{
+			 return $this->toRoute($route, $parameters, $absolute);
+		}
+
+		throw new InvalidArgumentException("Action {$action} not defined.");
 	}
 
 	/**
@@ -544,7 +572,12 @@ class UrlGenerator implements UrlGeneratorContract {
 	{
 		if (is_null($root))
 		{
-			$root = $this->forcedRoot ?: $this->request->root();
+			if (is_null($this->cachedRoot))
+			{
+				$this->cachedRoot = $this->forcedRoot ?: $this->request->root();
+			}
+
+			$root = $this->cachedRoot;
 		}
 
 		$start = starts_with($root, 'http://') ? 'http://' : 'https://';
@@ -560,7 +593,8 @@ class UrlGenerator implements UrlGeneratorContract {
 	 */
 	public function forceRootUrl($root)
 	{
-		$this->forcedRoot = $root;
+		$this->forcedRoot = rtrim($root, '/');
+		$this->cachedRoot = null;
 	}
 
 	/**
@@ -608,6 +642,9 @@ class UrlGenerator implements UrlGeneratorContract {
 	public function setRequest(Request $request)
 	{
 		$this->request = $request;
+
+		$this->cachedRoot = null;
+		$this->cachedSchema = null;
 	}
 
 	/**

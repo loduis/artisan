@@ -221,9 +221,9 @@ class Router implements RegistrarContract {
 	 */
 	public function controllers(array $controllers)
 	{
-		foreach ($controllers as $uri => $name)
+		foreach ($controllers as $uri => $controller)
 		{
-			$this->controller($uri, $name);
+			$this->controller($uri, $controller);
 		}
 	}
 
@@ -248,7 +248,7 @@ class Router implements RegistrarContract {
 		}
 
 		$routable = (new ControllerInspector)
-		                    ->getRoutable($prepended, $uri);
+							->getRoutable($prepended, $uri);
 
 		// When a controller is routed using this method, we use Reflection to parse
 		// out all of the routable methods for the controller, then register each
@@ -300,6 +300,20 @@ class Router implements RegistrarContract {
 	}
 
 	/**
+	 * Register an array of resource controllers.
+	 *
+	 * @param  array  $resources
+	 * @return void
+	 */
+	public function resources(array $resources)
+	{
+		foreach ($resources as $name => $controller)
+		{
+			$this->resource($name, $controller);
+		}
+	}
+
+	/**
 	 * Route a resource to a controller.
 	 *
 	 * @param  string  $name
@@ -309,7 +323,16 @@ class Router implements RegistrarContract {
 	 */
 	public function resource($name, $controller, array $options = array())
 	{
-		(new ResourceRegistrar($this))->register($name, $controller, $options);
+		if ($this->container && $this->container->bound('Illuminate\Routing\ResourceRegistrar'))
+		{
+			$registrar = $this->container->make('Illuminate\Routing\ResourceRegistrar');
+		}
+		else
+		{
+			$registrar = new ResourceRegistrar($this);
+		}
+
+		$registrar->register($name, $controller, $options);
 	}
 
 	/**
@@ -426,6 +449,7 @@ class Router implements RegistrarContract {
 		if ( ! empty($this->groupStack))
 		{
 			$last = end($this->groupStack);
+
 			return isset($last['prefix']) ? $last['prefix'] : '';
 		}
 
@@ -464,7 +488,7 @@ class Router implements RegistrarContract {
 		}
 
 		$route = $this->newRoute(
-			$methods, $uri = $this->prefix($uri), $action
+			$methods, $this->prefix($uri), $action
 		);
 
 		// If we have groups that need to be merged, we will merge them now after this
@@ -581,7 +605,7 @@ class Router implements RegistrarContract {
 	{
 		$group = last($this->groupStack);
 
-		return isset($group['namespace']) ? $group['namespace'].'\\'.$uses : $uses;
+		return isset($group['namespace']) && strpos($uses, '\\') !== 0 ? $group['namespace'].'\\'.$uses : $uses;
 	}
 
 	/**
@@ -667,12 +691,18 @@ class Router implements RegistrarContract {
 	{
 		$middleware = $this->gatherRouteMiddlewares($route);
 
+		$shouldSkipMiddleware = $this->container->bound('middleware.disable') &&
+		                        $this->container->make('middleware.disable') === true;
+
 		return (new Pipeline($this->container))
-		                ->send($request)
-		                ->through($middleware)
-		                ->then(function($request) use ($route)
+						->send($request)
+						->through($shouldSkipMiddleware ? [] : $middleware)
+						->then(function($request) use ($route)
 						{
-							return $route->run($request);
+							return $this->prepareResponse(
+								$request,
+								$route->run($request)
+							);
 						});
 	}
 
@@ -682,13 +712,28 @@ class Router implements RegistrarContract {
 	 * @param  \Illuminate\Routing\Route  $route
 	 * @return array
 	 */
-	protected function gatherRouteMiddlewares(Route $route)
+	public function gatherRouteMiddlewares(Route $route)
 	{
-		return Collection::make($route->middleware())->map(function($m)
+		return Collection::make($route->middleware())->map(function($name)
 		{
-			return array_get($this->middleware, $m, $m);
+			return Collection::make($this->resolveMiddlewareClassName($name));
+		})
+		->collapse()->all();
+	}
 
-		})->all();
+	/**
+	 * Resolve the middleware name to a class name preserving passed parameters
+	 *
+	 * @param $name
+	 * @return string
+	 */
+	public function resolveMiddlewareClassName($name)
+	{
+		$map = $this->middleware;
+
+		list($name, $parameters) = array_pad(explode(':', $name, 2), 2, null);
+
+		return array_get($map, $name, $name).($parameters ? ':'.$parameters : '');
 	}
 
 	/**
@@ -894,7 +939,7 @@ class Router implements RegistrarContract {
 			// developer a little greater flexibility to decide what will happen.
 			if ($callback instanceof Closure)
 			{
-				return call_user_func($callback);
+				return call_user_func($callback, $value);
 			}
 
 			throw new NotFoundHttpException;
@@ -942,7 +987,7 @@ class Router implements RegistrarContract {
 	}
 
 	/**
-	 * Set a global where pattern on all routes
+	 * Set a global where pattern on all routes.
 	 *
 	 * @param  string  $key
 	 * @param  string  $pattern
@@ -954,7 +999,7 @@ class Router implements RegistrarContract {
 	}
 
 	/**
-	 * Set a group of global where patterns on all routes
+	 * Set a group of global where patterns on all routes.
 	 *
 	 * @param  array  $patterns
 	 * @return void
@@ -1090,7 +1135,7 @@ class Router implements RegistrarContract {
 	{
 		$methods = $filter['methods'];
 
-		return (is_null($methods) || in_array($method, $methods));
+		return is_null($methods) || in_array($method, $methods);
 	}
 
 	/**
@@ -1111,7 +1156,7 @@ class Router implements RegistrarContract {
 	}
 
 	/**
-	 * Call the given route's before filters.
+	 * Call the given route's after filters.
 	 *
 	 * @param  \Illuminate\Routing\Route  $route
 	 * @param  \Illuminate\Http\Request  $request
@@ -1164,7 +1209,7 @@ class Router implements RegistrarContract {
 	 * @param  mixed  $response
 	 * @return \Illuminate\Http\Response
 	 */
-	protected function prepareResponse($request, $response)
+	public function prepareResponse($request, $response)
 	{
 		if ( ! $response instanceof SymfonyResponse)
 		{
@@ -1244,7 +1289,7 @@ class Router implements RegistrarContract {
 	 */
 	public function currentRouteName()
 	{
-		return ($this->current()) ? $this->current()->getName() : null;
+		return $this->current() ? $this->current()->getName() : null;
 	}
 
 	/**
@@ -1274,7 +1319,7 @@ class Router implements RegistrarContract {
 	 */
 	public function currentRouteNamed($name)
 	{
-		return ($this->current()) ? $this->current()->getName() == $name : false;
+		return $this->current() ? $this->current()->getName() == $name : false;
 	}
 
 	/**
