@@ -14,7 +14,18 @@ class ConfigureLogging {
 	 */
 	public function bootstrap(Application $app)
 	{
-		$this->configureHandlers($app, $this->registerLogger($app));
+		$log = $this->registerLogger($app);
+
+		// If a custom Monolog configurator has been registered for the application
+		// we will call that, passing Monolog along. Otherwise, we will grab the
+		// the configurations for the log system and use it for configuration.
+		if ($app->hasMonologConfigurator()) {
+			call_user_func(
+				$app->getMonologConfigurator(), $log->getMonolog()
+			);
+		} else {
+			$this->configureHandlers($app, $log);
+		}
 
 		// Next, we will bind a Closure that resolves the PSR logger implementation
 		// as this will grant us the ability to be interoperable with many other
@@ -75,7 +86,10 @@ class ConfigureLogging {
 	 */
 	protected function configureDailyHandler(Application $app, Writer $log)
 	{
-		$log->useDailyFiles($app->storagePath().'/logs/laravel.log', 5);
+		$log->useDailyFiles(
+			$app->storagePath().'/logs/laravel.log',
+			$app->make('config')->get('app.log_max_files', 5)
+		);
 	}
 
 	/**
@@ -88,6 +102,18 @@ class ConfigureLogging {
 	protected function configureSyslogHandler(Application $app, Writer $log)
 	{
 		$log->useSyslog('laravel');
+	}
+
+	/**
+	 * Configure the Monolog handlers for the application.
+	 *
+	 * @param  \Illuminate\Contracts\Foundation\Application  $app
+	 * @param  \Illuminate\Log\Writer  $log
+	 * @return void
+	 */
+	protected function configureErrorlogHandler(Application $app, Writer $log)
+	{
+		$log->useErrorLog();
 	}
 
 }

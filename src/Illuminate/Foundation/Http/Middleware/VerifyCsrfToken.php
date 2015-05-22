@@ -17,6 +17,13 @@ class VerifyCsrfToken implements Middleware {
 	protected $encrypter;
 
 	/**
+	 * The URIs that should be excluded from CSRF verification.
+	 *
+	 * @var array
+	 */
+	protected $except = [];
+
+	/**
 	 * Create a new middleware instance.
 	 *
 	 * @param  \Illuminate\Contracts\Encryption\Encrypter  $encrypter
@@ -38,12 +45,31 @@ class VerifyCsrfToken implements Middleware {
 	 */
 	public function handle($request, Closure $next)
 	{
-		if ($this->isReading($request) || $this->tokensMatch($request))
+		if ($this->isReading($request) || $this->shouldPassThrough($request) || $this->tokensMatch($request))
 		{
 			return $this->addCookieToResponse($request, $next($request));
 		}
 
 		throw new TokenMismatchException;
+	}
+
+	/**
+	 * Determine if the request has a URI that should pass through CSRF verification.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 * @return bool
+	 */
+	protected function shouldPassThrough($request)
+	{
+		foreach ($this->except as $except)
+		{
+			if ($request->is($except))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -54,12 +80,14 @@ class VerifyCsrfToken implements Middleware {
 	 */
 	protected function tokensMatch($request)
 	{
-		$token = $request->session()->token();
+		$token = $request->input('_token') ?: $request->header('X-CSRF-TOKEN');
 
-		$header = $request->header('X-XSRF-TOKEN');
+		if ( ! $token && $header = $request->header('X-XSRF-TOKEN'))
+		{
+			$token = $this->encrypter->decrypt($header);
+		}
 
-		return StringUtils::equals($token, $request->input('_token')) ||
-		       ($header && StringUtils::equals($token, $this->encrypter->decrypt($header)));
+		return StringUtils::equals($request->session()->token(), $token);
 	}
 
 	/**

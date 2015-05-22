@@ -1,40 +1,12 @@
 <?php namespace Illuminate\Foundation\Auth;
 
 use Illuminate\Http\Request;
-use Illuminate\Contracts\Auth\Guard;
-use Illuminate\Contracts\Auth\PasswordBroker;
+use Illuminate\Mail\Message;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 trait ResetsPasswords {
-
-	/**
-	 * The Guard implementation.
-	 *
-	 * @var Guard
-	 */
-	protected $auth;
-
-	/**
-	 * The password broker implementation.
-	 *
-	 * @var PasswordBroker
-	 */
-	protected $passwords;
-
-	/**
-	 * Create a new password controller instance.
-	 *
-	 * @param  Guard  $auth
-	 * @param  PasswordBroker  $passwords
-	 * @return void
-	 */
-	public function __construct(Guard $auth, PasswordBroker $passwords)
-	{
-		$this->auth = $auth;
-		$this->passwords = $passwords;
-
-		$this->middleware('guest');
-	}
 
 	/**
 	 * Display the form to request a password reset link.
@@ -54,16 +26,31 @@ trait ResetsPasswords {
 	 */
 	public function postEmail(Request $request)
 	{
-		$this->validate($request, ['email' => 'required']);
+		$this->validate($request, ['email' => 'required|email']);
 
-		switch ($response = $this->passwords->sendResetLink($request->only('email')))
+		$response = Password::sendResetLink($request->only('email'), function(Message $message)
 		{
-			case PasswordBroker::RESET_LINK_SENT:
+			$message->subject($this->getEmailSubject());
+		});
+
+		switch ($response)
+		{
+			case Password::RESET_LINK_SENT:
 				return redirect()->back()->with('status', trans($response));
 
-			case PasswordBroker::INVALID_USER:
-				return redirect()->back()->withErrors(['email' =>trans($response)]);
+			case Password::INVALID_USER:
+				return redirect()->back()->withErrors(['email' => trans($response)]);
 		}
+	}
+
+	/**
+	 * Get the e-mail subject line to be used for the reset link email.
+	 *
+	 * @return string
+	 */
+	protected function getEmailSubject()
+	{
+		return isset($this->subject) ? $this->subject : 'Your Password Reset Link';
 	}
 
 	/**
@@ -92,7 +79,7 @@ trait ResetsPasswords {
 	{
 		$this->validate($request, [
 			'token' => 'required',
-			'email' => 'required',
+			'email' => 'required|email',
 			'password' => 'required|confirmed',
 		]);
 
@@ -100,18 +87,14 @@ trait ResetsPasswords {
 			'email', 'password', 'password_confirmation', 'token'
 		);
 
-		$response = $this->passwords->reset($credentials, function($user, $password)
+		$response = Password::reset($credentials, function($user, $password)
 		{
-			$user->password = bcrypt($password);
-
-			$user->save();
-
-			$this->auth->login($user);
+			$this->resetPassword($user, $password);
 		});
 
 		switch ($response)
 		{
-			case PasswordBroker::PASSWORD_RESET:
+			case Password::PASSWORD_RESET:
 				return redirect($this->redirectPath());
 
 			default:
@@ -122,12 +105,33 @@ trait ResetsPasswords {
 	}
 
 	/**
+	 * Reset the given user's password.
+	 *
+	 * @param  \Illuminate\Contracts\Auth\CanResetPassword  $user
+	 * @param  string  $password
+	 * @return void
+	 */
+	protected function resetPassword($user, $password)
+	{
+		$user->password = bcrypt($password);
+
+		$user->save();
+
+		Auth::login($user);
+	}
+
+	/**
 	 * Get the post register / login redirect path.
 	 *
 	 * @return string
 	 */
 	public function redirectPath()
 	{
+		if (property_exists($this, 'redirectPath'))
+		{
+			return $this->redirectPath;
+		}
+
 		return property_exists($this, 'redirectTo') ? $this->redirectTo : '/home';
 	}
 

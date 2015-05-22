@@ -4,7 +4,6 @@ use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Console\Application as Artisan;
-use Symfony\Component\Console\Input\ArgvInput;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Console\Kernel as KernelContract;
 
@@ -66,7 +65,11 @@ class Kernel implements KernelContract {
 	{
 		$this->app = $app;
 		$this->events = $events;
-		$this->defineConsoleSchedule();
+
+		$this->app->booted(function()
+		{
+			$this->defineConsoleSchedule();
+		});
 	}
 
 	/**
@@ -106,6 +109,18 @@ class Kernel implements KernelContract {
 
 			return 1;
 		}
+	}
+
+	/**
+	 * Terminate the application.
+	 *
+	 * @param  \Symfony\Component\Console\Input\InputInterface  $input
+	 * @param  int  $status
+	 * @return void
+	 */
+	public function terminate($input, $status)
+	{
+		$this->app->terminate();
 	}
 
 	/**
@@ -188,24 +203,7 @@ class Kernel implements KernelContract {
 			$this->app->bootstrapWith($this->bootstrappers());
 		}
 
-		// If we are just calling another queue command, we will only load the queue
-		// service provider. This saves a lot of file loading as we don't need to
-		// load the providers with commands for every possible console command.
-		$this->isCallingAQueueCommand()
-					? $this->app->loadDeferredProvider('queue')
-					: $this->app->loadDeferredProviders();
-	}
-
-	/**
-	 * Determine if the console is calling a queue command.
-	 *
-	 * @return bool
-	 */
-	protected function isCallingAQueueCommand()
-	{
-		return in_array((new ArgvInput)->getFirstArgument(), [
-			'queue:listen', 'queue:work'
-		]);
+		$this->app->loadDeferredProviders();
 	}
 
 	/**
@@ -217,7 +215,7 @@ class Kernel implements KernelContract {
 	{
 		if (is_null($this->artisan))
 		{
-			return $this->artisan = (new Artisan($this->app, $this->events))
+			return $this->artisan = (new Artisan($this->app, $this->events, $this->app->version()))
 								->resolveCommands($this->commands);
 		}
 

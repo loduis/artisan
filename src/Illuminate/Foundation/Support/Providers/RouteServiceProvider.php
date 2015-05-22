@@ -2,30 +2,15 @@
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Routing\Annotations\Scanner;
 
 class RouteServiceProvider extends ServiceProvider {
 
 	/**
 	 * The controller namespace for the application.
 	 *
-	 * @var string
+	 * @var string|null
 	 */
-	protected $namespace = '';
-
-	/**
-	 * The controllers to scan for route annotations.
-	 *
-	 * @var array
-	 */
-	protected $scan = [];
-
-	/**
-	 * Determines if we will auto-scan in the local environment.
-	 *
-	 * @var bool
-	 */
-	protected $scanWhenLocal = false;
+	protected $namespace;
 
 	/**
 	 * Bootstrap any application services.
@@ -80,16 +65,6 @@ class RouteServiceProvider extends ServiceProvider {
 	 */
 	protected function loadRoutes()
 	{
-		if ($this->app->environment('local') && $this->scanWhenLocal)
-		{
-			$this->scanRoutes();
-		}
-
-		if ( ! empty($this->scan) && $this->app->routesAreScanned())
-		{
-			$this->loadScannedRoutes();
-		}
-
 		$this->app->call([$this, 'map']);
 	}
 
@@ -103,38 +78,11 @@ class RouteServiceProvider extends ServiceProvider {
 	{
 		$router = $this->app['Illuminate\Routing\Router'];
 
+		if (is_null($this->namespace)) return require $path;
+
 		$router->group(['namespace' => $this->namespace], function($router) use ($path)
 		{
 			require $path;
-		});
-	}
-
-	/**
-	 * Scan the routes and write the scanned routes file.
-	 *
-	 * @return void
-	 */
-	protected function scanRoutes()
-	{
-		if (empty($this->scan)) return;
-
-		$scanner = new Scanner($this->scan);
-
-		file_put_contents($this->app->getScannedRoutesPath(), '<?php '.$scanner->getRouteDefinitions());
-	}
-
-	/**
-	 * Load the scanned application routes.
-	 *
-	 * @return void
-	 */
-	protected function loadScannedRoutes()
-	{
-		$this->app->booted(function()
-		{
-			$router = app('Illuminate\Contracts\Routing\Registrar');
-
-			require $this->app->getScannedRoutesPath();
 		});
 	}
 
@@ -143,16 +91,9 @@ class RouteServiceProvider extends ServiceProvider {
 	 *
 	 * @return void
 	 */
-	public function register() {}
-
-	/**
-	 * Get the classes to be scanned by the provider.
-	 *
-	 * @return array
-	 */
-	public function scans()
+	public function register()
 	{
-		return $this->scan;
+		//
 	}
 
 	/**

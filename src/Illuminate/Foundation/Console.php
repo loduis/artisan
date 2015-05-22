@@ -58,7 +58,15 @@ class Console
         $this->app     = new Application($basePath);
         $this->output  = new ConsoleOutput;
         $this->config  = $this->getConfig();
+        $this->setNamespace($this->config->get('name') ?: $this->config->get('namespace'));
         $this->useCustomPaths();
+    }
+
+    private function setNamespace($namespace)
+    {
+        $namespace = ucfirst($namespace);
+        $namespace = strtok($namespace, '\\') . '\\';
+        $this->app->setNamespace($namespace);
     }
 
     /**

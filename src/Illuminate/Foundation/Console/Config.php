@@ -43,6 +43,7 @@ class Config
             $content = file_get_contents($file);
 
             $config = json_decode($content, true);
+            $config = isset($config['extra']) ? $config['extra'] : [];
             $config = isset($config['laravel']) ? $config['laravel'] : [];
             if (!is_array($config)) {
                 $config = [];

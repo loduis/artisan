@@ -3,13 +3,14 @@
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Console\UpCommand;
 use Illuminate\Foundation\Console\DownCommand;
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Foundation\Console\TinkerCommand;
+use Illuminate\Foundation\Console\JobMakeCommand;
 use Illuminate\Foundation\Console\AppNameCommand;
 use Illuminate\Foundation\Console\OptimizeCommand;
 use Illuminate\Foundation\Console\RouteListCommand;
-use Illuminate\Foundation\Console\RouteScanCommand;
 use Illuminate\Foundation\Console\EventMakeCommand;
-use Illuminate\Foundation\Console\EventScanCommand;
+use Illuminate\Foundation\Console\ModelMakeCommand;
 use Illuminate\Foundation\Console\RouteCacheCommand;
 use Illuminate\Foundation\Console\RouteClearCommand;
 use Illuminate\Foundation\Console\CommandMakeCommand;
@@ -19,9 +20,12 @@ use Illuminate\Foundation\Console\ConsoleMakeCommand;
 use Illuminate\Foundation\Console\EnvironmentCommand;
 use Illuminate\Foundation\Console\KeyGenerateCommand;
 use Illuminate\Foundation\Console\RequestMakeCommand;
+use Illuminate\Foundation\Console\ListenerMakeCommand;
 use Illuminate\Foundation\Console\ProviderMakeCommand;
 use Illuminate\Foundation\Console\HandlerEventCommand;
 use Illuminate\Foundation\Console\ClearCompiledCommand;
+use Illuminate\Foundation\Console\EventGenerateCommand;
+use Illuminate\Foundation\Console\VendorPublishCommand;
 use Illuminate\Foundation\Console\HandlerCommandCommand;
 
 class ArtisanServiceProvider extends ServiceProvider {
@@ -45,22 +49,26 @@ class ArtisanServiceProvider extends ServiceProvider {
 		'ConfigCache' => 'command.config.cache',
 		'ConfigClear' => 'command.config.clear',
 		'ConsoleMake' => 'command.console.make',
+		'EventGenerate' => 'command.event.generate',
 		'EventMake' => 'command.event.make',
 		'Down' => 'command.down',
 		'Environment' => 'command.environment',
-		'EventScan' => 'command.event.scan',
 		'HandlerCommand' => 'command.handler.command',
 		'HandlerEvent' => 'command.handler.event',
+		'JobMake' => 'command.job.make',
 		'KeyGenerate' => 'command.key.generate',
+		'ListenerMake' => 'command.listener.make',
+		'ModelMake' => 'command.model.make',
 		'Optimize' => 'command.optimize',
 		'ProviderMake' => 'command.provider.make',
 		'RequestMake' => 'command.request.make',
 		'RouteCache' => 'command.route.cache',
 		'RouteClear' => 'command.route.clear',
 		'RouteList' => 'command.route.list',
-		'RouteScan' => 'command.route.scan',
+		'Serve' => 'command.serve',
 		'Tinker' => 'command.tinker',
 		'Up' => 'command.up',
+		'VendorPublish' => 'command.vendor.publish',
 	];
 
 	/**
@@ -163,6 +171,19 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 *
 	 * @return void
 	 */
+	protected function registerEventGenerateCommand()
+	{
+		$this->app->singleton('command.event.generate', function()
+		{
+			return new EventGenerateCommand;
+		});
+	}
+
+	/**
+	 * Register the command.
+	 *
+	 * @return void
+	 */
 	protected function registerEventMakeCommand()
 	{
 		$this->app->singleton('command.event.make', function($app)
@@ -202,19 +223,6 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 *
 	 * @return void
 	 */
-	protected function registerEventScanCommand()
-	{
-		$this->app->singleton('command.event.scan', function($app)
-		{
-			return new EventScanCommand($app['files']);
-		});
-	}
-
-	/**
-	 * Register the command.
-	 *
-	 * @return void
-	 */
 	protected function registerHandlerCommandCommand()
 	{
 		$this->app->singleton('command.handler.command', function($app)
@@ -241,11 +249,50 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 *
 	 * @return void
 	 */
+	protected function registerJobMakeCommand()
+	{
+		$this->app->singleton('command.job.make', function($app)
+		{
+			return new JobMakeCommand($app['files']);
+		});
+	}
+
+	/**
+	 * Register the command.
+	 *
+	 * @return void
+	 */
 	protected function registerKeyGenerateCommand()
 	{
-		$this->app->singleton('command.key.generate', function($app)
+		$this->app->singleton('command.key.generate', function()
 		{
-			return new KeyGenerateCommand($app['files']);
+			return new KeyGenerateCommand;
+		});
+	}
+
+	/**
+	 * Register the command.
+	 *
+	 * @return void
+	 */
+	protected function registerListenerMakeCommand()
+	{
+		$this->app->singleton('command.listener.make', function($app)
+		{
+			return new ListenerMakeCommand($app['files']);
+		});
+	}
+
+	/**
+	 * Register the command.
+	 *
+	 * @return void
+	 */
+	protected function registerModelMakeCommand()
+	{
+		$this->app->singleton('command.model.make', function($app)
+		{
+			return new ModelMakeCommand($app['files']);
 		});
 	}
 
@@ -332,11 +379,11 @@ class ArtisanServiceProvider extends ServiceProvider {
 	 *
 	 * @return void
 	 */
-	protected function registerRouteScanCommand()
+	protected function registerServeCommand()
 	{
-		$this->app->singleton('command.route.scan', function($app)
+		$this->app->singleton('command.serve', function()
 		{
-			return new RouteScanCommand($app['files']);
+			return new ServeCommand;
 		});
 	}
 
@@ -363,6 +410,19 @@ class ArtisanServiceProvider extends ServiceProvider {
 		$this->app->singleton('command.up', function()
 		{
 			return new UpCommand;
+		});
+	}
+
+	/**
+	 * Register the command.
+	 *
+	 * @return void
+	 */
+	protected function registerVendorPublishCommand()
+	{
+		$this->app->singleton('command.vendor.publish', function($app)
+		{
+			return new VendorPublishCommand($app['files']);
 		});
 	}
 

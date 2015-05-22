@@ -2,6 +2,7 @@
 
 use Illuminate\Config\Repository;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Config\Repository as RepositoryContract;
 
@@ -20,7 +21,7 @@ class LoadConfiguration {
 		// First we will see if we have a cache configuration file. If we do, we'll load
 		// the configuration items from that file so that it is very quick. Otherwise
 		// we will need to spin through every configuration file and load them all.
-		if (file_exists($cached = storage_path('framework/config.php')))
+		if (file_exists($cached = $app->getCachedConfigPath()))
 		{
 			$items = require $cached;
 
@@ -38,6 +39,8 @@ class LoadConfiguration {
 		}
 
 		date_default_timezone_set($config['app.timezone']);
+
+		mb_internal_encoding('UTF-8');
 	}
 
 	/**
@@ -67,10 +70,30 @@ class LoadConfiguration {
 
 		foreach (Finder::create()->files()->name('*.php')->in($app->configPath()) as $file)
 		{
-			$files[basename($file->getRealPath(), '.php')] = $file->getRealPath();
+			$nesting = $this->getConfigurationNesting($file);
+
+			$files[$nesting.basename($file->getRealPath(), '.php')] = $file->getRealPath();
 		}
 
 		return $files;
+	}
+
+	/**
+	 * Get the configuration file nesting path.
+	 *
+	 * @param  \Symfony\Component\Finder\SplFileInfo  $file
+	 * @return string
+	 */
+	private function getConfigurationNesting(SplFileInfo $file)
+	{
+		$directory = dirname($file->getRealPath());
+
+		if ($tree = trim(str_replace(config_path(), '', $directory), DIRECTORY_SEPARATOR))
+		{
+			$tree = str_replace(DIRECTORY_SEPARATOR, '.', $tree).'.';
+		}
+
+		return $tree;
 	}
 
 }

@@ -6,29 +6,31 @@
             "Admin\\": "admin/"
         }
     },
-    "laravel": {
-        "apps": [
-            {
-                "name": "app",
-                "description": "This is the main application",
-                "commands": {
-                    "tinker" : "Illuminate\\Foundation\\Console\\TinkerCommand"
+    "extra": {
+        "laravel": {
+            "apps": [
+                {
+                    "name": "app",
+                    "description": "This is the main application",
+                    "commands": {
+                        "tinker" : "Illuminate\\Foundation\\Console\\TinkerCommand"
+                    }
+                },
+                {
+                    "name": "admin",
+                    "description": "This is the admin application",
+                    "paths" : {
+                        "commands": "admin/Console/Commands"
+                    }
+                },
+                {
+                    "name": "web",
+                    "description": "This is the web application",
+                    "paths" : {
+                        "commands": "web/Console/Commands"
+                    }
                 }
-            },
-            {
-                "name": "admin",
-                "description": "This is the admin application",
-                "paths" : {
-                    "commands": "admin/Console/Commands"
-                }
-            },
-            {
-                "name": "web",
-                "description": "This is the web application",
-                "paths" : {
-                    "commands": "web/Console/Commands"
-                }
-            }
-        ]
+            ]
+        }
     }
 }

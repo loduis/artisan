@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Validator;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exception\HttpResponseException;
 
 trait ValidatesRequests {
@@ -12,11 +12,13 @@ trait ValidatesRequests {
 	 *
 	 * @param  \Illuminate\Http\Request  $request
 	 * @param  array  $rules
+	 * @param  array  $messages
+	 * @param  array  $customAttributes
 	 * @return void
 	 */
-	public function validate(Request $request, array $rules)
+	public function validate(Request $request, array $rules, array $messages = array(), array $customAttributes = array())
 	{
-		$validator = $this->getValidationFactory()->make($request->all(), $rules);
+		$validator = $this->getValidationFactory()->make($request->all(), $rules, $messages, $customAttributes);
 
 		if ($validator->fails())
 		{
@@ -47,20 +49,20 @@ trait ValidatesRequests {
 	 */
 	protected function buildFailedValidationResponse(Request $request, array $errors)
 	{
-		if ($request->ajax())
+		if ($request->ajax() || $request->wantsJson())
 		{
 			return new JsonResponse($errors, 422);
 		}
 
 		return redirect()->to($this->getRedirectUrl())
-                        ->withInput($request->input())
-                        ->withErrors($errors);
+						->withInput($request->input())
+						->withErrors($errors, $this->errorBag());
 	}
 
 	/**
 	 * Format the validation errors to be returned.
 	 *
-	 * @param  \Illuminate\Validation\Validator  $validator
+	 * @param  \Illuminate\Contracts\Validation\Validator  $validator
 	 * @return array
 	 */
 	protected function formatValidationErrors(Validator $validator)
@@ -86,6 +88,16 @@ trait ValidatesRequests {
 	protected function getValidationFactory()
 	{
 		return app('Illuminate\Contracts\Validation\Factory');
+	}
+
+	/**
+	 * Get the key to be used for the view error bag.
+	 *
+	 * @return string
+	 */
+	protected function errorBag()
+	{
+		return 'default';
 	}
 
 }

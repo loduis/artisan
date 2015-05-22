@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Str;
+use Illuminate\Container\Container;
+
 if ( ! function_exists('abort'))
 {
 	/**
@@ -40,16 +43,14 @@ if ( ! function_exists('app'))
 	 * Get the available container instance.
 	 *
 	 * @param  string  $make
-	 * @return mixed
+	 * @param  array   $parameters
+	 * @return mixed|\Illuminate\Foundation\Application
 	 */
-	function app($make = null)
+	function app($make = null, $parameters = [])
 	{
-		if ( ! is_null($make))
-		{
-			return app()->make($make);
-		}
+		if (is_null($make)) return Container::getInstance();
 
-		return Illuminate\Container\Container::getInstance();
+		return Container::getInstance()->make($make, $parameters);
 	}
 }
 
@@ -82,6 +83,19 @@ if ( ! function_exists('asset'))
 	}
 }
 
+if ( ! function_exists('auth'))
+{
+	/**
+	 * Get the available auth instance.
+	 *
+	 * @return \Illuminate\Contracts\Auth\Guard
+	 */
+	function auth()
+	{
+		return app('Illuminate\Contracts\Auth\Guard');
+	}
+}
+
 if ( ! function_exists('base_path'))
 {
 	/**
@@ -92,7 +106,7 @@ if ( ! function_exists('base_path'))
 	 */
 	function base_path($path = '')
 	{
-		return app()->make('path.base').($path ? '/'.$path : $path);
+		return app()->basePath().($path ? '/'.$path : $path);
 	}
 }
 
@@ -150,6 +164,20 @@ if ( ! function_exists('config'))
 	}
 }
 
+if ( ! function_exists('config_path'))
+{
+	/**
+	 * Get the configuration path.
+	 *
+	 * @param  string  $path
+	 * @return string
+	 */
+	function config_path($path = '')
+	{
+		return app()->make('path.config').($path ? '/'.$path : $path);
+	}
+}
+
 if ( ! function_exists('cookie'))
 {
 	/**
@@ -177,6 +205,19 @@ if ( ! function_exists('cookie'))
 	}
 }
 
+if ( ! function_exists('csrf_field'))
+{
+	/**
+	 * Generate a CSRF token form field.
+	 *
+	 * @return string
+	 */
+	function csrf_field()
+	{
+		return '<input type="hidden" name="_token" value="'.csrf_token().'">';
+	}
+}
+
 if ( ! function_exists('csrf_token'))
 {
 	/**
@@ -199,6 +240,20 @@ if ( ! function_exists('csrf_token'))
 	}
 }
 
+if ( ! function_exists('database_path'))
+{
+	/**
+	 * Get the database path.
+	 *
+	 * @param  string  $path
+	 * @return string
+	 */
+	function database_path($path = '')
+	{
+		return app()->databasePath().($path ? '/'.$path : $path);
+	}
+}
+
 if ( ! function_exists('delete'))
 {
 	/**
@@ -211,6 +266,30 @@ if ( ! function_exists('delete'))
 	function delete($uri, $action)
 	{
 		return app('router')->delete($uri, $action);
+	}
+}
+
+if ( ! function_exists('factory'))
+{
+	/**
+	 * Create a model factory builder for a given class, name, and amount.
+	 *
+	 * @param  dynamic  class|class,name|class,amount|class,name,amount
+	 * @return \Illuminate\Database\Eloquent\FactoryBuilder
+	 */
+	function factory()
+	{
+		$factory = app('Illuminate\Database\Eloquent\Factory');
+
+		$arguments = func_get_args();
+
+		if (isset($arguments[1]) && is_string($arguments[1])) {
+			return $factory->of($arguments[0], $arguments[1])->times(isset($arguments[2]) ? $arguments[2] : 1);
+		} elseif (isset($arguments[1])) {
+			return $factory->of($arguments[0])->times($arguments[1]);
+		} else {
+			return $factory->of($arguments[0]);
+		}
 	}
 }
 
@@ -251,7 +330,7 @@ if ( ! function_exists('logger'))
 	 *
 	 * @param  string  $message
 	 * @param  array  $context
-	 * @return void
+	 * @return null|\Illuminate\Contracts\Logging\Log
 	 */
 	function logger($message = null, array $context = array())
 	{
@@ -351,6 +430,22 @@ if ( ! function_exists('redirect'))
 		if (is_null($to)) return app('redirect');
 
 		return app('redirect')->to($to, $status, $headers, $secure);
+	}
+}
+
+if ( ! function_exists('resource'))
+{
+	/**
+	 * Route a resource to a controller.
+	 *
+	 * @param  string  $name
+	 * @param  string  $controller
+	 * @param  array   $options
+	 * @return void
+	 */
+	function resource($name, $controller, array $options = [])
+	{
+		return app('router')->resource($name, $controller, $options);
 	}
 }
 
@@ -559,16 +654,37 @@ if ( ! function_exists('env'))
 			case '(false)':
 				return false;
 
-			case 'null':
-			case '(null)':
-				return null;
-
 			case 'empty':
 			case '(empty)':
 				return '';
+
+			case 'null':
+			case '(null)':
+				return;
+		}
+
+		if (Str::startsWith($value, '"') && Str::endsWith($value, '"'))
+		{
+			return substr($value, 1, -1);
 		}
 
 		return $value;
+	}
+}
+
+if ( ! function_exists('event'))
+{
+	/**
+	 * Fire an event and call the listeners.
+	 *
+	 * @param  string  $event
+	 * @param  mixed   $payload
+	 * @param  bool    $halt
+	 * @return array|null
+	 */
+	function event($event, $payload = array(), $halt = false)
+	{
+		return app('events')->fire($event, $payload, $halt);
 	}
 }
 
@@ -596,5 +712,4 @@ if ( ! function_exists('elixir'))
 
 		throw new InvalidArgumentException("File {$file} not defined in asset manifest.");
 	}
-
 }

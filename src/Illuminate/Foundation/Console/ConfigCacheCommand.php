@@ -48,9 +48,7 @@ class ConfigCacheCommand extends Command {
 	{
 		$this->call('config:clear');
 
-		$config = $this->setRealSessionDriver(
-			$this->getFreshConfiguration()
-		);
+		$config = $this->getFreshConfiguration();
 
 		$this->files->put(
 			$this->laravel->getCachedConfigPath(), '<?php return '.var_export($config, true).';'.PHP_EOL
@@ -62,32 +60,15 @@ class ConfigCacheCommand extends Command {
 	/**
 	 * Boot a fresh copy of the application configuration.
 	 *
-	 * @return \Illuminate\Routing\RouteCollection
+	 * @return array
 	 */
 	protected function getFreshConfiguration()
 	{
-		$app = require $this->laravel['path.base'].'/bootstrap/app.php';
+		$app = require $this->laravel->basePath().'/bootstrap/app.php';
 
 		$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 		return $app['config']->all();
-	}
-
-	/**
-	 * Set the "real" session driver on the configuratoin array.
-	 *
-	 * Typically the SessionManager forces the driver to "array" in CLI environment.
-	 *
-	 * @param  array  $config
-	 * @return array
-	 */
-	protected function setRealSessionDriver(array $config)
-	{
-		$session = require $this->laravel->configPath().'/session.php';
-
-		$config['session']['driver'] = $session['driver'];
-
-		return $config;
 	}
 
 }

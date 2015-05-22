@@ -1,19 +1,33 @@
 {
     "autoload": {
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Admin\\": "admin/"
         }
     },
-    "laravel": {
-        "apps": [
-            {
-                "name": "app",
-                "description": "This is the main application",
-                "paths": {
-                    "config": "app/config",
-                    "storage": "app/storage"
+    "extra": {
+        "laravel": {
+            "apps": [
+                {
+                    "name": "app",
+                    "description": "This is the main application",
+                    "paths": {
+                        "config": "app/config",
+                        "storage": "app/storage"
+                    }
+                },
+                {
+                    "name": "admin",
+                    "description": "This is the main application",
+                    "paths": {
+                        "config": "web/config",
+                        "storage": "web/storage"
+                    },
+                    "commands": {
+                        "command.make" : "Illuminate\\Foundation\\Console\\CommandMakeCommand"
+                    }
                 }
-            }
-        ]
+            ]
+        }
     }
 }
