@@ -3,6 +3,8 @@
 use Exception;
 use ReflectionClass;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Contracts\Events\Dispatcher as DispatcherContract;
 use Illuminate\Contracts\Container\Container as ContainerContract;
 
@@ -127,7 +129,7 @@ class Dispatcher implements DispatcherContract {
 	/**
 	 * Register an event subscriber with the dispatcher.
 	 *
-	 * @param  string  $subscriber
+	 * @param  object|string  $subscriber
 	 * @return void
 	 */
 	public function subscribe($subscriber)
@@ -140,7 +142,7 @@ class Dispatcher implements DispatcherContract {
 	/**
 	 * Resolve the subscriber instance.
 	 *
-	 * @param  mixed  $subscriber
+	 * @param  object|string  $subscriber
 	 * @return mixed
 	 */
 	protected function resolveSubscriber($subscriber)
@@ -189,7 +191,7 @@ class Dispatcher implements DispatcherContract {
 	/**
 	 * Fire an event and call the listeners.
 	 *
-	 * @param  string  $event
+	 * @param  string|object  $event
 	 * @param  mixed   $payload
 	 * @param  bool    $halt
 	 * @return array|null
@@ -212,6 +214,11 @@ class Dispatcher implements DispatcherContract {
 		if ( ! is_array($payload)) $payload = array($payload);
 
 		$this->firing[] = $event;
+
+		if (isset($payload[0]) && $payload[0] instanceof ShouldBroadcast)
+		{
+			$this->broadcastEvent($payload[0]);
+		}
 
 		foreach ($this->getListeners($event) as $listener)
 		{
@@ -238,6 +245,24 @@ class Dispatcher implements DispatcherContract {
 		array_pop($this->firing);
 
 		return $halt ? null : $responses;
+	}
+
+	/**
+	 * Broadcast the given event class.
+	 *
+	 * @param  \Illuminate\Contracts\Broadcasting\ShouldBroadcast  $event
+	 * @return void
+	 */
+	protected function broadcastEvent($event)
+	{
+		if ($this->queueResolver)
+		{
+			$connection = $event instanceof ShouldBroadcastNow ? 'sync' : null;
+
+			$this->resolveQueue()->connection($connection)->push('Illuminate\Broadcasting\BroadcastEvent', [
+				'event' => serialize($event)
+			]);
+		}
 	}
 
 	/**
@@ -393,10 +418,47 @@ class Dispatcher implements DispatcherContract {
 	{
 		return function() use ($class, $method)
 		{
-			$this->resolveQueue()->push('Illuminate\Events\CallQueuedHandler@call', [
-				'class' => $class, 'method' => $method, 'data' => serialize(func_get_args()),
-			]);
+			$arguments = $this->cloneArgumentsForQueueing(func_get_args());
+
+			if (method_exists($class, 'queue'))
+			{
+				$this->callQueueMethodOnHandler($class, $method, $arguments);
+			}
+			else
+			{
+				$this->resolveQueue()->push('Illuminate\Events\CallQueuedHandler@call', [
+					'class' => $class, 'method' => $method, 'data' => serialize($arguments),
+				]);
+			}
 		};
+	}
+
+	/**
+	 * Clone the given arguments for queueing.
+	 *
+	 * @param  array  $arguments
+	 * @return array
+	 */
+	protected function cloneArgumentsForQueueing(array $arguments)
+	{
+		return array_map(function($a) { return is_object($a) ? clone $a : $a; }, $arguments);
+	}
+
+	/**
+	 * Call the queue method on the handler class.
+	 *
+	 * @param  string  $class
+	 * @param  string  $method
+	 * @param  array  $arguments
+	 * @return void
+	 */
+	protected function callQueueMethodOnHandler($class, $method, $arguments)
+	{
+		$handler = (new ReflectionClass($class))->newInstanceWithoutConstructor();
+
+		$handler->queue($this->resolveQueue(), 'Illuminate\Events\CallQueuedHandler@call', [
+			'class' => $class, 'method' => $method, 'data' => serialize($arguments),
+		]);
 	}
 
 	/**
