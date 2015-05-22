@@ -4,6 +4,7 @@ use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Console\Application as Artisan;
+use Symfony\Component\Console\Input\ArgvInput;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Console\Kernel as KernelContract;
 
@@ -33,7 +34,7 @@ class Kernel implements KernelContract {
 	/**
 	 * The bootstrap classes for the application.
 	 *
-	 * @return void
+	 * @var array
 	 */
 	protected $bootstrappers = [
 		'Illuminate\Foundation\Bootstrap\DetectEnvironment',
@@ -129,6 +130,11 @@ class Kernel implements KernelContract {
 	{
 		$this->bootstrap();
 
+		// If we are calling a arbitary command from within the application, we will load
+		// all of the available deferred providers which will make all of the commands
+		// available to an application. Otherwise the command will not be available.
+		$this->app->loadDeferredProviders();
+
 		return $this->getArtisan()->call($command, $parameters);
 	}
 
@@ -136,7 +142,7 @@ class Kernel implements KernelContract {
 	 * Queue the given console command.
 	 *
 	 * @param  string  $command
-	 * @param  array  $parameters
+	 * @param  array   $parameters
 	 * @return void
 	 */
 	public function queue($command, array $parameters = array())
@@ -182,7 +188,24 @@ class Kernel implements KernelContract {
 			$this->app->bootstrapWith($this->bootstrappers());
 		}
 
-		$this->app->loadDeferredProviders();
+		// If we are just calling another queue command, we will only load the queue
+		// service provider. This saves a lot of file loading as we don't need to
+		// load the providers with commands for every possible console command.
+		$this->isCallingAQueueCommand()
+					? $this->app->loadDeferredProvider('queue')
+					: $this->app->loadDeferredProviders();
+	}
+
+	/**
+	 * Determine if the console is calling a queue command.
+	 *
+	 * @return bool
+	 */
+	protected function isCallingAQueueCommand()
+	{
+		return in_array((new ArgvInput)->getFirstArgument(), [
+			'queue:listen', 'queue:work'
+		]);
 	}
 
 	/**

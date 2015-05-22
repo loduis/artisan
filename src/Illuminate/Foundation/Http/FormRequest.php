@@ -1,7 +1,6 @@
 <?php namespace Illuminate\Foundation\Http;
 
 use Illuminate\Http\Request;
-use Illuminate\Routing\Route;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Redirector;
@@ -18,23 +17,16 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 	/**
 	 * The container instance.
 	 *
-	 * @var Container
+	 * @var \Illuminate\Container\Container
 	 */
 	protected $container;
 
 	/**
 	 * The redirector instance.
 	 *
-	 * @var Redirector
+	 * @var \Illuminate\Routing\Redirector
 	 */
 	protected $redirector;
-
-	/**
-	 * The sanitized input.
-	 *
-	 * @var array
-	 */
-	protected $sanitized;
 
 	/**
 	 * The URI to redirect to if validation fails.
@@ -86,37 +78,8 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 		}
 
 		return $factory->make(
-			$this->sanitizeInput(), $this->container->call([$this, 'rules']), $this->messages()
+			$this->all(), $this->container->call([$this, 'rules']), $this->messages()
 		);
-	}
-
-	/**
-	 * Sanitize the input.
-	 *
-	 * @return array
-	 */
-	protected function sanitizeInput()
-	{
-		if (method_exists($this, 'sanitize'))
-		{
-			return $this->sanitized = $this->container->call([$this, 'sanitize']);
-		}
-
-		return $this->all();
-	}
-
-	/**
-	 * Get sanitized input.
-	 *
-	 * @param  string  $key
-	 * @param  mixed  $default
-	 * @return mixed
-	 */
-	public function sanitized($key = null, $default = null)
-	{
-		$input = is_null($this->sanitized) ? $this->all() : $this->sanitized;
-
-		return array_get($input, $key, $default);
 	}
 
 	/**
@@ -237,7 +200,7 @@ class FormRequest extends Request implements ValidatesWhenResolved {
 	/**
 	 * Set the container implementation.
 	 *
-	 * @param  Container  $container
+	 * @param  \Illuminate\Container\Container  $container
 	 * @return $this
 	 */
 	public function setContainer(Container $container)

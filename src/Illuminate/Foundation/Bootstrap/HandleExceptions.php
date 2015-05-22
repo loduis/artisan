@@ -1,7 +1,6 @@
 <?php namespace Illuminate\Foundation\Bootstrap;
 
 use ErrorException;
-use Symfony\Component\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Debug\Exception\FatalErrorException;
@@ -48,6 +47,8 @@ class HandleExceptions {
 	 * @param  int  $line
 	 * @param  array  $context
 	 * @return void
+	 *
+	 * @throws \ErrorException
 	 */
 	public function handleError($level, $message, $file = '', $line = 0, $context = array())
 	{

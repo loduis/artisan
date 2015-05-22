@@ -13,7 +13,6 @@
         "php": ">=5.4.0",
         "d11wtq/boris": "~1.0",
         "filp/whoops": "1.0.10",
-        "patchwork/utf8": "1.1.*",
         "monolog/monolog": "~1.6",
         "symfony/console": "2.7.*",
         "symfony/debug": "2.7.*",

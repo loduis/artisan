@@ -20,13 +20,33 @@ class ConfigClearCommand extends Command {
 	protected $description = 'Remove the configuration cache file';
 
 	/**
+	 * The filesystem instance.
+	 *
+	 * @var \Illuminate\Filesystem\Filesystem
+	 */
+	protected $files;
+
+	/**
+	 * Create a new config clear command instance.
+	 *
+	 * @param  \Illuminate\Filesystem\Filesystem  $files
+	 * @return void
+	 */
+	public function __construct(Filesystem $files)
+	{
+		parent::__construct();
+
+		$this->files = $files;
+	}
+
+	/**
 	 * Execute the console command.
 	 *
 	 * @return void
 	 */
 	public function fire()
 	{
-		@unlink($this->laravel->getCachedConfigPath());
+		$this->files->delete($this->laravel->getCachedConfigPath());
 
 		$this->info('Configuration cache cleared!');
 	}
