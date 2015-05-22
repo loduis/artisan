@@ -102,7 +102,7 @@ interface Container {
 	 * @param  array   $parameters
 	 * @return mixed
 	 */
-	public function make($abstract, $parameters = array());
+	public function make($abstract, array $parameters = []);
 
 	/**
 	 * Call the given Closure / class@method and inject its dependencies.
@@ -112,7 +112,7 @@ interface Container {
 	 * @param  string|null  $defaultMethod
 	 * @return mixed
 	 */
-	public function call($callback, array $parameters = array(), $defaultMethod = null);
+	public function call($callback, array $parameters = [], $defaultMethod = null);
 
 	/**
 	 * Determine if the given abstract type has been resolved.
@@ -129,14 +129,15 @@ interface Container {
 	 * @param  \Closure  $callback
 	 * @return void
 	 */
-	public function resolving($abstract, Closure $callback);
+	public function resolving($abstract, Closure $callback = null);
 
 	/**
-	 * Register a new resolving callback for all types.
+	 * Register a new after resolving callback.
 	 *
+	 * @param  string    $abstract
 	 * @param  \Closure  $callback
 	 * @return void
 	 */
-	public function resolvingAny(Closure $callback);
+	public function afterResolving($abstract, Closure $callback = null);
 
 }
