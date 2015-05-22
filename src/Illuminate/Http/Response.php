@@ -17,6 +17,13 @@ class Response extends BaseResponse {
 	public $original;
 
 	/**
+	 * The exception that triggered the error response (if applicable).
+	 *
+	 * @var \Exception
+	 */
+	public $exception;
+
+	/**
 	 * Set the content on the response.
 	 *
 	 * @param  mixed  $content
@@ -31,7 +38,7 @@ class Response extends BaseResponse {
 		// from routes that will be automatically transformed to their JSON form.
 		if ($this->shouldBeJson($content))
 		{
-			$this->headers->set('Content-Type', 'application/json');
+			$this->header('Content-Type', 'application/json');
 
 			$content = $this->morphToJson($content);
 		}
