@@ -31,13 +31,12 @@ class Config
     public function __construct($basePath)
     {
         $this->basePath   = $basePath;
-        $config           = $this->loadFromFile(self::LARAVEL_CONFIG_FILE);
+        $config           = $this->loadFromFile($this->filePath());
         $this->data       = new Collection($config);
     }
 
-    private function loadFromFile($filename)
+    private function loadFromFile($file)
     {
-        $file = $this->basePath . '/' . $filename;
         $config = [];
         if (file_exists($file)) {
             $content = file_get_contents($file);
@@ -51,6 +50,11 @@ class Config
         }
 
         return $config;
+    }
+
+    public function filePath()
+    {
+        return $this->basePath . '/' . static::LARAVEL_CONFIG_FILE;
     }
 
     public function applications()

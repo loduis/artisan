@@ -58,15 +58,17 @@ class Console
         $this->app     = new Application($basePath);
         $this->output  = new ConsoleOutput;
         $this->config  = $this->getConfig();
-        $this->setNamespace($this->config->get('name') ?: $this->config->get('namespace'));
+        $this->app->setNamespace($this->getNamespace());
         $this->useCustomPaths();
     }
 
-    private function setNamespace($namespace)
+    private function getNamespace()
     {
+        $namespace = $this->config->get('name') ?: $this->config->get('namespace');
         $namespace = ucfirst($namespace);
         $namespace = strtok($namespace, '\\') . '\\';
-        $this->app->setNamespace($namespace);
+
+        return $namespace;
     }
 
     /**
@@ -124,24 +126,22 @@ class Console
         $config  = new Config($this->app->basePath());
         $apps    = $config->applications();
         if ($apps->isEmpty()) {
-            $this->error('There are not valid laravel configuration on: ' . PHP_EOL . $this->app->basePath() . '/composer.json');
-        } elseif ($apps->count() > 1) {
+            $this->error(
+                'There are not valid laravel configuration on: ' . PHP_EOL .
+                $config->filePath()
+            );
+        }
+        if ($apps->count() > 1) {
             $name = $this->getAppNameFromFirstArgument();
-            if (is_null($name)) {
-                $config = $apps->first();
-            } else {
-                $config = $apps->where('name', $name);
-                if ($config->isEmpty()) {
+            if (!is_null($name)) {
+                $apps = $apps->where('name', $name);
+                if ($apps->isEmpty()) {
                     $this->error('This is not valid laravel application: ' . $name);
-                } else {
-                    $config = $config->first();
                 }
             }
-        } else {
-            $config = $apps->first();
         }
 
-        return $config;
+        return $apps->first();
     }
 
     /**
