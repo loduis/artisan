@@ -1,204 +1,219 @@
-<?php namespace Illuminate\Console;
+<?php
 
+namespace Illuminate\Console;
+
+use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
 use Symfony\Component\Console\Input\InputArgument;
 
-abstract class GeneratorCommand extends Command {
+abstract class GeneratorCommand extends Command
+{
+    /**
+     * The filesystem instance.
+     *
+     * @var \Illuminate\Filesystem\Filesystem
+     */
+    protected $files;
 
-	/**
-	 * The filesystem instance.
-	 *
-	 * @var \Illuminate\Filesystem\Filesystem
-	 */
-	protected $files;
+    /**
+     * The type of class being generated.
+     *
+     * @var string
+     */
+    protected $type;
 
-	/**
-	 * The type of class being generated.
-	 *
-	 * @var string
-	 */
-	protected $type;
+    /**
+     * Create a new controller creator command instance.
+     *
+     * @param  \Illuminate\Filesystem\Filesystem  $files
+     * @return void
+     */
+    public function __construct(Filesystem $files)
+    {
+        parent::__construct();
 
-	/**
-	 * Create a new controller creator command instance.
-	 *
-	 * @param  \Illuminate\Filesystem\Filesystem  $files
-	 * @return void
-	 */
-	public function __construct(Filesystem $files)
-	{
-		parent::__construct();
+        $this->files = $files;
+    }
 
-		$this->files = $files;
-	}
+    /**
+     * Get the stub file for the generator.
+     *
+     * @return string
+     */
+    abstract protected function getStub();
 
-	/**
-	 * Get the stub file for the generator.
-	 *
-	 * @return string
-	 */
-	abstract protected function getStub();
+    /**
+     * Execute the console command.
+     *
+     * @return void
+     */
+    public function fire()
+    {
+        $name = $this->parseName($this->getNameInput());
 
-	/**
-	 * Execute the console command.
-	 *
-	 * @return void
-	 */
-	public function fire()
-	{
-		$name = $this->parseName($this->getNameInput());
+        $path = $this->getPath($name);
 
-		if ($this->files->exists($path = $this->getPath($name)))
-		{
-			return $this->error($this->type.' already exists!');
-		}
+        if ($this->alreadyExists($this->getNameInput())) {
+            $this->error($this->type.' already exists!');
 
-		$this->makeDirectory($path);
+            return false;
+        }
 
-		$this->files->put($path, $this->buildClass($name));
+        $this->makeDirectory($path);
 
-		$this->info($this->type.' created successfully.');
-	}
+        $this->files->put($path, $this->buildClass($name));
 
-	/**
-	 * Get the destination class path.
-	 *
-	 * @param  string  $name
-	 * @return string
-	 */
-	protected function getPath($name)
-	{
-		$name = str_replace($this->laravel->getNamespace(), '', $name);
+        $this->info($this->type.' created successfully.');
+    }
 
-		return $this->laravel['path'].'/'.str_replace('\\', '/', $name).'.php';
-	}
+    /**
+     * Determine if the class already exists.
+     *
+     * @param  string  $rawName
+     * @return bool
+     */
+    protected function alreadyExists($rawName)
+    {
+        $name = $this->parseName($rawName);
 
-	/**
-	 * Parse the name and format according to the root namespace.
-	 *
-	 * @param  string  $name
-	 * @return string
-	 */
-	protected function parseName($name)
-	{
-		$rootNamespace = $this->laravel->getNamespace();
+        return $this->files->exists($path = $this->getPath($name));
+    }
 
-		if (starts_with($name, $rootNamespace))
-		{
-			return $name;
-		}
+    /**
+     * Get the destination class path.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function getPath($name)
+    {
+        $name = str_replace($this->laravel->getNamespace(), '', $name);
 
-		if (str_contains($name, '/'))
-		{
-			$name = str_replace('/', '\\', $name);
-		}
+        return $this->laravel['path'].'/'.str_replace('\\', '/', $name).'.php';
+    }
 
-		return $this->parseName($this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\'.$name);
-	}
+    /**
+     * Parse the name and format according to the root namespace.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function parseName($name)
+    {
+        $rootNamespace = $this->laravel->getNamespace();
 
-	/**
-	 * Get the default namespace for the class.
-	 *
-	 * @param  string  $rootNamespace
-	 * @return string
-	 */
-	protected function getDefaultNamespace($rootNamespace)
-	{
-		return $rootNamespace;
-	}
+        if (Str::startsWith($name, $rootNamespace)) {
+            return $name;
+        }
 
-	/**
-	 * Build the directory for the class if necessary.
-	 *
-	 * @param  string  $path
-	 * @return string
-	 */
-	protected function makeDirectory($path)
-	{
-		if ( ! $this->files->isDirectory(dirname($path)))
-		{
-			$this->files->makeDirectory(dirname($path), 0777, true, true);
-		}
-	}
+        if (Str::contains($name, '/')) {
+            $name = str_replace('/', '\\', $name);
+        }
 
-	/**
-	 * Build the class with the given name.
-	 *
-	 * @param  string  $name
-	 * @return string
-	 */
-	protected function buildClass($name)
-	{
-		$stub = $this->files->get($this->getStub());
+        return $this->parseName($this->getDefaultNamespace(trim($rootNamespace, '\\')).'\\'.$name);
+    }
 
-		return $this->replaceNamespace($stub, $name)->replaceClass($stub, $name);
-	}
+    /**
+     * Get the default namespace for the class.
+     *
+     * @param  string  $rootNamespace
+     * @return string
+     */
+    protected function getDefaultNamespace($rootNamespace)
+    {
+        return $rootNamespace;
+    }
 
-	/**
-	 * Replace the namespace for the given stub.
-	 *
-	 * @param  string  $stub
-	 * @param  string  $name
-	 * @return $this
-	 */
-	protected function replaceNamespace(&$stub, $name)
-	{
-		$stub = str_replace(
-			'DummyNamespace', $this->getNamespace($name), $stub
-		);
+    /**
+     * Build the directory for the class if necessary.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    protected function makeDirectory($path)
+    {
+        if (! $this->files->isDirectory(dirname($path))) {
+            $this->files->makeDirectory(dirname($path), 0777, true, true);
+        }
+    }
 
-		$stub = str_replace(
-			'DummyRootNamespace', $this->laravel->getNamespace(), $stub
-		);
+    /**
+     * Build the class with the given name.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function buildClass($name)
+    {
+        $stub = $this->files->get($this->getStub());
 
-		return $this;
-	}
+        return $this->replaceNamespace($stub, $name)->replaceClass($stub, $name);
+    }
 
-	/**
-	 * Get the full namespace name for a given class.
-	 *
-	 * @param  string  $name
-	 * @return string
-	 */
-	protected function getNamespace($name)
-	{
-		return trim(implode('\\', array_slice(explode('\\', $name), 0, -1)), '\\');
-	}
+    /**
+     * Replace the namespace for the given stub.
+     *
+     * @param  string  $stub
+     * @param  string  $name
+     * @return $this
+     */
+    protected function replaceNamespace(&$stub, $name)
+    {
+        $stub = str_replace(
+            'DummyNamespace', $this->getNamespace($name), $stub
+        );
 
-	/**
-	 * Replace the class name for the given stub.
-	 *
-	 * @param  string  $stub
-	 * @param  string  $name
-	 * @return string
-	 */
-	protected function replaceClass($stub, $name)
-	{
-		$class = str_replace($this->getNamespace($name).'\\', '', $name);
+        $stub = str_replace(
+            'DummyRootNamespace', $this->laravel->getNamespace(), $stub
+        );
 
-		return str_replace('DummyClass', $class, $stub);
-	}
+        return $this;
+    }
 
-	/**
-	 * Get the desired class name from the input.
-	 *
-	 * @return string
-	 */
-	protected function getNameInput()
-	{
-		return $this->argument('name');
-	}
+    /**
+     * Get the full namespace name for a given class.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function getNamespace($name)
+    {
+        return trim(implode('\\', array_slice(explode('\\', $name), 0, -1)), '\\');
+    }
 
-	/**
-	 * Get the console command arguments.
-	 *
-	 * @return array
-	 */
-	protected function getArguments()
-	{
-		return array(
-			array('name', InputArgument::REQUIRED, 'The name of the class'),
-		);
-	}
+    /**
+     * Replace the class name for the given stub.
+     *
+     * @param  string  $stub
+     * @param  string  $name
+     * @return string
+     */
+    protected function replaceClass($stub, $name)
+    {
+        $class = str_replace($this->getNamespace($name).'\\', '', $name);
 
+        return str_replace('DummyClass', $class, $stub);
+    }
+
+    /**
+     * Get the desired class name from the input.
+     *
+     * @return string
+     */
+    protected function getNameInput()
+    {
+        return $this->argument('name');
+    }
+
+    /**
+     * Get the console command arguments.
+     *
+     * @return array
+     */
+    protected function getArguments()
+    {
+        return [
+            ['name', InputArgument::REQUIRED, 'The name of the class'],
+        ];
+    }
 }
