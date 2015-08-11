@@ -1,55 +1,58 @@
-<?php namespace Illuminate\Http;
+<?php
 
-use Symfony\Component\HttpFoundation\Cookie;
+namespace Illuminate\Http;
 
-trait ResponseTrait {
+trait ResponseTrait
+{
+    /**
+     * Get the status code for the response.
+     *
+     * @return int
+     */
+    public function status()
+    {
+        return $this->getStatusCode();
+    }
 
-	/**
-	 * Get the status code for the response.
-	 *
-	 * @return int
-	 */
-	public function status()
-	{
-		return $this->getStatusCode();
-	}
+    /**
+     * Get the content of the response.
+     *
+     * @return string
+     */
+    public function content()
+    {
+        return $this->getContent();
+    }
 
-	/**
-	 * Get the content of the response.
-	 *
-	 * @return string
-	 */
-	public function content()
-	{
-		return $this->getContent();
-	}
+    /**
+     * Set a header on the Response.
+     *
+     * @param  string  $key
+     * @param  string  $value
+     * @param  bool    $replace
+     * @return $this
+     */
+    public function header($key, $value, $replace = true)
+    {
+        $this->headers->set($key, $value, $replace);
 
-	/**
-	 * Set a header on the Response.
-	 *
-	 * @param  string  $key
-	 * @param  string  $value
-	 * @param  bool    $replace
-	 * @return $this
-	 */
-	public function header($key, $value, $replace = true)
-	{
-		$this->headers->set($key, $value, $replace);
+        return $this;
+    }
 
-		return $this;
-	}
+    /**
+     * Add a cookie to the response.
+     *
+     * @param  \Symfony\Component\HttpFoundation\Cookie|dynamic  $cookie
+     * @return $this
+     */
+    public function withCookie($cookie)
+    {
+        if (is_string($cookie) && function_exists('cookie')) {
+            $cookie = call_user_func_array('cookie', func_get_args());
+        }
 
-	/**
-	 * Add a cookie to the response.
-	 *
-	 * @param  \Symfony\Component\HttpFoundation\Cookie  $cookie
-	 * @return $this
-	 */
-	public function withCookie(Cookie $cookie)
-	{
-		$this->headers->setCookie($cookie);
+        $this->headers->setCookie($cookie);
 
-		return $this;
-	}
-
+        return $this;
+    }
 }
