@@ -1,6 +1,7 @@
-<?php namespace Illuminate\Contracts\Queue;
+<?php
 
-/**
- * This interface is primarily to "rename" ShouldBeQueued.
- */
-interface ShouldQueue extends ShouldBeQueued {}
+namespace Illuminate\Contracts\Queue;
+
+interface ShouldQueue
+{
+}
