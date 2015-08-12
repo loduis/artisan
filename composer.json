@@ -10,14 +10,15 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "d11wtq/boris": "~1.0",
-        "filp/whoops": "1.0.10",
+        "php": ">=5.5.9",
+        "league/flysystem": "~1.0",
+        "psy/psysh": "~0.5.2",
         "monolog/monolog": "~1.11",
-        "symfony/console": "2.7.*",
-        "symfony/debug": "2.7.*",
-        "symfony/finder": "2.7.*",
-        "symfony/http-foundation": "2.7.*",
+        "symfony/console": "3.0.*",
+        "symfony/debug": "3.0.*",
+        "symfony/finder": "3.0.*",
+        "symfony/http-foundation": "3.0.*",
+        "symfony/http-kernel": "3.0.*",
         "vlucas/phpdotenv": "~1.1"
     },
     "replace": {
@@ -32,20 +33,20 @@
         "illuminate/support": "self.version"
     },
     "autoload": {
-        "psr-0": {
-            "Illuminate": "src/"
-        },
         "files": [
-            "src/Illuminate/Foundation/helpers.php",
-            "src/Illuminate/Support/helpers.php"
-        ]
+          "src/Illuminate/Foundation/helpers.php",
+          "src/Illuminate/Support/helpers.php"
+        ],
+        "psr-4": {
+          "Illuminate\\": "src/Illuminate/"
+        }
     },
     "bin": [
         "artisan"
     ],
     "extra": {
         "branch-alias": {
-            "dev-master": "5.1-dev"
+            "dev-master": "5.2-dev"
         }
     },
     "minimum-stability": "dev"

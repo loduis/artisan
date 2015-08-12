@@ -5,21 +5,21 @@ namespace Illuminate\Foundation\Console;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 
-class RouteClearCommand extends Command
+class ViewClearCommand extends Command
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'route:clear';
+    protected $name = 'view:clear';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Remove the route cache file';
+    protected $description = 'Clear all compiled view files';
 
     /**
      * The filesystem instance.
@@ -29,7 +29,7 @@ class RouteClearCommand extends Command
     protected $files;
 
     /**
-     * Create a new route clear command instance.
+     * Create a new config clear command instance.
      *
      * @param  \Illuminate\Filesystem\Filesystem  $files
      * @return void
@@ -48,8 +48,12 @@ class RouteClearCommand extends Command
      */
     public function fire()
     {
-        $this->files->delete($this->laravel->getCachedRoutesPath());
+        $views = $this->files->glob($this->laravel['config']['view.compiled'].'/*');
 
-        $this->info('Route cache cleared!');
+        foreach ($views as $view) {
+            $this->files->delete($view);
+        }
+
+        $this->info('Compiled views cleared!');
     }
 }

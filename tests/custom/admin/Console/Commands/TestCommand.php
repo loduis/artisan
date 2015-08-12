@@ -37,6 +37,6 @@ class TestCommand extends Command
      */
     public function handle()
     {
-        echo 'App: ', app_path(), PHP_EOL;
+        //
     }
 }

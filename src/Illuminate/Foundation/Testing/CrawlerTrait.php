@@ -1,9 +1,14 @@
-<?php namespace Illuminate\Foundation\Testing;
+<?php
 
+namespace Illuminate\Foundation\Testing;
+
+use Exception;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 use Symfony\Component\DomCrawler\Form;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use PHPUnit_Framework_ExpectationFailedException as PHPUnitException;
 
 trait CrawlerTrait
@@ -37,6 +42,13 @@ trait CrawlerTrait
     protected $inputs = [];
 
     /**
+     * All of the stored uploads for the current page.
+     *
+     * @var array
+     */
+    protected $uploads = [];
+
+    /**
      * Visit the given URI with a GET request.
      *
      * @param  string  $uri
@@ -54,9 +66,11 @@ trait CrawlerTrait
      * @param  array  $headers
      * @return $this
      */
-    public function get($uri, array $headers = array())
+    public function get($uri, array $headers = [])
     {
-        $this->call('GET', $uri, [], [], [], $headers);
+        $server = $this->transformHeadersToServerVars($headers);
+
+        $this->call('GET', $uri, [], [], [], $server);
 
         return $this;
     }
@@ -69,9 +83,11 @@ trait CrawlerTrait
      * @param  array  $headers
      * @return $this
      */
-    public function post($uri, array $data = array(), array $headers = array())
+    public function post($uri, array $data = [], array $headers = [])
     {
-        $this->call('POST', $uri, $data, [], [], $headers);
+        $server = $this->transformHeadersToServerVars($headers);
+
+        $this->call('POST', $uri, $data, [], [], $server);
 
         return $this;
     }
@@ -84,9 +100,11 @@ trait CrawlerTrait
      * @param  array  $headers
      * @return $this
      */
-    public function put($uri, array $data = array(), array $headers = array())
+    public function put($uri, array $data = [], array $headers = [])
     {
-        $this->call('PUT', $uri, $data, [], [], $headers);
+        $server = $this->transformHeadersToServerVars($headers);
+
+        $this->call('PUT', $uri, $data, [], [], $server);
 
         return $this;
     }
@@ -99,9 +117,11 @@ trait CrawlerTrait
      * @param  array  $headers
      * @return $this
      */
-    public function patch($uri, array $data = array(), array $headers = array())
+    public function patch($uri, array $data = [], array $headers = [])
     {
-        $this->call('PATCH', $uri, $data, [], [], $headers);
+        $server = $this->transformHeadersToServerVars($headers);
+
+        $this->call('PATCH', $uri, $data, [], [], $server);
 
         return $this;
     }
@@ -114,9 +134,26 @@ trait CrawlerTrait
      * @param  array  $headers
      * @return $this
      */
-    public function delete($uri, array $data = array(), array $headers = array())
+    public function delete($uri, array $data = [], array $headers = [])
     {
-        $this->call('DELETE', $uri, $data, [], [], $headers);
+        $server = $this->transformHeadersToServerVars($headers);
+
+        $this->call('DELETE', $uri, $data, [], [], $server);
+
+        return $this;
+    }
+
+    /**
+     * Send the given request through the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return $this
+     */
+    public function handle(Request $request)
+    {
+        $this->currentUri = $request->fullUrl();
+
+        $this->response = $this->app->prepareResponse($this->app->handle($request));
 
         return $this;
     }
@@ -135,13 +172,13 @@ trait CrawlerTrait
     {
         $uri = $this->prepareUrlForRequest($uri);
 
-        $response = $this->call($method, $uri, $parameters, $cookies, $files);
+        $this->call($method, $uri, $parameters, $cookies, $files);
 
         $this->clearInputs()->followRedirects()->assertPageLoaded($uri);
 
         $this->currentUri = $this->app->make('request')->fullUrl();
 
-        $this->crawler = new Crawler($response->getContent(), $uri);
+        $this->crawler = new Crawler($this->response->getContent(), $uri);
 
         return $this;
     }
@@ -149,14 +186,30 @@ trait CrawlerTrait
     /**
      * Make a request to the application using the given form.
      *
-     * @param  \Symfony\Component\DomCrawler\Form
+     * @param  \Symfony\Component\DomCrawler\Form  $form
+     * @param  array  $uploads
      * @return $this
      */
-    protected function makeRequestUsingForm(Form $form)
+    protected function makeRequestUsingForm(Form $form, array $uploads = [])
     {
+        $files = $this->convertUploadsForTesting($form, $uploads);
+
         return $this->makeRequest(
-            $form->getMethod(), $form->getUri(), $form->getValues(), [], $form->getFiles()
+            $form->getMethod(), $form->getUri(), $this->extractParametersFromForm($form), [], $files
         );
+    }
+
+    /**
+     * Extract the parameters from the given form.
+     *
+     * @param  \Symfony\Component\DomCrawler\Form  $form
+     * @return array
+     */
+    protected function extractParametersFromForm(Form $form)
+    {
+        parse_str(http_build_query($form->getValues()), $parameters);
+
+        return $parameters;
     }
 
     /**
@@ -181,6 +234,8 @@ trait CrawlerTrait
     protected function clearInputs()
     {
         $this->inputs = [];
+
+        $this->uploads = [];
 
         return $this;
     }
@@ -216,9 +271,70 @@ trait CrawlerTrait
     {
         $method = $negate ? 'assertNotRegExp' : 'assertRegExp';
 
-        $this->$method("/".preg_quote($text, '/')."/i", $this->response->getContent());
+        $rawPattern = preg_quote($text, '/');
+
+        $escapedPattern = preg_quote(e($text), '/');
+
+        $this->$method("/({$rawPattern}|{$escapedPattern})/i", $this->response->getContent());
 
         return $this;
+    }
+
+    /**
+     * Assert that a given string is not seen on the page.
+     *
+     * @param  string  $text
+     * @return $this
+     */
+    protected function dontSee($text)
+    {
+        return $this->see($text, true);
+    }
+
+    /**
+     * Assert that an input field contains the given value.
+     *
+     * @param  string  $selector
+     * @param  string  $expected
+     * @return $this
+     */
+    public function seeInField($selector, $expected)
+    {
+        $this->assertSame(
+            $this->getInputOrTextAreaValue($selector), $expected,
+            "The input [{$selector}] does not contain the expected value [{$expected}]."
+        );
+
+        return $this;
+    }
+
+    /**
+     * Get the value of an input or textarea.
+     *
+     * @param  string  $selector
+     * @return string
+     *
+     * @throws \Exception
+     */
+    protected function getInputOrTextAreaValue($selector)
+    {
+        $field = $this->filterByNameOrId($selector);
+
+        if ($field->count() == 0) {
+            throw new Exception("There are no elements with the name or ID [$selector]");
+        }
+
+        $element = $field->nodeName();
+
+        if ($element == 'input') {
+            return $field->attr('value');
+        }
+
+        if ($element == 'textarea') {
+            return $field->text();
+        }
+
+        throw new Exception("Given selector [$selector] is not an input or textarea");
     }
 
     /**
@@ -299,7 +415,7 @@ trait CrawlerTrait
             $expected = $this->formatToExpectedJson($key, $value);
 
             $this->assertTrue(
-                str_contains($actual, $this->formatToExpectedJson($key, $value)),
+                Str::contains($actual, $this->formatToExpectedJson($key, $value)),
                 "Unable to find JSON fragment [{$expected}] within [{$actual}]."
             );
         }
@@ -318,15 +434,39 @@ trait CrawlerTrait
     {
         $expected = json_encode([$key => $value]);
 
-        if (starts_with($expected, '{')) {
+        if (Str::startsWith($expected, '{')) {
             $expected = substr($expected, 1);
         }
 
-        if (ends_with($expected, '}')) {
+        if (Str::endsWith($expected, '}')) {
             $expected = substr($expected, 0, -1);
         }
 
         return $expected;
+    }
+
+    /**
+     * Asserts that the status code of the response matches the given code.
+     *
+     * @param  int  $status
+     * @return $this
+     */
+    protected function seeStatusCode($status)
+    {
+        $this->assertEquals($status, $this->response->getStatusCode());
+
+        return $this;
+    }
+
+    /**
+     * Assert that the current page matches a given URI.
+     *
+     * @param  string  $uri
+     * @return $this
+     */
+    protected function seePageIs($uri)
+    {
+        return $this->landOn($uri);
     }
 
     /**
@@ -353,6 +493,61 @@ trait CrawlerTrait
         $this->assertEquals(
             $uri, $this->currentUri, "Did not land on expected page [{$uri}].\n"
         );
+
+        return $this;
+    }
+
+    /**
+     * Asserts that the response contains the given header and equals the optional value.
+     *
+     * @param  string $headerName
+     * @param  mixed $value
+     * @return $this
+     */
+    protected function seeHeader($headerName, $value = null)
+    {
+        $headers = $this->response->headers;
+
+        $this->assertTrue($headers->has($headerName), "Header [{$headerName}] not present on response.");
+
+        if (! is_null($value)) {
+            $this->assertEquals(
+                $headers->get($headerName), $value,
+                "Header [{$headerName}] was found, but value [{$headers->get($headerName)}] does not match [{$value}]."
+            );
+        }
+
+        return $this;
+    }
+
+    /**
+     * Asserts that the response contains the given cookie and equals the optional value.
+     *
+     * @param  string $cookieName
+     * @param  mixed $value
+     * @return $this
+     */
+    protected function seeCookie($cookieName, $value = null)
+    {
+        $headers = $this->response->headers;
+
+        $exist = false;
+
+        foreach ($headers->getCookies() as $cookie) {
+            if ($cookie->getName() === $cookieName) {
+                $exist = true;
+                break;
+            }
+        }
+
+        $this->assertTrue($exist, "Cookie [{$cookieName}] not present on response.");
+
+        if (! is_null($value)) {
+            $this->assertEquals(
+                $cookie->getValue(), $value,
+                "Cookie [{$cookieName}] was found, but value [{$cookie->getValue()}] does not match [{$value}]."
+            );
+        }
 
         return $this;
     }
@@ -406,6 +601,17 @@ trait CrawlerTrait
     }
 
     /**
+     * Uncheck a checkbox on the page.
+     *
+     * @param  string  $element
+     * @return $this
+     */
+    protected function uncheck($element)
+    {
+        return $this->storeInput($element, false);
+    }
+
+    /**
      * Select an option from a drop-down.
      *
      * @param  string  $option
@@ -426,6 +632,8 @@ trait CrawlerTrait
      */
     protected function attach($absolutePath, $element)
     {
+        $this->uploads[$element] = $absolutePath;
+
         return $this->storeInput($element, $absolutePath);
     }
 
@@ -437,7 +645,7 @@ trait CrawlerTrait
      */
     protected function press($buttonText)
     {
-        return $this->submitForm($buttonText, $this->inputs);
+        return $this->submitForm($buttonText, $this->inputs, $this->uploads);
     }
 
     /**
@@ -445,11 +653,12 @@ trait CrawlerTrait
      *
      * @param  string  $buttonText
      * @param  array  $inputs
+     * @param  array  $uploads
      * @return $this
      */
-    protected function submitForm($buttonText, $inputs = [])
+    protected function submitForm($buttonText, $inputs = [], $uploads = [])
     {
-        $this->makeRequestUsingForm($this->fillForm($buttonText, $inputs));
+        $this->makeRequestUsingForm($this->fillForm($buttonText, $inputs), $uploads);
 
         return $this;
     }
@@ -539,7 +748,7 @@ trait CrawlerTrait
     {
         $name = str_replace('#', '', $name);
 
-        return $this->crawler->filter("{$element}#{$name}, {$element}[name={$name}]");
+        return $this->crawler->filter("{$element}#{$name}, {$element}[name='{$name}']");
     }
 
     /**
@@ -556,6 +765,8 @@ trait CrawlerTrait
      */
     public function call($method, $uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null)
     {
+        $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
+
         $this->currentUri = $this->prepareUrlForRequest($uri);
 
         $request = Request::create(
@@ -563,7 +774,11 @@ trait CrawlerTrait
             $cookies, $files, $server, $content
         );
 
-        return $this->response = $this->app->make('Illuminate\Contracts\Http\Kernel')->handle($request);
+        $response = $kernel->handle($request);
+
+        $kernel->terminate($request, $response);
+
+        return $this->response = $response;
     }
 
     /**
@@ -633,15 +848,76 @@ trait CrawlerTrait
      */
     protected function prepareUrlForRequest($uri)
     {
-        if (starts_with($uri, '/')) {
+        if (Str::startsWith($uri, '/')) {
             $uri = substr($uri, 1);
         }
 
-        if (! starts_with($uri, 'http')) {
+        if (! Str::startsWith($uri, 'http')) {
             $uri = $this->baseUrl.'/'.$uri;
         }
 
         return trim($uri, '/');
+    }
+
+    /**
+     * Transform headers array to array of $_SERVER vars with HTTP_* format.
+     *
+     * @param  array  $headers
+     * @return array
+     */
+    protected function transformHeadersToServerVars(array $headers)
+    {
+        $server = [];
+        $prefix = 'HTTP_';
+
+        foreach ($headers as $name => $value) {
+            $name = strtr(strtoupper($name), '-', '_');
+
+            if (! starts_with($name, $prefix) && $name != 'CONTENT_TYPE') {
+                $name = $prefix.$name;
+            }
+
+            $server[$name] = $value;
+        }
+
+        return $server;
+    }
+
+    /**
+     * Convert the given uploads to UploadedFile instances.
+     *
+     * @param  \Symfony\Component\DomCrawler\Form  $form
+     * @param  array  $uploads
+     * @return array
+     */
+    protected function convertUploadsForTesting(Form $form, array $uploads)
+    {
+        $files = $form->getFiles();
+
+        $names = array_keys($files);
+
+        $files = array_map(function (array $file, $name) use ($uploads) {
+            return isset($uploads[$name])
+                        ? $this->getUploadedFileForTesting($file, $uploads, $name)
+                        : $file;
+        }, $files, $names);
+
+        return array_combine($names, $files);
+    }
+
+    /**
+     * Create an UploadedFile instance for testing.
+     *
+     * @param  array  $file
+     * @param  array  $uploads
+     * @param  string  $name
+     * @return \Symfony\Component\HttpFoundation\File\UploadedFile
+     */
+    protected function getUploadedFileForTesting($file, $uploads, $name)
+    {
+        return new UploadedFile(
+            $file['tmp_name'], basename($uploads[$name]), $file['type'], $file['size'], $file['error'], true
+        );
     }
 
     /**
@@ -654,5 +930,23 @@ trait CrawlerTrait
         $this->app->instance('middleware.disable', true);
 
         return $this;
+    }
+
+    /**
+     * Dump the content from the last response.
+     *
+     * @return void
+     */
+    public function dump()
+    {
+        $content = $this->response->getContent();
+
+        $json = json_decode($content);
+
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $content = $json;
+        }
+
+        dd($content);
     }
 }

@@ -12,16 +12,16 @@
                     "name": "app",
                     "description": "This is the main application",
                     "paths": {
-                        "config": "app/config",
-                        "storage": "app/storage"
+                        "config": "config",
+                        "storage": "storage"
                     }
                 },
                 {
                     "name": "admin",
                     "description": "This is the main application",
                     "paths": {
-                        "config": "web/config",
-                        "storage": "web/storage"
+                        "config": "config",
+                        "storage": "storage"
                     },
                     "commands": {
                         "command.make" : "Illuminate\\Foundation\\Console\\CommandMakeCommand"

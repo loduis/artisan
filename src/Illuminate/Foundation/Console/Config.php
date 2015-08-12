@@ -21,18 +21,20 @@ class Config
     /**
      * keep the laravel config
      *
-     * @var Illuminate\Collection
+     * @var \Illuminate\Support\Collection
      */
     private $data;
+
+    private $psr4 = [];
 
     /**
      * Create a new Illuminate Artisan config instance.
      */
     public function __construct($basePath)
     {
-        $this->basePath   = $basePath;
-        $config           = $this->loadFromFile($this->filePath());
-        $this->data       = new Collection($config);
+        $this->basePath = $basePath;
+        $config         = $this->loadFromFile($this->filePath());
+        $this->data     = new Collection($config);
     }
 
     private function loadFromFile($file)
@@ -42,11 +44,13 @@ class Config
             $content = file_get_contents($file);
 
             $config = json_decode($content, true);
+            $psr4   = (array) data_get($config, 'autoload.psr-4');
             $config = isset($config['extra']) ? $config['extra'] : [];
             $config = isset($config['laravel']) ? $config['laravel'] : [];
             if (!is_array($config)) {
                 $config = [];
             }
+            $this->psr4 = $psr4;
         }
 
         return $config;
@@ -57,15 +61,39 @@ class Config
         return $this->basePath . '/' . static::LARAVEL_CONFIG_FILE;
     }
 
+    private function getNamespace($app)
+    {
+        $namespace = isset($app['namespace']) ? $app['namespace'] : $app['name'];
+        $namespace = ucfirst($namespace);
+        $namespace = strtok($namespace, '\\') . '\\';
+
+        return $namespace;
+    }
+
+    private function getPaths($app, $appPath)
+    {
+        $appPath = rtrim($appPath, '/');
+        $paths           = isset($app['paths']) ? $app['paths'] : [];
+        unset ($paths['path']);
+        $newPaths = [];
+        foreach ($paths as $key => $path) {
+            $newPaths[$key] = strpos($path, '..') !== false ? $path : ($appPath . '/' . $path);
+        }
+        $newPaths['path'] = $appPath;
+
+        return $newPaths;
+    }
+
+
     public function applications()
     {
         $apps = $this->data->get('apps');
         if (is_array($apps)) {
             $apps = array_map(
                 function ($app) {
-                    if (!isset($app['paths'])) {
-                        $app['paths'] = [];
-                    }
+                    $namespace        = $this->getNamespace($app);
+                    $app['namespace'] = $namespace;
+                    $app['paths']     = $this->getPaths($app, $this->psr4[$namespace]);
 
                     return new Collection($app);
                 },

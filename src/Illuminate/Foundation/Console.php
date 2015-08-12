@@ -1,14 +1,14 @@
 <?php namespace Illuminate\Foundation;
 
+use Illuminate\Foundation\Console\Config;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
-use InvalidArgumentException;
-use Symfony\Component\Finder\Finder;
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Console\Config;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Illuminate\Console\Command;
+use Symfony\Component\Finder\Finder;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 
 class Console
 {
@@ -37,13 +37,15 @@ class Console
         'Illuminate\Contracts\Debug\ExceptionHandler' => 'Illuminate\Foundation\Exceptions\Handler'
     ];
 
+
+
     /**
      * The main commands for console.
      * @var array
      */
     private $commands = [
         'command.console.make' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-        'command.environment' => 'Illuminate\Foundation\Console\EnvironmentCommand'
+        'command.environment'  => 'Illuminate\Foundation\Console\EnvironmentCommand'
     ];
 
     private $output;
@@ -55,20 +57,12 @@ class Console
      */
     public function __construct($basePath)
     {
-        $this->app     = new Application($basePath);
-        $this->output  = new ConsoleOutput;
-        $this->config  = $this->getConfig();
-        $this->app->setNamespace($this->getNamespace());
+        $this->app    = new Application($basePath);
+        $this->output = new ConsoleOutput;
+        $this->config = $this->getConfig();
+        $namespace    = $this->useNamespace();
         $this->useCustomPaths();
-    }
-
-    private function getNamespace()
-    {
-        $namespace = $this->config->get('name') ?: $this->config->get('namespace');
-        $namespace = ucfirst($namespace);
-        $namespace = strtok($namespace, '\\') . '\\';
-
-        return $namespace;
+        $this->registerBinds($namespace);
     }
 
     /**
@@ -88,7 +82,7 @@ class Console
         }
 
         // Start
-        $status = $this->app->make('Illuminate\Contracts\Console\Kernel')->handle(new ArgvInput, $this->output);
+        $status = $this->app->make(ConsoleKernel::class)->handle(new ArgvInput, $this->output);
 
         exit($status);
     }
@@ -97,6 +91,7 @@ class Console
      * Shortcut for run console
      *
      * @param  string $basePath
+     *
      * @return void
      */
     public static function run($basePath)
@@ -108,6 +103,7 @@ class Console
      * Report error and stop console
      *
      * @param  string $string
+     *
      * @return void
      */
     private function error($string)
@@ -119,12 +115,12 @@ class Console
     /**
      * Get the config store on composer file in basePath
      *
-     * @return Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection
      */
     private function getConfig()
     {
-        $config  = new Config($this->app->basePath());
-        $apps    = $config->applications();
+        $config = new Config($this->app->basePath());
+        $apps   = $config->applications();
         if ($apps->isEmpty()) {
             $this->error(
                 'There are not valid laravel configuration on: ' . PHP_EOL .
@@ -147,9 +143,10 @@ class Console
     /**
      * Register command in container
      *
-     * @param  string $commandName
-     * @param  string|Illuminate\Console\Command $commandClass
-     * @return void
+     * @param  string                             $commandName
+     * @param  string|\Illuminate\Console\Command $commandClass
+     *
+     * @return string
      */
     protected function registerCommand($commandName, $commandClass)
     {
@@ -164,11 +161,12 @@ class Console
      * Create one instance for command class
      *
      * @param  string $commandClass
-     * @return Illuminate\Console\Command
+     *
+     * @return \Illuminate\Console\Command
      */
     private function instanceCommand($commandClass)
     {
-        $class       = new ReflectionClass($commandClass);
+        $class = new ReflectionClass($commandClass);
 
         return $class->newInstanceArgs($this->resolveCommandParameters($class->getConstructor()));
     }
@@ -177,13 +175,14 @@ class Console
      * Resolve the parameters in the constructor
      *
      * @param  ReflectionMethod $constructor
+     *
      * @return array
      *
      * @throws \InvalidArgumentException
      */
     protected function resolveCommandParameters(ReflectionMethod $constructor)
     {
-        $params      = [];
+        $params = [];
         foreach ($constructor->getParameters() as $parameter) {
             $paramClass = $parameter->getClass();
             if (!is_null($paramClass)) {
@@ -206,9 +205,9 @@ class Console
      */
     private function getScanCommands()
     {
-        $files = Finder::create()
-                            ->in($this->app['path.commands'])
-                            ->name('*Command.php');
+        $files    = Finder::create()
+            ->in($this->app['path.commands'])
+            ->name('*Command.php');
         $commands = [];
 
         foreach ($files as $file) {
@@ -222,6 +221,7 @@ class Console
      * Get the command name with command. append on start
      *
      * @param  string $name
+     *
      * @return string
      */
     private function getCommandName($name)
@@ -236,7 +236,8 @@ class Console
     /**
      * Get the command class for the file
      *
-     * @param  string|Symfony\Component\Finder\SplFileInfo $file
+     * @param  string|\Symfony\Component\Finder\SplFileInfo $file
+     *
      * @return string
      */
     private function getCommandFromSource($file)
@@ -247,10 +248,10 @@ class Console
         $namespace    = '';
         $commandName  = '';
 
-        for ($i = 0; $i < $count; $i ++) {
+        for ($i = 0; $i < $count; $i++) {
             if (!$commandClass) {
                 if ($tokens[$i][0] == T_NAMESPACE) {
-                    for ($j = $i+1; $j < $count; ++ $j) {
+                    for ($j = $i + 1; $j < $count; ++$j) {
                         if ($tokens[$j][0] == T_STRING) {
                             $namespace .= "\\" . $tokens[$j][1];
                         } elseif ($tokens[$j] == '{' or $tokens[$j] == ';') {
@@ -261,22 +262,24 @@ class Console
                 if ($tokens[$i][0] == T_CLASS) {
                     for ($j = $i + 1; $j < $count; ++$j) {
                         if ($tokens[$j] == '{') {
-                            $commandClass .= $namespace."\\".$tokens[$i+2][1];
+                            $commandClass .= $namespace . "\\" . $tokens[$i + 2][1];
                             break;
                         }
                     }
                 }
-            } else if ($tokens[$i][0] == T_PROTECTED && isset($tokens[$i + 2])) {
-                $token = $tokens[$i + 2];
-                if ($token[0]  == T_VARIABLE && $token[1] == '$name') {
-                    for ($j = $i + 3; $j < $count; ++ $j) {
-                        if ($tokens[$j][0] == T_CONSTANT_ENCAPSED_STRING) {
-                            $commandName = $tokens[$j][1];
-                            $commandName = trim($commandName, "'");
-                            $commandName = trim($commandName, '"');
-                            break;
-                        } elseif ($tokens[$j] == ';') {
-                            break;
+            } else {
+                if ($tokens[$i][0] == T_PROTECTED && isset($tokens[$i + 2])) {
+                    $token = $tokens[$i + 2];
+                    if ($token[0] == T_VARIABLE && $token[1] == '$name') {
+                        for ($j = $i + 3; $j < $count; ++$j) {
+                            if ($tokens[$j][0] == T_CONSTANT_ENCAPSED_STRING) {
+                                $commandName = $tokens[$j][1];
+                                $commandName = trim($commandName, "'");
+                                $commandName = trim($commandName, '"');
+                                break;
+                            } elseif ($tokens[$j] == ';') {
+                                break;
+                            }
                         }
                     }
                 }
@@ -342,7 +345,7 @@ class Console
     private function getAppNameFromFirstArgument()
     {
         if (count($_SERVER['argv']) >= 2) {
-            $name     =  $_SERVER['argv'][1];
+            $name = $_SERVER['argv'][1];
             unset($_SERVER['argv'][1]);
 
             $_SERVER['argv'] = array_values($_SERVER['argv']);
@@ -350,6 +353,14 @@ class Console
 
             return $name;
         }
+    }
+
+    private function useNamespace()
+    {
+        $namespace = $this->config->get('namespace');
+        $this->app->useNamespace($namespace);
+
+        return $namespace;
     }
 
     /**
@@ -360,8 +371,20 @@ class Console
     private function useCustomPaths()
     {
         foreach ($this->config->get('paths') as $key => $path) {
-            $key = $key == 'path' ? $key : 'path.' . $key;
+            $key             = $key == 'path' ? $key : 'path.' . $key;
             $this->app[$key] = realpath($this->app->basePath() . '/' . $path);
         }
+    }
+
+    private function registerBinds($namespace)
+    {
+        $binds = [];
+        foreach ($this->binds as $contract => $foundationClass) {
+            $appClass = str_replace('Illuminate\\Foundation\\', $namespace, $foundationClass);
+            $classPath = base_path(str_replace('\\', '/', Str::camel($appClass))) . '.php';
+            $binds[$contract] = file_exists($classPath) ? $appClass : $foundationClass;
+        }
+
+        $this->binds  = $binds;
     }
 }
