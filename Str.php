@@ -2,8 +2,8 @@
 
 namespace Illuminate\Support;
 
-use Stringy\Stringy;
 use RuntimeException;
+use Stringy\StaticStringy;
 use Illuminate\Support\Traits\Macroable;
 
 class Str
@@ -39,7 +39,7 @@ class Str
      */
     public static function ascii($value)
     {
-        return (string) Stringy::create($value)->toAscii();
+        return (string) StaticStringy::toAscii($value);
     }
 
     /**
@@ -166,7 +166,7 @@ class Str
      */
     public static function lower($value)
     {
-        return mb_strtolower($value);
+        return mb_strtolower($value, 'UTF-8');
     }
 
     /**
@@ -323,7 +323,7 @@ class Str
      */
     public static function upper($value)
     {
-        return mb_strtoupper($value);
+        return mb_strtoupper($value, 'UTF-8');
     }
 
     /**
@@ -432,5 +432,29 @@ class Str
         $value = ucwords(str_replace(['-', '_'], ' ', $value));
 
         return static::$studlyCache[$key] = str_replace(' ', '', $value);
+    }
+
+    /**
+     * Returns the portion of string specified by the start and length parameters.
+     *
+     * @param  string  $string
+     * @param  int  $start
+     * @param  int|null  $length
+     * @return string
+     */
+    public static function substr($string, $start, $length = null)
+    {
+        return mb_substr($string, $start, $length, 'UTF-8');
+    }
+
+    /**
+     * Make a string's first character uppercase.
+     *
+     * @param  string  $string
+     * @return string
+     */
+    public static function ucfirst($string)
+    {
+        return static::upper(static::substr($string, 0, 1)).static::substr($string, 1);
     }
 }
