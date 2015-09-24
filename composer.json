@@ -19,6 +19,7 @@
         "symfony/finder": "3.0.*",
         "symfony/http-foundation": "3.0.*",
         "symfony/http-kernel": "3.0.*",
+        "symfony/process": "3.0.*",
         "vlucas/phpdotenv": "~1.1"
     },
     "replace": {

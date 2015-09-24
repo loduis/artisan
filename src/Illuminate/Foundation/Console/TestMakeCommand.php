@@ -4,39 +4,28 @@ namespace Illuminate\Foundation\Console;
 
 use Illuminate\Console\GeneratorCommand;
 
-class EventMakeCommand extends GeneratorCommand
+class TestMakeCommand extends GeneratorCommand
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'make:event';
+    protected $name = 'make:test';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new event class';
+    protected $description = 'Create a new test class';
 
     /**
      * The type of class being generated.
      *
      * @var string
      */
-    protected $type = 'Event';
-
-    /**
-     * Determine if the class already exists.
-     *
-     * @param  string  $rawName
-     * @return bool
-     */
-    protected function alreadyExists($rawName)
-    {
-        return class_exists($rawName);
-    }
+    protected $type = 'Test';
 
     /**
      * Get the stub file for the generator.
@@ -45,7 +34,20 @@ class EventMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return __DIR__.'/stubs/event.stub';
+        return __DIR__.'/stubs/test.stub';
+    }
+
+    /**
+     * Get the destination class path.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function getPath($name)
+    {
+        $name = str_replace($this->laravel->getNamespace(), '', $name);
+
+        return $this->laravel['path.base'].'/tests/'.str_replace('\\', '/', $name).'.php';
     }
 
     /**
@@ -56,6 +58,6 @@ class EventMakeCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace.'\Events';
+        return $rootNamespace;
     }
 }

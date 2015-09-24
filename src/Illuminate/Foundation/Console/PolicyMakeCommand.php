@@ -4,39 +4,28 @@ namespace Illuminate\Foundation\Console;
 
 use Illuminate\Console\GeneratorCommand;
 
-class EventMakeCommand extends GeneratorCommand
+class PolicyMakeCommand extends GeneratorCommand
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'make:event';
+    protected $name = 'make:policy';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new event class';
+    protected $description = 'Create a new policy class';
 
     /**
      * The type of class being generated.
      *
      * @var string
      */
-    protected $type = 'Event';
-
-    /**
-     * Determine if the class already exists.
-     *
-     * @param  string  $rawName
-     * @return bool
-     */
-    protected function alreadyExists($rawName)
-    {
-        return class_exists($rawName);
-    }
+    protected $type = 'Policy';
 
     /**
      * Get the stub file for the generator.
@@ -45,7 +34,7 @@ class EventMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return __DIR__.'/stubs/event.stub';
+        return __DIR__.'/stubs/policy.stub';
     }
 
     /**
@@ -56,6 +45,6 @@ class EventMakeCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace.'\Events';
+        return $rootNamespace.'\Policies';
     }
 }

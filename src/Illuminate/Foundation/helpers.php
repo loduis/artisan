@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Str;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Auth\Access\Gate;
 
 if (! function_exists('abort')) {
     /**
@@ -365,6 +366,21 @@ if (! function_exists('patch')) {
     }
 }
 
+if (! function_exists('policy')) {
+    /**
+     * Get a policy instance for a given class.
+     *
+     * @param  object|string  $class
+     * @return mixed
+     *
+     * @throws \InvalidArgumentException
+     */
+    function policy($class)
+    {
+        return app(Gate::class)->getPolicyFor($class);
+    }
+}
+
 if (! function_exists('post')) {
     /**
      * Register a new POST route with the router.
@@ -423,6 +439,24 @@ if (! function_exists('redirect')) {
         }
 
         return app('redirect')->to($to, $status, $headers, $secure);
+    }
+}
+
+if (! function_exists('request')) {
+    /**
+     * Get an instance of the current request or an input item from the request.
+     *
+     * @param  string  $key
+     * @param  mixed   $default
+     * @return \Illuminate\Http\Request|string|array
+     */
+    function request($key = null, $default = null)
+    {
+        if (is_null($key)) {
+            return app('request');
+        }
+
+        return app('request')->input($key, $default);
     }
 }
 
@@ -678,13 +712,15 @@ if (! function_exists('elixir')) {
      *
      * @param  string  $file
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     function elixir($file)
     {
         static $manifest = null;
 
         if (is_null($manifest)) {
-            $manifest = json_decode(file_get_contents(public_path().'/build/rev-manifest.json'), true);
+            $manifest = json_decode(file_get_contents(public_path('build/rev-manifest.json')), true);
         }
 
         if (isset($manifest[$file])) {

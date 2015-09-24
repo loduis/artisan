@@ -25,7 +25,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      *
      * @var string
      */
-    const VERSION = '5.2-dev';
+    const VERSION = '5.2.0-Dev';
 
     /**
      * The base path for the Laravel installation.
@@ -1122,7 +1122,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             return $this->namespace;
         }
 
-        $composer = json_decode(file_get_contents(base_path().'/composer.json'), true);
+        $composer = json_decode(file_get_contents(base_path('composer.json')), true);
 
         foreach ((array) data_get($composer, 'autoload.psr-4') as $namespace => $path) {
             foreach ((array) $path as $pathChoice) {
