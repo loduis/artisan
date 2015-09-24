@@ -270,7 +270,7 @@ class Console
             } else {
                 if ($tokens[$i][0] == T_PROTECTED && isset($tokens[$i + 2])) {
                     $token = $tokens[$i + 2];
-                    if ($token[0] == T_VARIABLE && $token[1] == '$name') {
+                    if ($token[0] == T_VARIABLE && ($token[1] == '$name' || $token[1] == '$signature')) {
                         for ($j = $i + 3; $j < $count; ++$j) {
                             if ($tokens[$j][0] == T_CONSTANT_ENCAPSED_STRING) {
                                 $commandName = $tokens[$j][1];
