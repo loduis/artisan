@@ -7,17 +7,15 @@
     },
     "extra": {
         "laravel": {
-            "apps": [
-                {
-                    "name": "app",
+            "applications": {
+                "app": {
                     "description": "This is the main application",
                     "paths": {
                         "config": "config",
                         "storage": "storage"
                     }
                 },
-                {
-                    "name": "admin",
+                "admin" : {
                     "description": "This is the main application",
                     "paths": {
                         "config": "config",
@@ -27,7 +25,7 @@
                         "command.make" : "Illuminate\\Foundation\\Console\\CommandMakeCommand"
                     }
                 }
-            ]
+            }
         }
     }
 }

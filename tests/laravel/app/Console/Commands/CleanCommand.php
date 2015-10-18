@@ -57,5 +57,7 @@ class CleanCommand extends Command
         ];
 
         $this->files->put($logPath . '/.gitignore', implode(PHP_EOL, $ignore) . PHP_EOL);
+
+        $this->info('Storage clean.');
     }
 }

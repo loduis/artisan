@@ -8,29 +8,29 @@
     },
     "extra": {
         "laravel": {
-            "apps": [
-                {
-                    "name": "app",
+            "commands": {
+                "clean": "App\\Console\\Commands\\CleanCommand"
+            },
+            "applications": {
+                "app": {
                     "description": "This is the main application",
                     "commands": {
                         "tinker" : "Illuminate\\Foundation\\Console\\TinkerCommand"
                     }
                 },
-                {
-                    "name": "admin",
+                "admin": {
                     "description": "This is the admin application",
                     "paths" : {
                         "commands": "Console/Commands"
                     }
                 },
-                {
-                    "name": "web",
+                "web": {
                     "description": "This is the web application",
                     "paths" : {
                         "commands": "Console/Commands"
                     }
                 }
-            ]
+            }
         }
     }
 }
