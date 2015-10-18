@@ -4,6 +4,7 @@ namespace Illuminate\Routing;
 
 use Closure;
 use LogicException;
+use ReflectionMethod;
 use ReflectionFunction;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -160,6 +161,8 @@ class Route
      *
      * @param  \Illuminate\Http\Request  $request
      * @return mixed
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     protected function runController(Request $request)
     {
@@ -237,9 +240,7 @@ class Route
         $uri = preg_replace('/\{(\w+?)\?\}/', '{$1}', $this->uri);
 
         $this->compiled = with(
-
             new SymfonyRoute($uri, $optionals, $this->wheres, [], $this->domain() ?: '')
-
         )->compile();
     }
 
@@ -272,10 +273,32 @@ class Route
         }
 
         $this->action['middleware'] = array_merge(
-            array_get($this->action, 'middleware', []), $middleware
+            Arr::get($this->action, 'middleware', []), $middleware
         );
 
         return $this;
+    }
+
+    /**
+     * Get the parameters that are listed in the route / controller signature.
+     *
+     * @return array
+     */
+    public function signatureParameters($subClass = null)
+    {
+        $action = $this->getAction();
+
+        if (is_string($action['uses'])) {
+            list($class, $method) = explode('@', $action['uses']);
+
+            $parameters = (new ReflectionMethod($class, $method))->getParameters();
+        } else {
+            $parameters = (new ReflectionFunction($action['uses']))->getParameters();
+        }
+
+        return is_null($subClass) ? $parameters : array_filter($parameters, function ($p) use ($subClass) {
+            return $p->getClass() && $p->getClass()->isSubclassOf($subClass);
+        });
     }
 
     /**
@@ -345,7 +368,7 @@ class Route
      *
      * @return array
      *
-     * @throws LogicException
+     * @throws \LogicException
      */
     public function parameters()
     {
@@ -764,13 +787,12 @@ class Route
     /**
      * Add or change the route name.
      *
-     * @param $name
-     *
+     * @param  string  $name
      * @return $this
      */
     public function name($name)
     {
-        $this->action['as'] = $name;
+        $this->action['as'] = isset($this->action['as']) ? $this->action['as'].$name : $name;
 
         return $this;
     }
@@ -836,7 +858,7 @@ class Route
      *
      * @return void
      *
-     * @throws LogicException
+     * @throws \LogicException
      */
     public function prepareForSerialization()
     {
