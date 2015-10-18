@@ -112,22 +112,6 @@ if (! function_exists('array_except')) {
     }
 }
 
-if (! function_exists('array_fetch')) {
-    /**
-     * Fetch a flattened array of a nested array element.
-     *
-     * @param  array   $array
-     * @param  string  $key
-     * @return array
-     *
-     * @deprecated since version 5.1. Use array_pluck instead.
-     */
-    function array_fetch($array, $key)
-    {
-        return Arr::fetch($array, $key);
-    }
-}
-
 if (! function_exists('array_first')) {
     /**
      * Return the first element in an array passing a given truth test.
@@ -143,31 +127,17 @@ if (! function_exists('array_first')) {
     }
 }
 
-if (! function_exists('array_last')) {
-    /**
-     * Return the last element in an array passing a given truth test.
-     *
-     * @param  array  $array
-     * @param  callable  $callback
-     * @param  mixed  $default
-     * @return mixed
-     */
-    function array_last($array, $callback, $default = null)
-    {
-        return Arr::last($array, $callback, $default);
-    }
-}
-
 if (! function_exists('array_flatten')) {
     /**
      * Flatten a multi-dimensional array into a single level.
      *
      * @param  array  $array
+     * @param  int  $depth
      * @return array
      */
-    function array_flatten($array)
+    function array_flatten($array, $depth = INF)
     {
-        return Arr::flatten($array);
+        return Arr::flatten($array, $depth);
     }
 }
 
@@ -211,6 +181,21 @@ if (! function_exists('array_has')) {
     function array_has($array, $key)
     {
         return Arr::has($array, $key);
+    }
+}
+
+if (! function_exists('array_last')) {
+    /**
+     * Return the last element in an array passing a given truth test.
+     *
+     * @param  array  $array
+     * @param  callable  $callback
+     * @param  mixed  $default
+     * @return mixed
+     */
+    function array_last($array, $callback, $default = null)
+    {
+        return Arr::last($array, $callback, $default);
     }
 }
 

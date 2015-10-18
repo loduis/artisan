@@ -149,15 +149,26 @@ class Arr
      * Flatten a multi-dimensional array into a single level.
      *
      * @param  array  $array
+     * @param  int  $depth
      * @return array
      */
-    public static function flatten($array)
+    public static function flatten($array, $depth = INF)
     {
-        $return = [];
+        return array_reduce($array, function ($result, $item) use ($depth) {
+            $item = $item instanceof Collection ? $item->all() : $item;
 
-        array_walk_recursive($array, function ($x) use (&$return) { $return[] = $x; });
+            if (is_array($item)) {
+                if ($depth === 1) {
+                    return array_merge($result, $item);
+                }
 
-        return $return;
+                return array_merge($result, static::flatten($item, $depth - 1));
+            }
+
+            $result[] = $item;
+
+            return $result;
+        }, []);
     }
 
     /**
@@ -398,11 +409,11 @@ class Arr
     {
         foreach ($array as &$value) {
             if (is_array($value)) {
-                $value = self::sortRecursive($value);
+                $value = static::sortRecursive($value);
             }
         }
 
-        if (self::isAssoc($array)) {
+        if (static::isAssoc($array)) {
             ksort($array);
         } else {
             sort($array);
