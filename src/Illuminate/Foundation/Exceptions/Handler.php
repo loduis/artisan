@@ -5,8 +5,11 @@ namespace Illuminate\Foundation\Exceptions;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Illuminate\Http\Response;
+use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\Debug\Exception\FlattenException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Foundation\Validation\ValidationException;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\Debug\ExceptionHandler as SymfonyExceptionHandler;
@@ -89,6 +92,14 @@ class Handler implements ExceptionHandlerContract
      */
     public function render($request, Exception $e)
     {
+        if ($e instanceof ModelNotFoundException) {
+            $e = new NotFoundHttpException($e->getMessage(), $e);
+        } elseif ($e instanceof AuthorizationException) {
+            $e = new HttpException(403, $e->getMessage());
+        } elseif ($e instanceof ValidationException && $e->response) {
+            return $e->response;
+        }
+
         if ($this->isHttpException($e)) {
             return $this->toIlluminateResponse($this->renderHttpException($e), $e);
         } else {

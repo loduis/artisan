@@ -3,7 +3,6 @@
 namespace Illuminate\Foundation\Auth\Access;
 
 use Illuminate\Contracts\Auth\Access\Gate;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 trait AuthorizesRequests
 {
@@ -12,17 +11,15 @@ trait AuthorizesRequests
      *
      * @param  mixed  $ability
      * @param  mixed|array  $arguments
-     * @return void
+     * @return \Illuminate\Auth\Access\Response
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function authorize($ability, $arguments = [])
     {
         list($ability, $arguments) = $this->parseAbilityAndArguments($ability, $arguments);
 
-        if (! app(Gate::class)->check($ability, $arguments)) {
-            throw $this->createGateUnauthorizedException($ability, $arguments);
-        }
+        return app(Gate::class)->authorize($ability, $arguments);
     }
 
     /**
@@ -31,19 +28,15 @@ trait AuthorizesRequests
      * @param  \Illuminate\Contracts\Auth\Authenticatable|mixed  $user
      * @param  mixed  $ability
      * @param  mixed|array  $arguments
-     * @return void
+     * @return \Illuminate\Auth\Access\Response
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function authorizeForUser($user, $ability, $arguments = [])
     {
         list($ability, $arguments) = $this->parseAbilityAndArguments($ability, $arguments);
 
-        $result = app(Gate::class)->forUser($user)->check($ability, $arguments);
-
-        if (! $result) {
-            throw $this->createGateUnauthorizedException($ability, $arguments);
-        }
+        return app(Gate::class)->forUser($user)->authorize($ability, $arguments);
     }
 
     /**
@@ -60,17 +53,5 @@ trait AuthorizesRequests
         }
 
         return [debug_backtrace(false, 3)[2]['function'], $ability];
-    }
-
-    /**
-     * Throw an unauthorized exception based on gate results.
-     *
-     * @param  string  $ability
-     * @param  array  $arguments
-     * @return \Symfony\Component\HttpKernel\Exception\HttpException
-     */
-    protected function createGateUnauthorizedException($ability, $arguments)
-    {
-        return new HttpException(403, 'This action is unauthorized.');
     }
 }
