@@ -8,7 +8,7 @@ use ReflectionMethod;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Finder\Finder;
-use Illuminate\Console\Command\Source;
+use Illuminate\Console\Command\Source as CommandSource;
 
 trait ResolveCommands
 {
@@ -84,12 +84,32 @@ trait ResolveCommands
         $commands = [];
 
         foreach ($files as $file) {
-            if ($command  = Source::getCommand($file)) {
+            if ($command  = $this->getCommandFromSource($file)) {
                 $commands = array_merge($commands, $command);
             }
         }
 
         return $commands;
+    }
+
+    protected function getCommandFromSource($file)
+    {
+        $source       = new CommandSource($file);
+        $commandClass = $source->getClassName();
+        if (!$commandClass) {
+            return [];
+        }
+
+        $commandName = $source->getProperty(['name', 'signature']);
+
+        if (!$commandName) {
+            return [];
+        }
+
+        $commandName = trim($commandName, "'");
+        $commandName = trim($commandName, '"');
+
+        return [$commandName => $commandClass];
     }
 
     /**
