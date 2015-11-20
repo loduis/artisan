@@ -29,7 +29,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function __construct($items = [])
     {
-        $this->items = is_array($items) ? $items : $this->getArrayableItems($items);
+        $this->items = $this->getArrayableItems($items);
     }
 
     /**
@@ -159,6 +159,19 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
         }
 
         return new static($new);
+    }
+
+    /**
+     * Get all items except for those with the specified keys.
+     *
+     * @param  mixed  $keys
+     * @return static
+     */
+    public function except($keys)
+    {
+        $keys = is_array($keys) ? $keys : func_get_args();
+
+        return new static(Arr::except($this->items, $keys));
     }
 
     /**
@@ -404,27 +417,15 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     }
 
     /**
-     * Get an array with the values of a given key.
+     * Get the values of a given key.
      *
      * @param  string  $value
-     * @param  string  $key
+     * @param  string|null  $key
      * @return static
      */
     public function pluck($value, $key = null)
     {
         return new static(Arr::pluck($this->items, $value, $key));
-    }
-
-    /**
-     * Alias for the "pluck" method.
-     *
-     * @param  string  $value
-     * @param  string  $key
-     * @return static
-     */
-    public function lists($value, $key = null)
-    {
-        return $this->pluck($value, $key);
     }
 
     /**
@@ -440,6 +441,17 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
         $items = array_map($callback, $this->items, $keys);
 
         return new static(array_combine($keys, $items));
+    }
+
+    /**
+     * Map a collection and flatten the result by a single level.
+     *
+     * @param  callable  $callback
+     * @return static
+     */
+    public function flatMap(callable $callback)
+    {
+        return $this->map($callback)->collapse();
     }
 
     /**
@@ -484,6 +496,19 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     }
 
     /**
+     * Get the items with the specified keys.
+     *
+     * @param  mixed  $keys
+     * @return static
+     */
+    public function only($keys)
+    {
+        $keys = is_array($keys) ? $keys : func_get_args();
+
+        return new static(Arr::only($this->items, $keys));
+    }
+
+    /**
      * "Paginate" the collection by slicing it into a smaller collection.
      *
      * @param  int  $page
@@ -509,11 +534,12 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      * Push an item onto the beginning of the collection.
      *
      * @param  mixed  $value
+     * @param  mixed  $key
      * @return $this
      */
-    public function prepend($value)
+    public function prepend($value, $key = null)
     {
-        array_unshift($this->items, $value);
+        $this->items = Arr::prepend($this->items, $value, $key);
 
         return $this;
     }
@@ -922,7 +948,15 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function jsonSerialize()
     {
-        return $this->toArray();
+        return array_map(function ($value) {
+            if ($value instanceof JsonSerializable) {
+                return $value->jsonSerialize();
+            } elseif ($value instanceof Arrayable) {
+                return $value->toArray();
+            } else {
+                return $value;
+            }
+        }, $this->items);
     }
 
     /**
@@ -933,7 +967,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function toJson($options = 0)
     {
-        return json_encode($this->toArray(), $options);
+        return json_encode($this->jsonSerialize(), $options);
     }
 
     /**
@@ -1034,7 +1068,9 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     protected function getArrayableItems($items)
     {
-        if ($items instanceof self) {
+        if (is_array($items)) {
+            return $items;
+        } elseif ($items instanceof self) {
             return $items->all();
         } elseif ($items instanceof Arrayable) {
             return $items->toArray();

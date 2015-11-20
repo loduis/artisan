@@ -2,7 +2,6 @@
 
 namespace Illuminate\Support;
 
-use RuntimeException;
 use Stringy\StaticStringy;
 use Illuminate\Support\Traits\Macroable;
 
@@ -236,33 +235,6 @@ class Str
     }
 
     /**
-     * Generate a more truly "random" bytes.
-     *
-     * @param  int  $length
-     * @return string
-     *
-     * @throws \RuntimeException
-     *
-     * @deprecated since version 5.2. Use random_bytes instead.
-     */
-    public static function randomBytes($length = 16)
-    {
-        if (PHP_MAJOR_VERSION >= 7 || defined('RANDOM_COMPAT_READ_BUFFER')) {
-            $bytes = random_bytes($length);
-        } elseif (function_exists('openssl_random_pseudo_bytes')) {
-            $bytes = openssl_random_pseudo_bytes($length, $strong);
-
-            if ($bytes === false || $strong === false) {
-                throw new RuntimeException('Unable to generate random string.');
-            }
-        } else {
-            throw new RuntimeException('OpenSSL extension or paragonie/random_compat is required for PHP 5 users.');
-        }
-
-        return $bytes;
-    }
-
-    /**
      * Generate a "random" alpha-numeric string.
      *
      * Should not be considered sufficient for cryptography, etc.
@@ -275,46 +247,6 @@ class Str
         $pool = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
         return substr(str_shuffle(str_repeat($pool, $length)), 0, $length);
-    }
-
-    /**
-     * Compares two strings using a constant-time algorithm.
-     *
-     * Note: This method will leak length information.
-     *
-     * Note: Adapted from Symfony\Component\Security\Core\Util\StringUtils.
-     *
-     * @param  string  $knownString
-     * @param  string  $userInput
-     * @return bool
-     */
-    public static function equals($knownString, $userInput)
-    {
-        if (! is_string($knownString)) {
-            $knownString = (string) $knownString;
-        }
-
-        if (! is_string($userInput)) {
-            $userInput = (string) $userInput;
-        }
-
-        if (function_exists('hash_equals')) {
-            return hash_equals($knownString, $userInput);
-        }
-
-        $knownLength = mb_strlen($knownString, '8bit');
-
-        if (mb_strlen($userInput, '8bit') !== $knownLength) {
-            return false;
-        }
-
-        $result = 0;
-
-        for ($i = 0; $i < $knownLength; ++$i) {
-            $result |= (ord($knownString[$i]) ^ ord($userInput[$i]));
-        }
-
-        return 0 === $result;
     }
 
     /**
