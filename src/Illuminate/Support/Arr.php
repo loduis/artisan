@@ -26,26 +26,6 @@ class Arr
     }
 
     /**
-     * Build a new array using a callback.
-     *
-     * @param  array  $array
-     * @param  callable  $callback
-     * @return array
-     */
-    public static function build($array, callable $callback)
-    {
-        $results = [];
-
-        foreach ($array as $key => $value) {
-            list($innerKey, $innerValue) = call_user_func($callback, $key, $value);
-
-            $results[$innerKey] = $innerValue;
-        }
-
-        return $results;
-    }
-
-    /**
      * Collapse an array of arrays into a single array.
      *
      * @param  array|\ArrayAccess  $array
@@ -58,6 +38,10 @@ class Arr
         foreach ($array as $values) {
             if ($values instanceof Collection) {
                 $values = $values->all();
+            }
+
+            if (! is_array($values)) {
+                continue;
             }
 
             $results = array_merge($results, $values);
@@ -289,7 +273,7 @@ class Arr
     /**
      * Pluck an array of values from an array.
      *
-     * @param  array   $array
+     * @param  array|\ArrayAccess  $array
      * @param  string|array  $value
      * @param  string|array|null  $key
      * @return array
@@ -332,6 +316,25 @@ class Arr
         $key = is_null($key) || is_array($key) ? $key : explode('.', $key);
 
         return [$value, $key];
+    }
+
+    /**
+     * Push an item onto the beginning of an array.
+     *
+     * @param  array  $array
+     * @param  mixed  $value
+     * @param  mixed  $key
+     * @return array
+     */
+    public static function prepend($array, $value, $key = null)
+    {
+        if (is_null($key)) {
+            array_unshift($array, $value);
+        } else {
+            $array = [$key => $value] + $array;
+        }
+
+        return $array;
     }
 
     /**

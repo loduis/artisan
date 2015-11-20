@@ -64,6 +64,8 @@ abstract class Facade
     {
         static::$resolvedInstance[$name] = $mock = static::createMockByName($name);
 
+        $mock->shouldAllowMockingProtectedMethods();
+
         if (isset(static::$app)) {
             static::$app->instance($name, $mock);
         }
@@ -99,7 +101,7 @@ abstract class Facade
     /**
      * Get the mockable class for the bound instance.
      *
-     * @return string
+     * @return string|null
      */
     protected static function getMockableClass()
     {

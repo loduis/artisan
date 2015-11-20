@@ -44,20 +44,6 @@ if (! function_exists('array_add')) {
     }
 }
 
-if (! function_exists('array_build')) {
-    /**
-     * Build a new array using a callback.
-     *
-     * @param  array  $array
-     * @param  callable  $callback
-     * @return array
-     */
-    function array_build($array, callable $callback)
-    {
-        return Arr::build($array, $callback);
-    }
-}
-
 if (! function_exists('array_collapse')) {
     /**
      * Collapse an array of arrays into a single array.
@@ -218,13 +204,28 @@ if (! function_exists('array_pluck')) {
      * Pluck an array of values from an array.
      *
      * @param  array   $array
-     * @param  string  $value
-     * @param  string  $key
+     * @param  string|array  $value
+     * @param  string|array|null  $key
      * @return array
      */
     function array_pluck($array, $value, $key = null)
     {
         return Arr::pluck($array, $value, $key);
+    }
+}
+
+if (! function_exists('array_prepend')) {
+    /**
+     * Push an item onto the beginning of an array.
+     *
+     * @param  array  $array
+     * @param  mixed  $value
+     * @param  mixed  $key
+     * @return array
+     */
+    function array_prepend($array, $value, $key = null)
+    {
+        return Arr::prepend($array, $value, $key);
     }
 }
 
@@ -378,7 +379,17 @@ if (! function_exists('data_get')) {
 
         $key = is_array($key) ? $key : explode('.', $key);
 
-        foreach ($key as $segment) {
+        while (($segment = array_shift($key)) !== null) {
+            if ($segment === '*') {
+                if (! is_array($target) && ! $target instanceof ArrayAccess) {
+                    return $default;
+                }
+
+                $result = Arr::pluck($target, $key);
+
+                return in_array('*', $key) ? Arr::collapse($result) : $result;
+            }
+
             if (is_array($target)) {
                 if (! array_key_exists($segment, $target)) {
                     return value($default);
@@ -427,7 +438,7 @@ if (! function_exists('e')) {
     /**
      * Escape HTML entities in a string.
      *
-     * @param  \Illuminate\Support\Htmlable|string  $value
+     * @param  \Illuminate\Contracts\Support\Htmlable|string  $value
      * @return string
      */
     function e($value)
@@ -464,6 +475,44 @@ if (! function_exists('head')) {
     function head($array)
     {
         return reset($array);
+    }
+}
+
+if (! function_exists('hash_equals')) {
+    /**
+     * Compares two strings using a constant-time algorithm.
+     *
+     * Note: This method will leak length information.
+     *
+     * Note: Adapted from Symfony\Component\Security\Core\Util\StringUtils.
+     *
+     * @param  string  $knownString
+     * @param  string  $userInput
+     * @return bool
+     */
+    function hash_equals($knownString, $userInput)
+    {
+        if (! is_string($knownString)) {
+            $knownString = (string) $knownString;
+        }
+
+        if (! is_string($userInput)) {
+            $userInput = (string) $userInput;
+        }
+
+        $knownLength = mb_strlen($knownString, '8bit');
+
+        if (mb_strlen($userInput, '8bit') !== $knownLength) {
+            return false;
+        }
+
+        $result = 0;
+
+        for ($i = 0; $i < $knownLength; ++$i) {
+            $result |= (ord($knownString[$i]) ^ ord($userInput[$i]));
+        }
+
+        return 0 === $result;
     }
 }
 
