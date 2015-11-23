@@ -8,6 +8,7 @@ use ReflectionMethod;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Finder\Finder;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Command\Source as CommandSource;
 
 trait ResolveCommands
@@ -152,11 +153,11 @@ trait ResolveCommands
     }
 
     /**
-     * Register commands in container and add artisan.start event.
+     * Register commands in container and add artisan.
      *
      * @return void
      */
-    protected function registerCommands()
+    public function register()
     {
 
         $commands = [];
@@ -165,12 +166,6 @@ trait ResolveCommands
             $commands[] = $this->registerCommand($this->getCommandName($name), $command);
         }
 
-        // To register the commands with Artisan, we will grab each of the arguments
-        // passed into the method and listen for Artisan "start" event which will
-        // give us the Artisan console instance which we will give commands to.
-
-        $this->app['events']->listen('artisan.start', function ($artisan) use ($commands) {
-            $artisan->resolveCommands($commands);
-        });
+        $this->commands($commands);
     }
 }

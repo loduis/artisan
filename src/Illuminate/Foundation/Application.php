@@ -25,7 +25,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      *
      * @var string
      */
-    const VERSION = '5.2.0-Dev';
+    const VERSION = '5.3.0-Dev';
 
     /**
      * The base path for the Laravel installation.
@@ -742,7 +742,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      * Boot the given service provider.
      *
      * @param  \Illuminate\Support\ServiceProvider  $provider
-     * @return void
+     * @return mixed
      */
     protected function bootProvider(ServiceProvider $provider)
     {
@@ -1053,6 +1053,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             'cookie'               => ['Illuminate\Cookie\CookieJar', 'Illuminate\Contracts\Cookie\Factory', 'Illuminate\Contracts\Cookie\QueueingFactory'],
             'encrypter'            => ['Illuminate\Encryption\Encrypter', 'Illuminate\Contracts\Encryption\Encrypter'],
             'db'                   => 'Illuminate\Database\DatabaseManager',
+            'db.connection'        => ['Illuminate\Database\Connection', 'Illuminate\Database\ConnectionInterface'],
             'events'               => ['Illuminate\Events\Dispatcher', 'Illuminate\Contracts\Events\Dispatcher'],
             'files'                => 'Illuminate\Filesystem\Filesystem',
             'filesystem'           => ['Illuminate\Filesystem\FilesystemManager', 'Illuminate\Contracts\Filesystem\Factory'],
@@ -1067,7 +1068,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             'queue.connection'     => 'Illuminate\Contracts\Queue\Queue',
             'redirect'             => 'Illuminate\Routing\Redirector',
             'redis'                => ['Illuminate\Redis\Database', 'Illuminate\Contracts\Redis\Database'],
-            'request'              => 'Illuminate\Http\Request',
+            'request'              => ['Illuminate\Http\Request', 'Symfony\Component\HttpFoundation\Request'],
             'router'               => ['Illuminate\Routing\Router', 'Illuminate\Contracts\Routing\Registrar'],
             'session'              => 'Illuminate\Session\SessionManager',
             'session.store'        => ['Illuminate\Session\Store', 'Symfony\Component\HttpFoundation\Session\SessionInterface'],

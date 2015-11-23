@@ -2,17 +2,11 @@
 
 namespace Illuminate\Foundation\Console;
 
-use PhpParser\Lexer;
-use PhpParser\Parser;
+use ClassPreloader\Factory;
 use Illuminate\Console\Command;
-use ClassPreloader\ClassPreloader;
-use Illuminate\Foundation\Composer;
-use ClassPreloader\Parser\DirVisitor;
-use ClassPreloader\Parser\FileVisitor;
-use ClassPreloader\Parser\NodeTraverser;
-use ClassPreloader\Exceptions\SkipFileException;
+use Illuminate\Support\Composer;
 use Symfony\Component\Console\Input\InputOption;
-use PhpParser\PrettyPrinter\Standard as PrettyPrinter;
+use ClassPreloader\Exceptions\VisitorExceptionInterface;
 
 class OptimizeCommand extends Command
 {
@@ -33,14 +27,14 @@ class OptimizeCommand extends Command
     /**
      * The composer instance.
      *
-     * @var \Illuminate\Foundation\Composer
+     * @var \Illuminate\Support\Composer
      */
     protected $composer;
 
     /**
      * Create a new optimize command instance.
      *
-     * @param  \Illuminate\Foundation\Composer  $composer
+     * @param  \Illuminate\Support\Composer  $composer
      * @return void
      */
     public function __construct(Composer $composer)
@@ -80,35 +74,19 @@ class OptimizeCommand extends Command
      */
     protected function compileClasses()
     {
-        $preloader = new ClassPreloader(new PrettyPrinter, new Parser(new Lexer), $this->getTraverser());
+        $preloader = (new Factory)->create(['skip' => true]);
 
         $handle = $preloader->prepareOutput($this->laravel->getCachedCompilePath());
 
         foreach ($this->getClassFiles() as $file) {
             try {
                 fwrite($handle, $preloader->getCode($file, false)."\n");
-            } catch (SkipFileException $ex) {
+            } catch (VisitorExceptionInterface $e) {
                 //
             }
         }
 
         fclose($handle);
-    }
-
-    /**
-     * Get the node traverser used by the command.
-     *
-     * @return \ClassPreloader\Parser\NodeTraverser
-     */
-    protected function getTraverser()
-    {
-        $traverser = new NodeTraverser();
-
-        $traverser->addVisitor(new DirVisitor(true));
-
-        $traverser->addVisitor(new FileVisitor(true));
-
-        return $traverser;
     }
 
     /**
@@ -128,7 +106,7 @@ class OptimizeCommand extends Command
             $files = array_merge($files, forward_static_call([$provider, 'compiles']));
         }
 
-        return $files;
+        return array_map('realpath', $files);
     }
 
     /**

@@ -2,8 +2,10 @@
 
 namespace Illuminate\Foundation\Providers;
 
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Routing\Events\RouteMatched;
 use Symfony\Component\HttpFoundation\Request;
 
 class FormRequestServiceProvider extends ServiceProvider
@@ -25,12 +27,11 @@ class FormRequestServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->app['events']->listen('router.matched', function () {
+        $this->app['events']->listen(RouteMatched::class, function () {
             $this->app->resolving(function (FormRequest $request, $app) {
                 $this->initializeRequest($request, $app['request']);
 
-                $request->setContainer($app)
-                        ->setRedirector($app['Illuminate\Routing\Redirector']);
+                $request->setContainer($app)->setRedirector($app->make(Redirector::class));
             });
         });
     }

@@ -1,12 +1,13 @@
 <?php
 
-namespace Illuminate\Foundation\Testing;
+namespace Illuminate\Foundation\Testing\Concerns;
 
-use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
+use PHPUnit_Framework_Assert as PHPUnit;
 
-trait CrawlerTrait
+trait MakesHttpRequests
 {
     use InteractsWithPages;
 
@@ -30,6 +31,18 @@ trait CrawlerTrait
      * @var array
      */
     protected $serverVariables = [];
+
+    /**
+     * Disable middleware for the test.
+     *
+     * @return $this
+     */
+    public function withoutMiddleware()
+    {
+        $this->app->instance('middleware.disable', true);
+
+        return $this;
+    }
 
     /**
      * Visit the given URI with a JSON request.
@@ -173,15 +186,11 @@ trait CrawlerTrait
      * Assert that the response contains JSON.
      *
      * @param  array|null  $data
-     * @return $this
+     * @return $this|null
      */
     protected function receiveJson($data = null)
     {
-        $this->seeJson();
-
-        if (! is_null($data)) {
-            return $this->seeJson($data);
-        }
+        return $this->seeJson($data);
     }
 
     /**
@@ -230,6 +239,33 @@ trait CrawlerTrait
     public function dontSeeJson(array $data = null)
     {
         return $this->seeJson($data, true);
+    }
+
+    /**
+     * Assert that the JSON response has a given structure.
+     *
+     * @param  array|null  $structure
+     * @param  array|null  $responseData
+     * @return $this
+     */
+    public function seeJsonStructure(array $structure = null, $responseData = null)
+    {
+        if (is_null($structure)) {
+            return $this->seeJson();
+        }
+
+        if (! $responseData) {
+            $responseData = json_decode($this->response->getContent(), true);
+        }
+
+        foreach ($structure as $key => $value) {
+            if (is_array($value)) {
+                $this->assertArrayHasKey($key, $responseData);
+                $this->seeJsonStructure($structure[$key], $responseData[$key]);
+            } else {
+                $this->assertArrayHasKey($value, $responseData);
+            }
+        }
     }
 
     /**
@@ -303,8 +339,8 @@ trait CrawlerTrait
     /**
      * Asserts that the response contains the given header and equals the optional value.
      *
-     * @param  string $headerName
-     * @param  mixed $value
+     * @param  string  $headerName
+     * @param  mixed  $value
      * @return $this
      */
     protected function seeHeader($headerName, $value = null)
@@ -326,8 +362,8 @@ trait CrawlerTrait
     /**
      * Asserts that the response contains the given cookie and equals the optional value.
      *
-     * @param  string $cookieName
-     * @param  mixed $value
+     * @param  string  $cookieName
+     * @param  mixed  $value
      * @return $this
      */
     protected function seeCookie($cookieName, $value = null)
@@ -498,6 +534,129 @@ trait CrawlerTrait
         }
 
         return $server;
+    }
+
+    /**
+     * Assert that the client response has an OK status code.
+     *
+     * @return void
+     */
+    public function assertResponseOk()
+    {
+        $actual = $this->response->getStatusCode();
+
+        return PHPUnit::assertTrue($this->response->isOk(), "Expected status code 200, got {$actual}.");
+    }
+
+    /**
+     * Assert that the client response has a given code.
+     *
+     * @param  int  $code
+     * @return void
+     */
+    public function assertResponseStatus($code)
+    {
+        $actual = $this->response->getStatusCode();
+
+        return PHPUnit::assertEquals($code, $this->response->getStatusCode(), "Expected status code {$code}, got {$actual}.");
+    }
+
+    /**
+     * Assert that the response view has a given piece of bound data.
+     *
+     * @param  string|array  $key
+     * @param  mixed  $value
+     * @return void
+     */
+    public function assertViewHas($key, $value = null)
+    {
+        if (is_array($key)) {
+            return $this->assertViewHasAll($key);
+        }
+
+        if (! isset($this->response->original) || ! $this->response->original instanceof View) {
+            return PHPUnit::assertTrue(false, 'The response was not a view.');
+        }
+
+        if (is_null($value)) {
+            PHPUnit::assertArrayHasKey($key, $this->response->original->getData());
+        } else {
+            PHPUnit::assertEquals($value, $this->response->original->$key);
+        }
+    }
+
+    /**
+     * Assert that the view has a given list of bound data.
+     *
+     * @param  array  $bindings
+     * @return void
+     */
+    public function assertViewHasAll(array $bindings)
+    {
+        foreach ($bindings as $key => $value) {
+            if (is_int($key)) {
+                $this->assertViewHas($value);
+            } else {
+                $this->assertViewHas($key, $value);
+            }
+        }
+    }
+
+    /**
+     * Assert that the response view is missing a piece of bound data.
+     *
+     * @param  string  $key
+     * @return void
+     */
+    public function assertViewMissing($key)
+    {
+        if (! isset($this->response->original) || ! $this->response->original instanceof View) {
+            return PHPUnit::assertTrue(false, 'The response was not a view.');
+        }
+
+        PHPUnit::assertArrayNotHasKey($key, $this->response->original->getData());
+    }
+
+    /**
+     * Assert whether the client was redirected to a given URI.
+     *
+     * @param  string  $uri
+     * @param  array   $with
+     * @return void
+     */
+    public function assertRedirectedTo($uri, $with = [])
+    {
+        PHPUnit::assertInstanceOf('Illuminate\Http\RedirectResponse', $this->response);
+
+        PHPUnit::assertEquals($this->app['url']->to($uri), $this->response->headers->get('Location'));
+
+        $this->assertSessionHasAll($with);
+    }
+
+    /**
+     * Assert whether the client was redirected to a given route.
+     *
+     * @param  string  $name
+     * @param  array   $parameters
+     * @param  array   $with
+     * @return void
+     */
+    public function assertRedirectedToRoute($name, $parameters = [], $with = [])
+    {
+        $this->assertRedirectedTo($this->app['url']->route($name, $parameters), $with);
+    }
+
+    /**
+     * Assert whether the client was redirected to a given action.
+     *
+     * @param  string  $name
+     * @param  array   $parameters
+     * @param  array   $with
+     * @return void
+     */
+    public function assertRedirectedToAction($name, $parameters = [], $with = [])
+    {
+        $this->assertRedirectedTo($this->app['url']->action($name, $parameters), $with);
     }
 
     /**

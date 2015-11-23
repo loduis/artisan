@@ -4,12 +4,13 @@ namespace Illuminate\Foundation;
 
 use Illuminate\Support\Str;
 use Illuminate\Console\Config;
+use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Console\Input\ArgvInput;
 use Illuminate\Console\ResolveCommands;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 
-class Console
+class Console extends ServiceProvider
 {
     use ResolveCommands;
 
@@ -19,13 +20,6 @@ class Console
      * @var \Illuminate\Console\Config
      */
     private $config;
-
-    /**
-     *  The application instance.
-     *
-     * @var \Illuminate\Contracts\Foundation\Application
-     */
-    private $app;
 
     /**
      * The main interface for run console application.
@@ -57,7 +51,8 @@ class Console
      */
     public function __construct($basePath)
     {
-        $this->app    = new Application($basePath);
+        parent::__construct(new Application($basePath));
+
         $this->output = new ConsoleOutput;
         $this->config = $this->getConfig($basePath);
         $this->useCustomPaths();
@@ -71,7 +66,7 @@ class Console
      */
     public function start()
     {
-        $this->registerCommands();
+        $this->register();
 
         $this->bindInterfaces();
 

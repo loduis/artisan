@@ -101,7 +101,7 @@ class Source
                 break;
             }
             if ($token['number'] == T_WHITESPACE ||
-                ($after && !in_array($token['search'], $after))
+                ($after && in_array($token['search'], $after))
             ) {
                 continue;
             }

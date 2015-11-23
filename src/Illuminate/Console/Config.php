@@ -133,9 +133,11 @@ class Config
 
     private function transformToCollections(array $apps)
     {
-        return Arr::build($apps, function ($name, $app) {
-            return [$name, new Collection($this->application($name, $app))];
+        array_walk($apps, function (&$app, $name) {
+            $app = new Collection($this->application($name, $app));
         });
+
+        return $apps;
     }
 
     private function getCommands($app)

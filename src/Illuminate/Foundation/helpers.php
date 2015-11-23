@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Illuminate\Support\HtmlString;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Auth\Access\Gate;
 
@@ -90,7 +91,7 @@ if (! function_exists('auth')) {
      */
     function auth()
     {
-        return app('Illuminate\Contracts\Auth\Guard');
+        return app(Illuminate\Contracts\Auth\Guard::class);
     }
 }
 
@@ -187,7 +188,7 @@ if (! function_exists('cookie')) {
      */
     function cookie($name = null, $value = null, $minutes = 0, $path = null, $domain = null, $secure = false, $httpOnly = true)
     {
-        $cookie = app('Illuminate\Contracts\Cookie\Factory');
+        $cookie = app(Illuminate\Contracts\Cookie\Factory::class);
 
         if (is_null($name)) {
             return $cookie;
@@ -205,7 +206,7 @@ if (! function_exists('csrf_field')) {
      */
     function csrf_field()
     {
-        return new Illuminate\View\Expression('<input type="hidden" name="_token" value="'.csrf_token().'">');
+        return new HtmlString('<input type="hidden" name="_token" value="'.csrf_token().'">');
     }
 }
 
@@ -239,6 +240,19 @@ if (! function_exists('database_path')) {
     function database_path($path = '')
     {
         return app()->databasePath().($path ? DIRECTORY_SEPARATOR.$path : $path);
+    }
+}
+
+if (! function_exists('decrypt')) {
+    /**
+     * Decrypt the given value.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    function decrypt($value)
+    {
+        return app('encrypter')->decrypt($value);
     }
 }
 
@@ -278,6 +292,19 @@ if (! function_exists('elixir')) {
         }
 
         throw new InvalidArgumentException("File {$file} not defined in asset manifest.");
+    }
+}
+
+if (! function_exists('encrypt')) {
+    /**
+     * Encrypt the given value.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    function encrypt($value)
+    {
+        return app('encrypter')->encrypt($value);
     }
 }
 
@@ -347,7 +374,7 @@ if (! function_exists('factory')) {
      */
     function factory()
     {
-        $factory = app('Illuminate\Database\Eloquent\Factory');
+        $factory = app(Illuminate\Database\Eloquent\Factory::class);
 
         $arguments = func_get_args();
 
@@ -416,7 +443,7 @@ if (! function_exists('method_field')) {
      */
     function method_field($method)
     {
-        return new Illuminate\View\Expression('<input type="hidden" name="_method" value="'.$method.'">');
+        return new HtmlString('<input type="hidden" name="_method" value="'.$method.'">');
     }
 }
 
@@ -549,7 +576,7 @@ if (! function_exists('resource')) {
      * @param  string  $name
      * @param  string  $controller
      * @param  array   $options
-     * @return void
+     * @return \Illuminate\Routing\Route
      */
     function resource($name, $controller, array $options = [])
     {
@@ -568,7 +595,7 @@ if (! function_exists('response')) {
      */
     function response($content = '', $status = 200, array $headers = [])
     {
-        $factory = app('Illuminate\Contracts\Routing\ResponseFactory');
+        $factory = app(Illuminate\Contracts\Routing\ResponseFactory::class);
 
         if (func_num_args() === 0) {
             return $factory;
@@ -706,7 +733,11 @@ if (! function_exists('url')) {
      */
     function url($path = null, $parameters = [], $secure = null)
     {
-        return app('Illuminate\Contracts\Routing\UrlGenerator')->to($path, $parameters, $secure);
+        if (is_null($path)) {
+            return app('url');
+        }
+
+        return app('url')->to($path, $parameters, $secure);
     }
 }
 
@@ -717,11 +748,11 @@ if (! function_exists('view')) {
      * @param  string  $view
      * @param  array   $data
      * @param  array   $mergeData
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View|\Illuminate\Contracts\View\Factory
      */
     function view($view = null, $data = [], $mergeData = [])
     {
-        $factory = app('Illuminate\Contracts\View\Factory');
+        $factory = app(Illuminate\Contracts\View\Factory::class);
 
         if (func_num_args() === 0) {
             return $factory;

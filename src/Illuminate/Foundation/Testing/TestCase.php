@@ -7,7 +7,20 @@ use PHPUnit_Framework_TestCase;
 
 abstract class TestCase extends PHPUnit_Framework_TestCase
 {
-    use ApplicationTrait, AssertionsTrait, CrawlerTrait;
+    use Concerns\InteractsWithContainer,
+        Concerns\MakesHttpRequests,
+        Concerns\ImpersonatesUsers,
+        Concerns\InteractsWithConsole,
+        Concerns\InteractsWithDatabase,
+        Concerns\InteractsWithSession,
+        Concerns\MocksApplicationServices;
+
+    /**
+     * The Illuminate application instance.
+     *
+     * @var \Illuminate\Foundation\Application
+     */
+    protected $app;
 
     /**
      * The callbacks that should be run before the application is destroyed.
@@ -35,6 +48,18 @@ abstract class TestCase extends PHPUnit_Framework_TestCase
         if (! $this->app) {
             $this->refreshApplication();
         }
+    }
+
+    /**
+     * Refresh the application instance.
+     *
+     * @return void
+     */
+    protected function refreshApplication()
+    {
+        putenv('APP_ENV=testing');
+
+        $this->app = $this->createApplication();
     }
 
     /**
