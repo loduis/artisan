@@ -51,10 +51,9 @@ class Console extends ServiceProvider
      */
     public function __construct($basePath)
     {
+        $this->output    = new ConsoleOutput;
+        $this->config    = $this->getConfig($basePath);
         parent::__construct(new Application($basePath));
-
-        $this->output = new ConsoleOutput;
-        $this->config = $this->getConfig($basePath);
         $this->useCustomPaths();
         $this->resolveInterfaces($this->useNamespace());
     }
@@ -121,7 +120,7 @@ class Console extends ServiceProvider
         }
 
         if ($applications->count() > 1) {
-            $name = $this->getAppNameFromFirstArgument();
+            $name = $this->getAppNameFromConsoleArgs();
             if (!is_null($name)) {
                 if (!$applications->has($name)) {
                     $this->error('This is not valid laravel application: ' . $name);
@@ -139,17 +138,22 @@ class Console extends ServiceProvider
      *
      * @return string|null
      */
-    private function getAppNameFromFirstArgument()
+    private function getAppNameFromConsoleArgs()
     {
+        $name = null;
         if (count($_SERVER['argv']) >= 2) {
-            $name = $_SERVER['argv'][1];
-            unset($_SERVER['argv'][1]);
-
+            foreach ($_SERVER['argv'] as $i => $arg) {
+                if ($i && strpos($arg, '--') === false) {
+                    $name = $arg;
+                    unset($_SERVER['argv'][$i]);
+                    break;
+                }
+            }
             $_SERVER['argv'] = array_values($_SERVER['argv']);
             $_SERVER['argc'] = count($_SERVER['argv']);
-
-            return $name;
         }
+
+        return $name;
     }
 
     private function useNamespace()
