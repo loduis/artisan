@@ -144,6 +144,7 @@ class Application extends SymfonyApplication implements ApplicationContract
         $definition = parent::getDefaultInputDefinition();
 
         $definition->addOption($this->getEnvironmentOption());
+        $definition->addOption($this->getApplicationOption());
 
         return $definition;
     }
@@ -158,6 +159,18 @@ class Application extends SymfonyApplication implements ApplicationContract
         $message = 'The environment the command should run under.';
 
         return new InputOption('--env', null, InputOption::VALUE_OPTIONAL, $message);
+    }
+
+    /**
+     * Get the global application option for the definition.
+     *
+     * @return \Symfony\Component\Console\Input\InputOption
+     */
+    protected function getApplicationOption()
+    {
+        $message = 'The application the command should run under.';
+
+        return new InputOption('--app', null, InputOption::VALUE_OPTIONAL, $message);
     }
 
     /**
