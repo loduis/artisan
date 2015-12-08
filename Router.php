@@ -3,6 +3,7 @@
 namespace Illuminate\Routing;
 
 use Closure;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -104,6 +105,10 @@ class Router implements RegistrarContract
         $this->events = $events;
         $this->routes = new RouteCollection;
         $this->container = $container ?: new Container;
+
+        $this->bind('_missing', function ($v) {
+            return explode('/', $v);
+        });
     }
 
     /**
@@ -245,20 +250,18 @@ class Router implements RegistrarContract
     public function auth()
     {
         // Authentication Routes...
-        $this->get('login', 'Auth\AuthController@getLogin');
-        $this->post('login', 'Auth\AuthController@postLogin');
-        $this->get('logout', 'Auth\AuthController@getLogout');
+        $this->get('login', 'Auth\AuthController@showLoginForm');
+        $this->post('login', 'Auth\AuthController@login');
+        $this->get('logout', 'Auth\AuthController@logout');
 
         // Registration Routes...
-        $this->get('register', 'Auth\AuthController@getRegister');
-        $this->post('register', 'Auth\AuthController@postRegister');
+        $this->get('register', 'Auth\AuthController@showRegistrationForm');
+        $this->post('register', 'Auth\AuthController@register');
 
         // Password Reset Routes...
-        $this->get('password/email', 'Auth\PasswordController@getEmail');
-        $this->post('password/email', 'Auth\PasswordController@postEmail');
-
-        $this->get('password/reset/{token}', 'Auth\PasswordController@getReset');
-        $this->post('password/reset', 'Auth\PasswordController@postReset');
+        $this->get('password/reset/{token?}', 'Auth\PasswordController@showResetForm');
+        $this->post('password/email', 'Auth\PasswordController@sendResetLinkEmail');
+        $this->post('password/reset', 'Auth\PasswordController@reset');
     }
 
     /**
@@ -332,7 +335,7 @@ class Router implements RegistrarContract
             $new['as'] = $old['as'].(isset($new['as']) ? $new['as'] : '');
         }
 
-        return array_merge_recursive(array_except($old, ['namespace', 'prefix', 'where', 'as']), $new);
+        return array_merge_recursive(Arr::except($old, ['namespace', 'prefix', 'where', 'as']), $new);
     }
 
     /**
@@ -680,7 +683,8 @@ class Router implements RegistrarContract
         foreach ($route->signatureParameters(Model::class) as $parameter) {
             $class = $parameter->getClass();
 
-            if (array_key_exists($parameter->name, $parameters)) {
+            if (array_key_exists($parameter->name, $parameters) &&
+                ! $route->getParameter($parameter->name) instanceof Model) {
                 $method = $parameter->isDefaultValueAvailable() ? 'find' : 'findOrFail';
 
                 $route->setParameter(
