@@ -55,7 +55,7 @@ class Console extends ServiceProvider
         $this->config    = $this->getConfig($basePath);
         parent::__construct(new Application($basePath));
         $this->useCustomPaths();
-        $this->resolveInterfaces($this->useNamespace());
+        $this->resolveInterfaces();
     }
 
     /**
@@ -156,14 +156,6 @@ class Console extends ServiceProvider
         return $name;
     }
 
-    private function useNamespace()
-    {
-        $namespace = $this->config->get('namespace');
-        $this->app->useNamespace($namespace);
-
-        return $namespace;
-    }
-
     /**
      * Set the custom paths
      *
@@ -178,9 +170,10 @@ class Console extends ServiceProvider
         }
     }
 
-    private function resolveInterfaces($namespace)
+    private function resolveInterfaces()
     {
-        $binds = [];
+        $binds     = [];
+        $namespace = $this->app->getNamespace();
         foreach ($this->binds as $contract => $foundationClass) {
             $appClass = str_replace('Illuminate\\Foundation\\', $namespace, $foundationClass);
             $classPath = base_path(str_replace('\\', '/', Str::camel($appClass))) . '.php';

@@ -1136,9 +1136,4 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
 
         throw new RuntimeException('Unable to detect application namespace.');
     }
-
-    public function useNamespace($namespace)
-    {
-        $this->namespace = $namespace;
-    }
 }
