@@ -173,7 +173,8 @@ class Console extends ServiceProvider
     {
         foreach ($this->config->get('paths') as $key => $path) {
             $key             = $key == 'path' ? $key : 'path.' . $key;
-            $this->app[$key] = realpath($this->app->basePath() . '/' . $path);
+            $path            = realpath($this->app->basePath() . '/' . $path);
+            $this->app[$key] = $path;
         }
     }
 

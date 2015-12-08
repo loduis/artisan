@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'debug' => (bool) getenv('APP_DEBUG') ?: false,
+    'debug' => env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,9 +78,9 @@ return [
     |
     */
 
-    'key' => '4xdlFmruWQwIP1AHui6Dd6Esqud7ol6k',
+    'key' => env('APP_KEY'),
 
-    'cipher' => MCRYPT_RIJNDAEL_128,
+    'cipher' => 'AES-256-CBC',
 
     /*
     |--------------------------------------------------------------------------
@@ -91,11 +91,11 @@ return [
     | the box, Laravel uses the Monolog PHP logging library. This gives
     | you a variety of powerful log handlers / formatters to utilize.
     |
-    | Available Settings: "single", "daily", "syslog"
+    | Available Settings: "single", "daily", "syslog", "errorlog"
     |
     */
 
-    'log' => 'daily',
+    'log' => env('APP_LOG', 'single'),
 
     /*
     |--------------------------------------------------------------------------
@@ -111,51 +111,41 @@ return [
     'providers' => [
 
         /*
-         * Application Service Providers...
-         */
-        // 'App\Providers\AppServiceProvider',
-        // 'App\Providers\EventServiceProvider',
-        // 'App\Providers\RouteServiceProvider',
-
-        /*
          * Laravel Framework Service Providers...
          */
-        'Illuminate\Foundation\Providers\ComposerServiceProvider',
-        // 'Illuminate\Foundation\Providers\ArtisanServiceProvider',
-        // 'Illuminate\Auth\AuthServiceProvider',
-        // 'Illuminate\Cache\CacheServiceProvider',
-        // 'Illuminate\Foundation\Providers\ConsoleSupportServiceProvider',
-        // 'Illuminate\Routing\ControllerServiceProvider',
-        // 'Illuminate\Cookie\CookieServiceProvider',
-        // 'Illuminate\Database\DatabaseServiceProvider',
-        // 'Illuminate\Encryption\EncryptionServiceProvider',
-        'Illuminate\Filesystem\FilesystemServiceProvider',
-        // 'Illuminate\Foundation\Providers\FoundationServiceProvider',
-        // 'Illuminate\Hashing\HashServiceProvider',
-        // 'Illuminate\Mail\MailServiceProvider',
-        // 'Illuminate\Pagination\PaginationServiceProvider',
-        // 'Illuminate\Queue\QueueServiceProvider',
-        // 'Illuminate\Redis\RedisServiceProvider',
-        // 'Illuminate\Auth\Passwords\PasswordResetServiceProvider',
-        // 'Illuminate\Session\SessionServiceProvider',
-        // 'Illuminate\Translation\TranslationServiceProvider',
-        // 'Illuminate\Validation\ValidationServiceProvider',
-        // 'Illuminate\View\ViewServiceProvider',
+        // Illuminate\Auth\AuthServiceProvider::class,
+        // Illuminate\Broadcasting\BroadcastServiceProvider::class,
+        // Illuminate\Bus\BusServiceProvider::class,
+        // Illuminate\Cache\CacheServiceProvider::class,
+        //Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
+        Illuminate\Foundation\Providers\ComposerServiceProvider::class,
+        //Illuminate\Routing\ControllerServiceProvider::class,
+        // Illuminate\Cookie\CookieServiceProvider::class,
+        // Illuminate\Database\DatabaseServiceProvider::class,
+        // Illuminate\Encryption\EncryptionServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+        // Illuminate\Foundation\Providers\FoundationServiceProvider::class,
+        // Illuminate\Hashing\HashServiceProvider::class,
+        // Illuminate\Mail\MailServiceProvider::class,
+        // Illuminate\Pagination\PaginationServiceProvider::class,
+        // Illuminate\Pipeline\PipelineServiceProvider::class,
+        // Illuminate\Queue\QueueServiceProvider::class,
+        // Illuminate\Redis\RedisServiceProvider::class,
+        // Illuminate\Auth\Passwords\PasswordResetServiceProvider::class,
+        // Illuminate\Session\SessionServiceProvider::class,
+        // Illuminate\Translation\TranslationServiceProvider::class,
+        // Illuminate\Validation\ValidationServiceProvider::class,
+        // Illuminate\View\ViewServiceProvider::class,
+
+        /*
+         * Application Service Providers...
+         */
+        // App\Providers\AppServiceProvider::class,
+        // App\Providers\AuthServiceProvider::class,
+        // App\Providers\EventServiceProvider::class,
+        // App\Providers\RouteServiceProvider::class,
 
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Service Provider Manifest
-    |--------------------------------------------------------------------------
-    |
-    | The service provider manifest is used by Laravel to lazy load service
-    | providers which are not needed for each request, as well to keep a
-    | list of all of the services. Here, you may set its storage spot.
-    |
-    */
-
-    'manifest' => storage_path().'/framework',
 
     /*
     |--------------------------------------------------------------------------
@@ -170,36 +160,36 @@ return [
 
     'aliases' => [
 
-        'App'       => 'Illuminate\Support\Facades\App',
-        'Artisan'   => 'Illuminate\Support\Facades\Artisan',
-        'Auth'      => 'Illuminate\Support\Facades\Auth',
-        'Blade'     => 'Illuminate\Support\Facades\Blade',
-        'Cache'     => 'Illuminate\Support\Facades\Cache',
-        'Config'    => 'Illuminate\Support\Facades\Config',
-        'Cookie'    => 'Illuminate\Support\Facades\Cookie',
-        'Crypt'     => 'Illuminate\Support\Facades\Crypt',
-        'DB'        => 'Illuminate\Support\Facades\DB',
-        'Event'     => 'Illuminate\Support\Facades\Event',
-        'File'      => 'Illuminate\Support\Facades\File',
-        'Hash'      => 'Illuminate\Support\Facades\Hash',
-        'Input'     => 'Illuminate\Support\Facades\Input',
-        'Inspiring' => 'Illuminate\Foundation\Inspiring',
-        'Lang'      => 'Illuminate\Support\Facades\Lang',
-        'Log'       => 'Illuminate\Support\Facades\Log',
-        'Mail'      => 'Illuminate\Support\Facades\Mail',
-        'Paginator' => 'Illuminate\Support\Facades\Paginator',
-        'Password'  => 'Illuminate\Support\Facades\Password',
-        'Queue'     => 'Illuminate\Support\Facades\Queue',
-        'Redirect'  => 'Illuminate\Support\Facades\Redirect',
-        'Redis'     => 'Illuminate\Support\Facades\Redis',
-        'Request'   => 'Illuminate\Support\Facades\Request',
-        'Response'  => 'Illuminate\Support\Facades\Response',
-        'Route'     => 'Illuminate\Support\Facades\Route',
-        'Schema'    => 'Illuminate\Support\Facades\Schema',
-        'Session'   => 'Illuminate\Support\Facades\Session',
-        'URL'       => 'Illuminate\Support\Facades\URL',
-        'Validator' => 'Illuminate\Support\Facades\Validator',
-        'View'      => 'Illuminate\Support\Facades\View',
+        'App'       => Illuminate\Support\Facades\App::class,
+        'Artisan'   => Illuminate\Support\Facades\Artisan::class,
+        'Auth'      => Illuminate\Support\Facades\Auth::class,
+        'Blade'     => Illuminate\Support\Facades\Blade::class,
+        'Cache'     => Illuminate\Support\Facades\Cache::class,
+        'Config'    => Illuminate\Support\Facades\Config::class,
+        'Cookie'    => Illuminate\Support\Facades\Cookie::class,
+        'Crypt'     => Illuminate\Support\Facades\Crypt::class,
+        'DB'        => Illuminate\Support\Facades\DB::class,
+        'Eloquent'  => Illuminate\Database\Eloquent\Model::class,
+        'Event'     => Illuminate\Support\Facades\Event::class,
+        'File'      => Illuminate\Support\Facades\File::class,
+        'Gate'      => Illuminate\Support\Facades\Gate::class,
+        'Hash'      => Illuminate\Support\Facades\Hash::class,
+        'Lang'      => Illuminate\Support\Facades\Lang::class,
+        'Log'       => Illuminate\Support\Facades\Log::class,
+        'Mail'      => Illuminate\Support\Facades\Mail::class,
+        'Password'  => Illuminate\Support\Facades\Password::class,
+        'Queue'     => Illuminate\Support\Facades\Queue::class,
+        'Redirect'  => Illuminate\Support\Facades\Redirect::class,
+        'Redis'     => Illuminate\Support\Facades\Redis::class,
+        'Request'   => Illuminate\Support\Facades\Request::class,
+        'Response'  => Illuminate\Support\Facades\Response::class,
+        'Route'     => Illuminate\Support\Facades\Route::class,
+        'Schema'    => Illuminate\Support\Facades\Schema::class,
+        'Session'   => Illuminate\Support\Facades\Session::class,
+        'Storage'   => Illuminate\Support\Facades\Storage::class,
+        'URL'       => Illuminate\Support\Facades\URL::class,
+        'Validator' => Illuminate\Support\Facades\Validator::class,
+        'View'      => Illuminate\Support\Facades\View::class,
 
     ],
 

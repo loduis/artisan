@@ -7,23 +7,19 @@
     },
     "extra": {
         "laravel": {
+            "shared": {
+                "paths" : {
+                    "config": "config",
+                    "storage": "storage",
+                    "public" : "../content"
+                }
+            },
             "applications": {
                 "app": {
-                    "description": "This is the main application",
-                    "paths": {
-                        "config": "config",
-                        "storage": "storage"
-                    }
+                    "description": "This is the main application"
                 },
                 "admin" : {
-                    "description": "This is the main application",
-                    "paths": {
-                        "config": "config",
-                        "storage": "storage"
-                    },
-                    "commands": {
-                        "command.make" : "Illuminate\\Foundation\\Console\\CommandMakeCommand"
-                    }
+                    "description": "This is the main application"
                 }
             }
         }

@@ -8,9 +8,6 @@
     },
     "extra": {
         "laravel": {
-            "commands": {
-                "clean": "App\\Console\\Commands\\CleanCommand"
-            },
             "applications": {
                 "app": {
                     "description": "This is the main application",
@@ -29,6 +26,11 @@
                     "paths" : {
                         "commands": "Console/Commands"
                     }
+                }
+            },
+            "shared": {
+                "commands": {
+                    "clean": "App\\Console\\Commands\\CleanCommand"
                 }
             }
         }

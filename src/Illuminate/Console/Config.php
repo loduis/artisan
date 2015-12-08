@@ -4,6 +4,7 @@ namespace Illuminate\Console;
 
 use OutOfBoundsException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 
 class Config
@@ -110,16 +111,29 @@ class Config
     private function getPaths($app)
     {
         $appPath  = $this->getPathFromNamespace($app['namespace']);
-        $paths    = (array) Arr::get($app, 'paths');
+        $paths    = array_merge((array) data_get($this->items, 'shared.paths'), (array) Arr::get($app, 'paths'));
         $newPaths = [];
 
         foreach ($paths as $key => $path) {
-            $newPaths[$key] = strpos($path, '..') !== false ? $path : ($appPath . '/' . $path);
+            $newPaths[$key] = Str::contains($path, '.') ? $path : ($appPath . '/' . $path);
         }
 
         $newPaths['path'] = $appPath;
 
         return $newPaths;
+    }
+    /**
+     * Get application commands
+     *
+     * @param  array $app
+     * @return array
+     */
+    private function getCommands($app)
+    {
+        $appCommands    = (array) Arr::get($app, 'commands');
+        $sharedCommands = (array) data_get($this->items, 'shared.commands');
+
+        return array_merge($sharedCommands, $appCommands);
     }
 
     private function getPathFromNamespace($namespace)
@@ -138,13 +152,5 @@ class Config
         });
 
         return $apps;
-    }
-
-    private function getCommands($app)
-    {
-        $appCommands    = (array) Arr::get($app, 'commands');
-        $sharedCommands = (array) $this->items->get('commands');
-
-        return array_unique(array_merge($sharedCommands, $appCommands));
     }
 }
