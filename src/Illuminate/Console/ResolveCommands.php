@@ -103,7 +103,7 @@ trait ResolveCommands
 
         $commandName = $source->getProperty(['name', 'signature']);
 
-        if (!$commandName) {
+        if (!$commandName && !($commandName = $this->getCommandNameFromClass($commandClass))) {
             return [];
         }
 
@@ -111,6 +111,14 @@ trait ResolveCommands
         $commandName = trim($commandName, '"');
 
         return [$commandName => $commandClass];
+    }
+
+    protected function getCommandNameFromClass($commandClass)
+    {
+        $reflectionClass = new ReflectionClass($commandClass);
+        $getDefaultProperties = $reflectionClass->getDefaultProperties();
+
+        return Arr::get($getDefaultProperties, 'signature', Arr::get($getDefaultProperties, 'name'));
     }
 
     /**
