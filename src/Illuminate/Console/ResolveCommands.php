@@ -23,6 +23,7 @@ trait ResolveCommands
      */
     protected function registerCommand($commandName, $commandClass)
     {
+        $commandName = $this->getCommandName($commandName);
         $this->app->singleton($commandName, function () use ($commandClass) {
             return $this->newInstanceCommand($commandClass);
         });
@@ -158,22 +159,5 @@ trait ResolveCommands
         // Merge internal commands
 
         return array_unique(array_filter(array_merge($commands, $this->defaultCommands)));
-    }
-
-    /**
-     * Register commands in container and add artisan.
-     *
-     * @return void
-     */
-    public function register()
-    {
-
-        $commands = [];
-
-        foreach ($this->getAllCommands() as $name => $command) {
-            $commands[] = $this->registerCommand($this->getCommandName($name), $command);
-        }
-
-        $this->commands($commands);
     }
 }
