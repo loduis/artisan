@@ -2,13 +2,16 @@
 
 namespace Illuminate\Foundation;
 
+use Exception;
+use RuntimeException;
 use Illuminate\Support\Str;
 use Illuminate\Console\Config;
 use Illuminate\Support\ServiceProvider;
-use Symfony\Component\Console\Input\ArgvInput;
+use Illuminate\Console\ArgvInput;
 use Illuminate\Console\ResolveCommands;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 
 class Console extends ServiceProvider
 {
@@ -26,7 +29,7 @@ class Console extends ServiceProvider
      *
      * @var array
      */
-    private $binds = [
+    private $interfaces = [
         'Illuminate\Contracts\Http\Kernel'            => 'Illuminate\Foundation\Http\Kernel',
         'Illuminate\Contracts\Console\Kernel'         => 'Illuminate\Foundation\Console\Kernel',
         'Illuminate\Contracts\Debug\ExceptionHandler' => 'Illuminate\Foundation\Exceptions\Handler'
@@ -42,6 +45,10 @@ class Console extends ServiceProvider
         'command.environment'  => 'Illuminate\Foundation\Console\EnvironmentCommand'
     ];
 
+    private $error;
+
+    private $input;
+
     private $output;
 
     /**
@@ -51,11 +58,12 @@ class Console extends ServiceProvider
      */
     public function __construct($basePath)
     {
-        $this->output    = new ConsoleOutput;
-        $this->config    = $this->getConfig($basePath);
         parent::__construct(new Application($basePath));
+        $this->input  = new ArgvInput;
+        $this->output = new ConsoleOutput;
+        $this->config = $this->getConfiguration($basePath);
         $this->useCustomPaths();
-        $this->resolveInterfaces();
+        $this->bindInterfaces();
     }
 
     /**
@@ -65,17 +73,36 @@ class Console extends ServiceProvider
      */
     public function start()
     {
-        $this->register();
-
-        $this->bindInterfaces();
-
         $kernel = $this->app->make(ConsoleKernel::class);
+        $kernel->bootstrap();
 
-        $status = $kernel->handle($input = new ArgvInput, $this->output);
+        if ($this->hasError()) {
+            return $this->reportException();
+        }
 
-        $kernel->terminate($input, $status);
+        $this->register();
+        $status = $kernel->handle($this->input, $this->output);
+
+        $kernel->terminate($this->input, $status);
 
         return $status;
+    }
+
+    /**
+     * Register commands in container and add artisan.
+     *
+     * @return void
+     */
+    public function register()
+    {
+
+        $commands = [];
+
+        foreach ($this->getAllCommands() as $name => $command) {
+            $commands[] = $this->registerCommand($name, $command);
+        }
+
+        $this->commands($commands);
     }
 
     /**
@@ -97,10 +124,14 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    private function error($string)
+    private function reportError($string)
     {
-        $this->output->writeln("<error>$string</error>");
-        exit();
+        $this->error = new RuntimeException($string);
+    }
+
+    private function hasError()
+    {
+        return !is_null($this->error);
     }
 
     /**
@@ -109,51 +140,35 @@ class Console extends ServiceProvider
      * @param string $basePath
      * @return \Illuminate\Support\Collection
      */
-    private function getConfig($basePath)
+    private function getConfiguration($basePath)
     {
         $config       = new Config($basePath);
         $applications = $config->applications();
+
         if ($applications->isEmpty()) {
-            $this->error(
+            $this->reportError(
                 'There are not valid laravel configuration on: ' . PHP_EOL . $config->filePath()
             );
+            return $config->makeEmpty();
         }
 
-        if ($applications->count() > 1) {
-            $name = $this->getAppNameFromConsoleArgs();
-            if (!is_null($name)) {
-                if (!$applications->has($name)) {
-                    $this->error('This is not valid laravel application: ' . $name);
-                }
-
-                return $applications->get($name);
-            }
+        if ($applications->count() > 1 &&
+            ($appName = $this->findApplicationFromArgvInput($applications))
+        ) {
+            return $applications->get($appName);
         }
 
         return $applications->first();
     }
 
-    /**
-     * Extract the application name from first argument
-     *
-     * @return string|null
-     */
-    private function getAppNameFromConsoleArgs()
+    private function findApplicationFromArgvInput($applications)
     {
-        $name = null;
-        if (count($_SERVER['argv']) >= 2) {
-            foreach ($_SERVER['argv'] as $i => $arg) {
-                if ($i && strpos($arg, '--') === false) {
-                    $name = $arg;
-                    unset($_SERVER['argv'][$i]);
-                    break;
-                }
+        foreach ($applications->keys() as $appName) {
+            if ($this->input->hasParameterOption($appName)) {
+                $this->input->removeParameterOption($appName);
+                return $appName;
             }
-            $_SERVER['argv'] = array_values($_SERVER['argv']);
-            $_SERVER['argc'] = count($_SERVER['argv']);
         }
-
-        return $name;
     }
 
     /**
@@ -163,7 +178,7 @@ class Console extends ServiceProvider
      */
     private function useCustomPaths()
     {
-        foreach ($this->config->get('paths') as $key => $path) {
+        foreach ($this->config->get('paths', []) as $key => $path) {
             $key             = $key == 'path' ? $key : 'path.' . $key;
             $path            = realpath($this->app->basePath() . '/' . $path);
             $this->app[$key] = $path;
@@ -172,22 +187,37 @@ class Console extends ServiceProvider
 
     private function resolveInterfaces()
     {
-        $binds     = [];
+        $interfaces     = [];
         $namespace = $this->app->getNamespace();
-        foreach ($this->binds as $contract => $foundationClass) {
+        foreach ($this->interfaces as $contract => $foundationClass) {
             $appClass = str_replace('Illuminate\\Foundation\\', $namespace, $foundationClass);
             $classPath = base_path(str_replace('\\', '/', Str::camel($appClass))) . '.php';
-            $binds[$contract] = file_exists($classPath) ? $appClass : $foundationClass;
+            $interfaces[$contract] = file_exists($classPath) ? $appClass : $foundationClass;
         }
 
-        $this->binds  = $binds;
+        return $interfaces;
     }
 
     private function bindInterfaces()
     {
-        // Register interfaces
-        foreach ($this->binds as $name => $value) {
+        foreach ($this->resolveInterfaces() as $name => $value) {
             $this->app->singleton($name, $value);
         }
+    }
+
+    /**
+     * Report the exception to the exception handler.
+     *
+     * @param  \Exception  $e
+     * @return void
+     */
+    protected function reportException(Exception $e)
+    {
+        $handler = $this->app->make(ExceptionHandlerContract::class);
+
+        $handler->report($e);
+        $handler->renderForConsole($this->output, $e);
+
+        return 1;
     }
 }
