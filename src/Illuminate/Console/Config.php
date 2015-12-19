@@ -83,6 +83,14 @@ class Config
             $composer   = json_decode($content, true);
             $config     = (array) Arr::get($composer, 'extra.laravel');
             $this->psr4 = (array) Arr::get($composer, 'autoload.psr-4');
+            if (!Arr::has($config, 'applications') && $this->psr4) {
+                $applications = [];
+                foreach ($this->psr4 as $namespace => $path) {
+                    $name = strtolower(rtrim($namespace, '\\'));
+                    $applications[$name] = [];
+                }
+                $config['applications'] = $applications;
+            }
         }
 
         return $config;
