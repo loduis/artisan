@@ -2,6 +2,7 @@
 
 namespace Illuminate\Foundation;
 
+use Closure;
 use Exception;
 use RuntimeException;
 use Illuminate\Support\Str;
@@ -84,13 +85,12 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    public function start()
+    public function start(Closure $beforeHandler = null)
     {
         // If has configuration error this report by kernel to console
         if ($this->hasError()) {
             return $this->reportError();
         }
-
         $this->useCustomPaths();
         $this->resolveInterfaces();
 
@@ -98,6 +98,11 @@ class Console extends ServiceProvider
         $this->register();
 
         $kernel = $this->getKernel();
+
+        if ($beforeHandler instanceof Closure) {
+            call_user_func_array($beforeHandler, [$this->app]);
+        }
+
         $status = $kernel->handle($this->input, $this->output);
 
         $kernel->terminate($this->input, $status);
@@ -129,9 +134,9 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    public static function run($basePath)
+    public static function run($basePath, Closure $beforeHandler = null)
     {
-        return (new static($basePath))->start();
+        return (new static($basePath))->start($beforeHandler);
     }
 
     /**
