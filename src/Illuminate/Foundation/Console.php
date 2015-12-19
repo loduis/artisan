@@ -45,10 +45,25 @@ class Console extends ServiceProvider
         'command.environment'  => 'Illuminate\Foundation\Console\EnvironmentCommand'
     ];
 
+    /**
+     * This configuration error
+     *
+     * @var \RuntimeException
+     */
     private $error;
 
+    /**
+     * This is the console input
+     *
+     * @var \Illuminate\Console\ArgvInput
+     */
     private $input;
 
+    /**
+     * This is the console output
+     *
+     * @var \Symfony\Component\Console\Output\ConsoleOutput
+     */
     private $output;
 
     /**
@@ -62,8 +77,6 @@ class Console extends ServiceProvider
         $this->input  = new ArgvInput;
         $this->output = new ConsoleOutput;
         $this->config = $this->getConfiguration($basePath);
-        $this->useCustomPaths();
-        $this->bindInterfaces();
     }
 
     /**
@@ -73,14 +86,18 @@ class Console extends ServiceProvider
      */
     public function start()
     {
-        $kernel = $this->app->make(ConsoleKernel::class);
-        $kernel->bootstrap();
-
+        // If has configuration error this report by kernel to console
         if ($this->hasError()) {
-            return $this->reportException();
+            return $this->reportError();
         }
 
+        $this->useCustomPaths();
+        $this->resolveInterfaces();
+
+        // Register the commands
         $this->register();
+
+        $kernel = $this->getKernel();
         $status = $kernel->handle($this->input, $this->output);
 
         $kernel->terminate($this->input, $status);
@@ -124,7 +141,7 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    private function reportError($string)
+    private function registerError($string)
     {
         $this->error = new RuntimeException($string);
     }
@@ -132,6 +149,14 @@ class Console extends ServiceProvider
     private function hasError()
     {
         return !is_null($this->error);
+    }
+
+    private function getKernel()
+    {
+        $kernel = $this->app->make(ConsoleKernel::class);
+        $kernel->bootstrap();
+
+        return $kernel;
     }
 
     /**
@@ -146,10 +171,9 @@ class Console extends ServiceProvider
         $applications = $config->applications();
 
         if ($applications->isEmpty()) {
-            $this->reportError(
+            return $this->registerError(
                 'There are not valid laravel configuration on: ' . PHP_EOL . $config->filePath()
             );
-            return $config->makeEmpty();
         }
 
         if ($applications->count() > 1 &&
@@ -185,24 +209,36 @@ class Console extends ServiceProvider
         }
     }
 
-    private function resolveInterfaces()
+    private function applicationInterfaces()
     {
         $interfaces     = [];
         $namespace = $this->app->getNamespace();
         foreach ($this->interfaces as $contract => $foundationClass) {
-            $appClass = str_replace('Illuminate\\Foundation\\', $namespace, $foundationClass);
-            $classPath = base_path(str_replace('\\', '/', Str::camel($appClass))) . '.php';
+            $appClass = $this->resolveApplicationClassName($namespace, $foundationClass);
+            $classPath = $this->getClassPath($appClass);
             $interfaces[$contract] = file_exists($classPath) ? $appClass : $foundationClass;
         }
 
         return $interfaces;
     }
 
-    private function bindInterfaces()
+    private function resolveInterfaces()
     {
-        foreach ($this->resolveInterfaces() as $name => $value) {
+        foreach ($this->applicationInterfaces() as $name => $value) {
             $this->app->singleton($name, $value);
         }
+    }
+
+    private function getClassPath($className)
+    {
+        $className = str_replace('\\', '/', Str::camel($className));
+
+        return $this->app->basePath() . $className . '.php';
+    }
+
+    private function resolveApplicationClassName($namespace, $className)
+    {
+        return str_replace('Illuminate\\Foundation\\', $namespace, $className);
     }
 
     /**
@@ -211,8 +247,10 @@ class Console extends ServiceProvider
      * @param  \Exception  $e
      * @return void
      */
-    protected function reportException(Exception $e)
+    protected function reportError(Exception $e)
     {
+        $this->getKernel();
+
         $handler = $this->app->make(ExceptionHandlerContract::class);
 
         $handler->report($e);

@@ -2,13 +2,10 @@
 
 namespace Illuminate\Console;
 
-use Closure;
 use ReflectionClass;
-use ReflectionMethod;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Finder\Finder;
-use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Command\Source as CommandSource;
 
 trait ResolveCommands

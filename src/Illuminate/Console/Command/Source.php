@@ -31,6 +31,22 @@ class Source
     }
 
     /**
+     * Get the command source from file
+     *
+     * @param  string|\Symfony\Component\Finder\SplFileInfo $file
+     *
+     * @return static
+     */
+    public static function fromFile($file)
+    {
+        if (!$file instanceof SplFileInfo) {
+            $file = new SplFileInfo($file, null, null);
+        }
+
+        return new static($file);
+    }
+
+    /**
      * Get the command class for the file
      *
      * @param  string|\Symfony\Component\Finder\SplFileInfo $file
@@ -150,7 +166,7 @@ class Source
 
     public function getShortClassName()
     {
-        if ($this->findToken(T_CLASS) &&
+        if ($this->findToken([T_CLASS, T_TRAIT]) &&
             ($className = $this->getTokenContent(T_STRING))
         ) {
             return $className;

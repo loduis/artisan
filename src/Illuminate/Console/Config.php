@@ -60,11 +60,6 @@ class Config
         return $this->basePath . '/composer.json';
     }
 
-    public function makeEmpty()
-    {
-        return new Collection([]);
-    }
-
     private function application($name, $app)
     {
         $app['namespace'] = $this->getNamespace($app, $name);
@@ -73,8 +68,6 @@ class Config
 
         return $app;
     }
-
-
 
     /**
      * Load config from file
