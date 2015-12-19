@@ -31,11 +31,13 @@ class ThrottleRequests
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
+     * @param  int  $maxAttempts
+     * @param  int  $decayMinutes
      * @return mixed
      */
     public function handle($request, Closure $next, $maxAttempts = 60, $decayMinutes = 1)
     {
-        $key = $request->fingerprint();
+        $key = $this->resolveRequestSignature($request);
 
         if ($this->limiter->tooManyAttempts($key, $maxAttempts, $decayMinutes)) {
             return new Response('Too Many Attempts.', 429, [
@@ -51,5 +53,16 @@ class ThrottleRequests
             'X-RateLimit-Limit' => $maxAttempts,
             'X-RateLimit-Remaining' => $maxAttempts - $this->limiter->attempts($key) + 1,
         ]);
+    }
+
+    /**
+     * Resolve request signature.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return string
+     */
+    protected function resolveRequestSignature($request)
+    {
+        return $request->fingerprint();
     }
 }
