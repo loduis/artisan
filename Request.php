@@ -510,7 +510,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
             return $this->$source->all();
         }
 
-        return $this->$source->get($key, $default, true);
+        return $this->$source->get($key, $default);
     }
 
     /**
@@ -832,7 +832,9 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
      */
     public function getUserResolver()
     {
-        return $this->userResolver ?: function () {};
+        return $this->userResolver ?: function () {
+            //
+        };
     }
 
     /**
@@ -855,7 +857,9 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
      */
     public function getRouteResolver()
     {
-        return $this->routeResolver ?: function () {};
+        return $this->routeResolver ?: function () {
+            //
+        };
     }
 
     /**
