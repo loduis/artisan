@@ -99,7 +99,7 @@ class Container implements ArrayAccess, ContainerContract
     protected $globalAfterResolvingCallbacks = [];
 
     /**
-     * All of the after resolving callbacks by class type.
+     * All of the resolving callbacks by class type.
      *
      * @var array
      */
@@ -587,6 +587,8 @@ class Container implements ArrayAccess, ContainerContract
      * @param  array  $parameters
      * @param  string|null  $defaultMethod
      * @return mixed
+     *
+     * @throws \InvalidArgumentException
      */
     protected function callClass($target, array $parameters = [], $defaultMethod = null)
     {
@@ -739,7 +741,13 @@ class Container implements ArrayAccess, ContainerContract
         // an abstract type such as an Interface of Abstract Class and there is
         // no binding registered for the abstractions so we need to bail out.
         if (! $reflector->isInstantiable()) {
-            $message = "Target [$concrete] is not instantiable.";
+            if (! empty($this->buildStack)) {
+                $previous = implode(', ', $this->buildStack);
+
+                $message = "Target [$concrete] is not instantiable while building [$previous].";
+            } else {
+                $message = "Target [$concrete] is not instantiable.";
+            }
 
             throw new BindingResolutionException($message);
         }
@@ -1038,13 +1046,15 @@ class Container implements ArrayAccess, ContainerContract
     {
         $abstract = $this->normalize($abstract);
 
-        if (isset($this->bindings[$abstract]['shared'])) {
-            $shared = $this->bindings[$abstract]['shared'];
-        } else {
-            $shared = false;
+        if (isset($this->instances[$abstract])) {
+            return true;
         }
 
-        return isset($this->instances[$abstract]) || $shared === true;
+        if (! isset($this->bindings[$abstract]['shared'])) {
+            return false;
+        }
+
+        return $this->bindings[$abstract]['shared'] === true;
     }
 
     /**
