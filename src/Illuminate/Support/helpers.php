@@ -48,7 +48,7 @@ if (! function_exists('array_collapse')) {
     /**
      * Collapse an array of arrays into a single array.
      *
-     * @param  \ArrayAccess|array  $array
+     * @param  array  $array
      * @return array
      */
     function array_collapse($array)
@@ -103,11 +103,11 @@ if (! function_exists('array_first')) {
      * Return the first element in an array passing a given truth test.
      *
      * @param  array  $array
-     * @param  callable  $callback
+     * @param  callable|null  $callback
      * @param  mixed  $default
      * @return mixed
      */
-    function array_first($array, callable $callback, $default = null)
+    function array_first($array, callable $callback = null, $default = null)
     {
         return Arr::first($array, $callback, $default);
     }
@@ -145,7 +145,7 @@ if (! function_exists('array_get')) {
     /**
      * Get an item from an array using "dot" notation.
      *
-     * @param  \ArrayAccess|array   $array
+     * @param  \ArrayAccess|array  $array
      * @param  string  $key
      * @param  mixed   $default
      * @return mixed
@@ -160,7 +160,7 @@ if (! function_exists('array_has')) {
     /**
      * Check if an item exists in an array using "dot" notation.
      *
-     * @param  array   $array
+     * @param  \ArrayAccess|array  $array
      * @param  string  $key
      * @return bool
      */
@@ -175,11 +175,11 @@ if (! function_exists('array_last')) {
      * Return the last element in an array passing a given truth test.
      *
      * @param  array  $array
-     * @param  callable  $callback
+     * @param  callable|null  $callback
      * @param  mixed  $default
      * @return mixed
      */
-    function array_last($array, $callback, $default = null)
+    function array_last($array, callable $callback = null, $default = null)
     {
         return Arr::last($array, $callback, $default);
     }
@@ -396,7 +396,9 @@ if (! function_exists('data_get')) {
 
         while (($segment = array_shift($key)) !== null) {
             if ($segment === '*') {
-                if (! Arr::accessible($target)) {
+                if ($target instanceof Collection) {
+                    $target = $target->all();
+                } elseif (! is_array($target)) {
                     return value($default);
                 }
 
@@ -405,17 +407,9 @@ if (! function_exists('data_get')) {
                 return in_array('*', $key) ? Arr::collapse($result) : $result;
             }
 
-            if (Arr::accessible($target)) {
-                if (! Arr::exists($target, $segment)) {
-                    return value($default);
-                }
-
+            if (Arr::accessible($target) && Arr::exists($target, $segment)) {
                 $target = $target[$segment];
-            } elseif (is_object($target)) {
-                if (! isset($target->{$segment})) {
-                    return value($default);
-                }
-
+            } elseif (is_object($target) && isset($target->{$segment})) {
                 $target = $target->{$segment};
             } else {
                 return value($default);
@@ -473,6 +467,14 @@ if (! function_exists('data_set')) {
                 data_set($target->{$segment}, $segments, $value, $overwrite);
             } elseif ($overwrite || ! isset($target->{$segment})) {
                 $target->{$segment} = $value;
+            }
+        } else {
+            $target = [];
+
+            if ($segments) {
+                data_set($target[$segment], $segments, $value, $overwrite);
+            } elseif ($overwrite) {
+                $target[$segment] = $value;
             }
         }
 
@@ -581,7 +583,7 @@ if (! function_exists('object_get')) {
     }
 }
 
-if (! function_exists('preg_replace_sub')) {
+if (! function_exists('preg_replace_array')) {
     /**
      * Replace a given pattern with each value in the array in sequentially.
      *
@@ -590,13 +592,12 @@ if (! function_exists('preg_replace_sub')) {
      * @param  string  $subject
      * @return string
      */
-    function preg_replace_sub($pattern, &$replacements, $subject)
+    function preg_replace_array($pattern, array $replacements, $subject)
     {
         return preg_replace_callback($pattern, function ($match) use (&$replacements) {
             foreach ($replacements as $key => $value) {
                 return array_shift($replacements);
             }
-
         }, $subject);
     }
 }
@@ -842,6 +843,18 @@ if (! function_exists('value')) {
     function value($value)
     {
         return $value instanceof Closure ? $value() : $value;
+    }
+}
+
+if (! function_exists('windows_os')) {
+    /**
+     * Determine whether the current environment is Windows based.
+     *
+     * @return bool
+     */
+    function windows_os()
+    {
+        return strtolower(substr(PHP_OS, 0, 3)) === 'win';
     }
 }
 
