@@ -5,7 +5,7 @@ namespace Illuminate\Foundation\Http;
 use Exception;
 use Throwable;
 use Illuminate\Routing\Router;
-use Illuminate\Pipeline\Pipeline;
+use Illuminate\Routing\Pipeline;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -255,7 +255,7 @@ class Kernel implements KernelContract
      */
     public function hasMiddleware($middleware)
     {
-        return array_key_exists($middleware, array_flip($this->middleware));
+        return in_array($middleware, $this->middleware);
     }
 
     /**

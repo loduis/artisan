@@ -5,12 +5,12 @@ namespace Illuminate\Foundation\Exceptions;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exception\HttpResponseException;
 use Symfony\Component\Debug\Exception\FlattenException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Foundation\Validation\ValidationException;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -92,7 +92,7 @@ class Handler implements ExceptionHandlerContract
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Exception  $e
-     * @return \Illuminate\Http\Response
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function render($request, Exception $e)
     {
@@ -102,8 +102,8 @@ class Handler implements ExceptionHandlerContract
             $e = new NotFoundHttpException($e->getMessage(), $e);
         } elseif ($e instanceof AuthorizationException) {
             $e = new HttpException(403, $e->getMessage());
-        } elseif ($e instanceof ValidationException && $e->getResponse()) {
-            return $e->getResponse();
+        } elseif ($e instanceof ValidationException) {
+            return $this->convertValidationExceptionToResponse($e, $request);
         }
 
         if ($this->isHttpException($e)) {
@@ -152,10 +152,32 @@ class Handler implements ExceptionHandlerContract
         $status = $e->getStatusCode();
 
         if (view()->exists("errors.{$status}")) {
-            return response()->view("errors.{$status}", ['exception' => $e], $status);
+            return response()->view("errors.{$status}", ['exception' => $e], $status, $e->getHeaders());
         } else {
             return $this->convertExceptionToResponse($e);
         }
+    }
+
+    /**
+     * Create a response object from the given validation exception.
+     *
+     * @param  \Illuminate\Validation\ValidationException  $e
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function convertValidationExceptionToResponse(ValidationException $e, $request)
+    {
+        if ($e->response) {
+            return $e->response;
+        }
+
+        $errors = $e->validator->errors()->getMessages();
+
+        if (($request->ajax() && ! $request->pjax()) || $request->wantsJson()) {
+            return response()->json($errors, 422);
+        }
+
+        return redirect()->back()->withInput($request->input())->withErrors($errors);
     }
 
     /**

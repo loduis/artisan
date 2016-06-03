@@ -3,6 +3,7 @@
 use Illuminate\Support\Str;
 use Illuminate\Support\HtmlString;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -27,6 +28,48 @@ if (! function_exists('abort')) {
     function abort($code, $message = '', array $headers = [])
     {
         return app()->abort($code, $message, $headers);
+    }
+}
+
+if (! function_exists('abort_if')) {
+    /**
+     * Throw an HttpException with the given data if the given condition is true.
+     *
+     * @param  bool    $boolean
+     * @param  int     $code
+     * @param  string  $message
+     * @param  array   $headers
+     * @return void
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    function abort_if($boolean, $code, $message = '', array $headers = [])
+    {
+        if ($boolean) {
+            abort($code, $message, $headers);
+        }
+    }
+}
+
+if (! function_exists('abort_unless')) {
+    /**
+     * Throw an HttpException with the given data unless the given condition is true.
+     *
+     * @param  bool    $boolean
+     * @param  int     $code
+     * @param  string  $message
+     * @param  array   $headers
+     * @return void
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    function abort_unless($boolean, $code, $message = '', array $headers = [])
+    {
+        if (! $boolean) {
+            abort($code, $message, $headers);
+        }
     }
 }
 
@@ -94,11 +137,16 @@ if (! function_exists('auth')) {
     /**
      * Get the available auth instance.
      *
+     * @param  string|null  $guard
      * @return \Illuminate\Contracts\Auth\Factory
      */
-    function auth()
+    function auth($guard = null)
     {
-        return app(AuthFactory::class);
+        if (is_null($guard)) {
+            return app(AuthFactory::class);
+        } else {
+            return app(AuthFactory::class)->guard($guard);
+        }
     }
 }
 
@@ -223,7 +271,7 @@ if (! function_exists('csrf_token')) {
      *
      * @return string
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     function csrf_token()
     {
@@ -260,6 +308,19 @@ if (! function_exists('decrypt')) {
     function decrypt($value)
     {
         return app('encrypter')->decrypt($value);
+    }
+}
+
+if (! function_exists('dispatch')) {
+    /**
+     * Dispatch a job to its appropriate handler.
+     *
+     * @param  mixed  $job
+     * @return mixed
+     */
+    function dispatch($job)
+    {
+        return app(Dispatcher::class)->dispatch($job);
     }
 }
 
@@ -401,7 +462,7 @@ if (! function_exists('logger')) {
      *
      * @param  string  $message
      * @param  array  $context
-     * @return null|\Illuminate\Contracts\Logging\Log
+     * @return \Illuminate\Contracts\Logging\Log|null
      */
     function logger($message = null, array $context = [])
     {
@@ -503,6 +564,19 @@ if (! function_exists('request')) {
         }
 
         return app('request')->input($key, $default);
+    }
+}
+
+if (! function_exists('resource_path')) {
+    /**
+     * Get the path to the resources folder.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    function resource_path($path = '')
+    {
+        return app()->basePath().DIRECTORY_SEPARATOR.'resources'.($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 }
 
@@ -615,7 +689,7 @@ if (! function_exists('trans')) {
      * @param  array   $parameters
      * @param  string  $domain
      * @param  string  $locale
-     * @return string
+     * @return \Symfony\Component\Translation\TranslatorInterface|string
      */
     function trans($id = null, $parameters = [], $domain = 'messages', $locale = null)
     {
@@ -632,7 +706,7 @@ if (! function_exists('trans_choice')) {
      * Translates the given message based on a count.
      *
      * @param  string  $id
-     * @param  int     $number
+     * @param  int|array|\Countable  $number
      * @param  array   $parameters
      * @param  string  $domain
      * @param  string  $locale
