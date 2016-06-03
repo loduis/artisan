@@ -27,6 +27,7 @@
     "replace": {
         "illuminate/config": "self.version",
         "illuminate/console": "self.version",
+        "illuminate/contracts": "self.version",
         "illuminate/container": "self.version",
         "illuminate/events": "self.version",
         "illuminate/exception": "self.version",
