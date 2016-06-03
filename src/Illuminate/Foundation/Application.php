@@ -25,7 +25,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      *
      * @var string
      */
-    const VERSION = '5.3.0-Dev';
+    const VERSION = '5.4.0-Dev';
 
     /**
      * The base path for the Laravel installation.
@@ -40,14 +40,15 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      * @var array
      */
     private static $configPaths = [
-        'path'          => 'app',
-        'path.config'   => 'config',
-        'path.database' => 'database',
-        'path.lang'     => 'resources/lang',
-        'path.assets'   => 'resources/assets',
-        'path.public'   => 'public',
-        'path.storage'  => 'storage',
-        'path.commands' => 'app/Console/Commands'
+        'path'           => 'app',
+        'path.config'    => 'config',
+        'path.database'  => 'database',
+        'path.bootstrap' => 'bootstrap',
+        'path.lang'      => 'resources/lang',
+        'path.assets'    => 'resources/assets',
+        'path.public'    => 'public',
+        'path.storage'   => 'storage',
+        'path.commands'  => 'app/Console/Commands'
     ];
 
     /**
@@ -319,6 +320,16 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
+     * Get the path to the bootstrap directory.
+     *
+     * @return string
+     */
+    public function bootstrapPath()
+    {
+        return $this['path.bootstrap'];
+    }
+
+    /**
      * Get the path to the application configuration files.
      *
      * @return string
@@ -445,10 +456,20 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
+     * Get the fully qualified path to the environment file.
+     *
+     * @return string
+     */
+    public function environmentFilePath()
+    {
+        return $this->environmentPath().'/'.$this->environmentFile();
+    }
+
+    /**
      * Get or check the current application environment.
      *
      * @param  mixed
-     * @return string
+     * @return string|bool
      */
     public function environment()
     {
@@ -575,7 +596,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     {
         $name = is_string($provider) ? $provider : get_class($provider);
 
-        return Arr::first($this->serviceProviders, function ($key, $value) use ($name) {
+        return Arr::first($this->serviceProviders, function ($value) use ($name) {
             return $value instanceof $name;
         });
     }
@@ -826,7 +847,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function getCachedConfigPath()
     {
-        return $this->basePath().'/bootstrap/cache/config.php';
+        return $this->bootstrapPath().'/cache/config.php';
     }
 
     /**
@@ -846,7 +867,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function getCachedRoutesPath()
     {
-        return $this->basePath().'/bootstrap/cache/routes.php';
+        return $this->bootstrapPath().'/cache/routes.php';
     }
 
     /**
@@ -856,7 +877,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function getCachedCompilePath()
     {
-        return $this->basePath().'/bootstrap/cache/compiled.php';
+        return $this->bootstrapPath().'/cache/compiled.php';
     }
 
     /**
@@ -866,7 +887,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function getCachedServicesPath()
     {
-        return $this->basePath().'/bootstrap/cache/services.php';
+        return $this->bootstrapPath().'/cache/services.php';
     }
 
     /**
@@ -1035,6 +1056,17 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
+     * Determine if application locale is the given locale.
+     *
+     * @param  string  $locale
+     * @return bool
+     */
+    public function isLocale($locale)
+    {
+        return $this->getLocale() == $locale;
+    }
+
+    /**
      * Register the core class aliases in the container.
      *
      * @return void
@@ -1066,6 +1098,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             'auth.password.broker' => ['Illuminate\Auth\Passwords\PasswordBroker', 'Illuminate\Contracts\Auth\PasswordBroker'],
             'queue'                => ['Illuminate\Queue\QueueManager', 'Illuminate\Contracts\Queue\Factory', 'Illuminate\Contracts\Queue\Monitor'],
             'queue.connection'     => ['Illuminate\Contracts\Queue\Queue'],
+            'queue.failer'         => ['Illuminate\Queue\Failed\FailedJobProviderInterface'],
             'redirect'             => ['Illuminate\Routing\Redirector'],
             'redis'                => ['Illuminate\Redis\Database', 'Illuminate\Contracts\Redis\Database'],
             'request'              => ['Illuminate\Http\Request', 'Symfony\Component\HttpFoundation\Request'],
@@ -1094,20 +1127,6 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
         parent::flush();
 
         $this->loadedProviders = [];
-    }
-
-    /**
-     * Get the used kernel object.
-     *
-     * @return \Illuminate\Contracts\Console\Kernel|\Illuminate\Contracts\Http\Kernel
-     */
-    protected function getKernel()
-    {
-        $kernelContract = $this->runningInConsole()
-                    ? 'Illuminate\Contracts\Console\Kernel'
-                    : 'Illuminate\Contracts\Http\Kernel';
-
-        return $this->make($kernelContract);
     }
 
     /**
