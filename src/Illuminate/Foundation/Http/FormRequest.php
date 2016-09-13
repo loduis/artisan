@@ -144,7 +144,7 @@ class FormRequest extends Request implements ValidatesWhenResolved
      */
     public function response(array $errors)
     {
-        if ($this->probablyWantsJson()) {
+        if ($this->expectsJson()) {
             return new JsonResponse($errors, 422);
         }
 
@@ -156,7 +156,7 @@ class FormRequest extends Request implements ValidatesWhenResolved
     /**
      * Get the response for a forbidden operation.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function forbiddenResponse()
     {

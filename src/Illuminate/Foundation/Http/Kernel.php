@@ -159,11 +159,15 @@ class Kernel implements KernelContract
     public function terminate($request, $response)
     {
         $middlewares = $this->app->shouldSkipMiddleware() ? [] : array_merge(
-            $this->gatherRouteMiddlewares($request),
+            $this->gatherRouteMiddleware($request),
             $this->middleware
         );
 
         foreach ($middlewares as $middleware) {
+            if (! is_string($middleware)) {
+                continue;
+            }
+
             list($name, $parameters) = $this->parseMiddleware($middleware);
 
             $instance = $this->app->make($name);
@@ -182,10 +186,10 @@ class Kernel implements KernelContract
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    protected function gatherRouteMiddlewares($request)
+    protected function gatherRouteMiddleware($request)
     {
         if ($route = $request->route()) {
-            return $this->router->gatherRouteMiddlewares($route);
+            return $this->router->gatherRouteMiddleware($route);
         }
 
         return [];

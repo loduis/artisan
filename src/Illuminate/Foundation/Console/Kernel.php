@@ -8,7 +8,7 @@ use Throwable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Console\Application as Artisan;
-use Symfony\Component\Console\Input\ArrayInput;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Console\Kernel as KernelContract;
 use Symfony\Component\Debug\Exception\FatalThrowableError;
@@ -44,6 +44,13 @@ class Kernel implements KernelContract
     protected $commands = [];
 
     /**
+     * Indicates if the Closure commands have been loaded.
+     *
+     * @var bool
+     */
+    protected $commandsLoaded = false;
+
+    /**
      * The bootstrap classes for the application.
      *
      * @var array
@@ -77,8 +84,6 @@ class Kernel implements KernelContract
 
         $this->app->booted(function () {
             $this->defineConsoleSchedule();
-
-            $this->commands();
         });
     }
 
@@ -108,13 +113,17 @@ class Kernel implements KernelContract
         try {
             $this->bootstrap();
 
+            if (! $this->commandsLoaded) {
+                $this->commands();
+
+                $this->commandsLoaded = true;
+            }
+
             return $this->getArtisan()->run($input, $output);
         } catch (Exception $e) {
             $this->reportException($e);
 
             $this->renderException($output, $e);
-
-            $this->displayHelpOutputForCommand($input, $output);
 
             return 1;
         } catch (Throwable $e) {
@@ -166,11 +175,15 @@ class Kernel implements KernelContract
      *
      * @param  string  $signature
      * @param  Closure  $callback
-     * @return ClosureCommand
+     * @return \Illuminate\Foundation\Console\ClosureCommand
      */
     public function command($signature, Closure $callback)
     {
-        $this->registerCommand($command = new ClosureCommand($signature, $callback));
+        $command = new ClosureCommand($signature, $callback);
+
+        $this->app['events']->listen(ArtisanStarting::class, function ($event) use ($command) {
+            $event->artisan->add($command);
+        });
 
         return $command;
     }
@@ -278,22 +291,6 @@ class Kernel implements KernelContract
     protected function bootstrappers()
     {
         return $this->bootstrappers;
-    }
-
-    /**
-     * Display the help output for the intended command.
-     *
-     * @param  \Symfony\Component\Console\Input\InputInterface  $input
-     * @param  \Symfony\Component\Console\Output\OutputInterface  $output
-     * @return void
-     */
-    protected function displayHelpOutputForCommand($input, $output)
-    {
-        if (! $input->hasParameterOption('--help', true) && $input->hasArgument('command')) {
-            $input = new ArrayInput(['command' => $input->getArgument('command'), '--help']);
-
-            $this->handle($input, $output);
-        }
     }
 
     /**
