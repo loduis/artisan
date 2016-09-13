@@ -17,7 +17,6 @@
         "psy/psysh": "0.7.*",
         "monolog/monolog": "~1.11",
         "symfony/console": "3.2.*",
-        "symfony/debug": "3.2.*",
         "symfony/finder": "3.2.*",
         "symfony/http-foundation": "3.2.*",
         "symfony/http-kernel": "3.2.*",
