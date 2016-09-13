@@ -48,7 +48,8 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
         'path.assets'    => 'resources/assets',
         'path.public'    => 'public',
         'path.storage'   => 'storage',
-        'path.commands'  => 'app/Console/Commands'
+        'path.commands'  => 'app/Console/Commands',
+        'path.resources' => 'resources'
     ];
 
     /**
@@ -410,6 +411,16 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
+     * Get the path to the resources directory.
+     *
+     * @return string
+     */
+    public function resourcePath()
+    {
+        return $this['path.resources'];
+    }
+
+    /**
      * Get the path to the environment file directory.
      *
      * @return string
@@ -468,7 +479,6 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     /**
      * Get or check the current application environment.
      *
-     * @param  mixed
      * @return string|bool
      */
     public function environment()
