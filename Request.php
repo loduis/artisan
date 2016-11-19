@@ -167,7 +167,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
      */
     public function segments()
     {
-        $segments = explode('/', $this->path());
+        $segments = explode('/', $this->decodedPath());
 
         return array_values(array_filter($segments, function ($v) {
             return $v != '';
@@ -182,7 +182,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
     public function is()
     {
         foreach (func_get_args() as $pattern) {
-            if (Str::is($pattern, urldecode($this->path()))) {
+            if (Str::is($pattern, $this->decodedPath())) {
                 return true;
             }
         }
@@ -665,7 +665,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
             return $this->json();
         }
 
-        return $this->getMethod() == 'GET' ? $this->query : $this->request;
+        return $this->getRealMethod() == 'GET' ? $this->query : $this->request;
     }
 
     /**
@@ -864,7 +864,32 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
      */
     public function duplicate(array $query = null, array $request = null, array $attributes = null, array $cookies = null, array $files = null, array $server = null)
     {
-        return parent::duplicate($query, $request, $attributes, $cookies, array_filter((array) $files), $server);
+        return parent::duplicate($query, $request, $attributes, $cookies, $this->filterFiles($files), $server);
+    }
+
+    /**
+     * Filter the given array of files, removing any empty values.
+     *
+     * @param  mixed  $files
+     * @return mixed
+     */
+    protected function filterFiles($files)
+    {
+        if (! $files) {
+            return;
+        }
+
+        foreach ($files as $key => $file) {
+            if (is_array($file)) {
+                $files[$key] = $this->filterFiles($files[$key]);
+            }
+
+            if (empty($files[$key])) {
+                unset($files[$key]);
+            }
+        }
+
+        return $files;
     }
 
     /**
