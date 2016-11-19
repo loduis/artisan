@@ -34,7 +34,8 @@
         "illuminate/filesystem": "self.version",
         "illuminate/foundation": "self.version",
         "illuminate/log": "self.version",
-        "illuminate/support": "self.version"
+        "illuminate/support": "self.version",
+        "illuminate/cache": "self.version"
     },
     "autoload": {
         "files": [
