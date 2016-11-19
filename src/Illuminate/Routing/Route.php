@@ -195,7 +195,7 @@ class Route
      *
      * @return mixed
      */
-    protected function getController()
+    public function getController()
     {
         list($class) = explode('@', $this->action['uses']);
 
@@ -275,7 +275,7 @@ class Route
      */
     public function gatherMiddleware()
     {
-        return array_merge($this->middleware(), $this->controllerMiddleware());
+        return array_unique(array_merge($this->middleware(), $this->controllerMiddleware()), SORT_REGULAR);
     }
 
     /**
@@ -666,8 +666,8 @@ class Route
         // validator implementations. We will spin through each one making sure it
         // passes and then we will know if the route as a whole matches request.
         return static::$validators = [
-            new MethodValidator, new SchemeValidator,
-            new HostValidator, new UriValidator,
+            new UriValidator, new MethodValidator,
+            new SchemeValidator, new HostValidator,
         ];
     }
 
