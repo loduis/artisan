@@ -113,7 +113,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     /**
      * Get the mode of a given key.
      *
-     * @param  null $key
+     * @param  mixed  $key
      * @return array
      */
     public function mode($key = null)
@@ -616,7 +616,17 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
      */
     public function mapWithKeys(callable $callback)
     {
-        return $this->flatMap($callback);
+        $result = [];
+
+        foreach ($this->items as $key => $value) {
+            $assoc = $callback($value, $key);
+
+            foreach ($assoc as $mapKey => $mapValue) {
+                $result[$mapKey] = $mapValue;
+            }
+        }
+
+        return new static($result);
     }
 
     /**
@@ -724,6 +734,25 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     public function forPage($page, $perPage)
     {
         return $this->slice(($page - 1) * $perPage, $perPage);
+    }
+
+    /**
+     * Partition the collection into two arrays using the given callback or key.
+     *
+     * @param  callable|string  $callback
+     * @return static
+     */
+    public function partition($callback)
+    {
+        $partitions = [new static, new static];
+
+        $callback = $this->valueRetriever($callback);
+
+        foreach ($this->items as $key => $item) {
+            $partitions[(int) ! $callback($item)][$key] = $item;
+        }
+
+        return new static($partitions);
     }
 
     /**
@@ -1360,7 +1389,7 @@ class Collection implements ArrayAccess, Arrayable, Countable, IteratorAggregate
     public function __get($key)
     {
         $proxies = [
-            'each', 'map', 'first', 'sortBy',
+            'each', 'map', 'first', 'partition', 'sortBy',
             'sortByDesc', 'sum', 'reject', 'filter',
         ];
 
