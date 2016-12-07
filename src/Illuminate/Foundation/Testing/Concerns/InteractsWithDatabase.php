@@ -35,33 +35,7 @@ trait InteractsWithDatabase
      * @param  string  $connection
      * @return $this
      */
-    protected function missingFromDatabase($table, array $data, $connection = null)
-    {
-        return $this->notSeeInDatabase($table, $data, $connection);
-    }
-
-    /**
-     * Assert that a given where condition does not exist in the database.
-     *
-     * @param  string  $table
-     * @param  array  $data
-     * @param  string  $connection
-     * @return $this
-     */
     protected function dontSeeInDatabase($table, array $data, $connection = null)
-    {
-        return $this->notSeeInDatabase($table, $data, $connection);
-    }
-
-    /**
-     * Assert that a given where condition does not exist in the database.
-     *
-     * @param  string  $table
-     * @param  array  $data
-     * @param  string  $connection
-     * @return $this
-     */
-    protected function notSeeInDatabase($table, array $data, $connection = null)
     {
         $database = $this->app->make('db');
 
@@ -80,10 +54,12 @@ trait InteractsWithDatabase
      * Seed a given database connection.
      *
      * @param  string  $class
-     * @return void
+     * @return $this
      */
     public function seed($class = 'DatabaseSeeder')
     {
         $this->artisan('db:seed', ['--class' => $class]);
+
+        return $this;
     }
 }
