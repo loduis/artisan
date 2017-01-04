@@ -238,7 +238,7 @@ class Console extends ServiceProvider
     {
         $className = str_replace('\\', '/', Str::camel($className));
 
-        return $this->app->basePath() . '/'  . $className . '.php';
+        return $this->app->basePath() . '/' . $className . '.php';
     }
 
     private function resolveApplicationClassName($namespace, $className)
