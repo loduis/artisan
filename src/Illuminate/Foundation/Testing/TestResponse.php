@@ -3,10 +3,10 @@
 namespace Illuminate\Foundation\Testing;
 
 use Closure;
-use Illuminate\Support\Str;
 use Illuminate\Http\Response;
 use Illuminate\Contracts\View\View;
 use PHPUnit_Framework_Assert as PHPUnit;
+use Symfony\Component\HttpFoundation\Cookie;
 
 class TestResponse extends Response
 {
@@ -36,15 +36,19 @@ class TestResponse extends Response
     }
 
     /**
-     * Assert that the response has an OK status code.
+     * Assert that the response has the given status code.
      *
+     * @param  int  $status
      * @return void
      */
     public function assertStatus($status)
     {
         $actual = $this->getStatusCode();
 
-        PHPUnit::assertTrue($this->isOk(), "Expected status code 200, got {$actual}.");
+        PHPUnit::assertTrue(
+            $actual === $status,
+            "Expected status code {$status} but received {$actual}."
+        );
     }
 
     /**
@@ -105,24 +109,16 @@ class TestResponse extends Response
      * @param  string  $cookieName
      * @param  mixed  $value
      * @param  bool  $encrypted
-     * @return void
+     * @return $this
      */
     public function assertCookie($cookieName, $value = null, $encrypted = true)
     {
-        $headers = $this->headers;
+        PHPUnit::assertNotNull(
+            $cookie = $this->getCookie($cookieName),
+            "Cookie [{$cookieName}] not present on response."
+        );
 
-        $exist = false;
-
-        foreach ($headers->getCookies() as $cookie) {
-            if ($cookie->getName() === $cookieName) {
-                $exist = true;
-                break;
-            }
-        }
-
-        PHPUnit::assertTrue($exist, "Cookie [{$cookieName}] not present on response.");
-
-        if (! $exist || is_null($value)) {
+        if (! $cookie || is_null($value)) {
             return $this;
         }
 
@@ -135,6 +131,23 @@ class TestResponse extends Response
             $actual, $value,
             "Cookie [{$cookieName}] was found, but value [{$actual}] does not match [{$value}]."
         );
+
+        return $this;
+    }
+
+    /**
+     * Get the given cookie from the response.
+     *
+     * @param  string  $cookieName
+     * @return Cookie|null
+     */
+    protected function getCookie($cookieName)
+    {
+        foreach ($this->headers->getCookies() as $cookie) {
+            if ($cookie->getName() === $cookieName) {
+                return $cookie;
+            }
+        }
     }
 
     /**
@@ -169,28 +182,6 @@ class TestResponse extends Response
     }
 
     /**
-     * Format the given key and value into a JSON string for expectation checks.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return string
-     */
-    protected function formatToExpectedJson($key, $value)
-    {
-        $expected = json_encode([$key => $value]);
-
-        if (Str::startsWith($expected, '{')) {
-            $expected = substr($expected, 1);
-        }
-
-        if (Str::endsWith($expected, '}')) {
-            $expected = substr($expected, 0, -1);
-        }
-
-        return trim($expected);
-    }
-
-    /**
      * Assert that the response view has a given piece of bound data.
      *
      * @param  string|array  $key
@@ -203,9 +194,7 @@ class TestResponse extends Response
             return $this->assertViewHasAll($key);
         }
 
-        if (! isset($this->original) || ! $this->original instanceof View) {
-            return PHPUnit::assertTrue(false, 'The response is not a view.');
-        }
+        $this->ensureResponseHasView();
 
         if (is_null($value)) {
             PHPUnit::assertArrayHasKey($key, $this->original->getData());
@@ -241,11 +230,21 @@ class TestResponse extends Response
      */
     public function assertViewMissing($key)
     {
+        $this->ensureResponseHasView();
+
+        PHPUnit::assertArrayNotHasKey($key, $this->original->getData());
+    }
+
+    /**
+     * Ensure that the response has a view as its original content.
+     *
+     * @return void
+     */
+    protected function ensureResponseHasView()
+    {
         if (! isset($this->original) || ! $this->original instanceof View) {
             return PHPUnit::fail('The response is not a view.');
         }
-
-        PHPUnit::assertArrayNotHasKey($key, $this->original->getData());
     }
 
     /**

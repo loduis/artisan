@@ -12,7 +12,7 @@
                 "app": {
                     "description": "This is the main application",
                     "commands": {
-                        "tinker" : "Illuminate\\Foundation\\Console\\TinkerCommand"
+                        "tinker" : "Laravel\\Tinker\\Console\\TinkerCommand"
                     }
                 },
                 "admin": {

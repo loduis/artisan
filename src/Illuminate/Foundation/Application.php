@@ -149,7 +149,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      *
      * @var string
      */
-    protected $namespace = null;
+    protected $namespace;
 
     /**
      * Create a new Illuminate application instance.
@@ -236,7 +236,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     public function afterLoadingEnvironment(Closure $callback)
     {
         return $this->afterBootstrapping(
-            'Illuminate\Foundation\Bootstrap\DetectEnvironment', $callback
+            'Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables', $callback
         );
     }
 
@@ -551,9 +551,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function registerConfiguredProviders()
     {
-        $manifestPath = $this->getCachedServicesPath();
-
-        (new ProviderRepository($this, new Filesystem, $manifestPath))
+        (new ProviderRepository($this, new Filesystem, $this->getCachedServicesPath()))
                     ->load($this->config['app.providers']);
     }
 
@@ -575,25 +573,18 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
         // application instance automatically for the developer. This is simply
         // a more convenient way of specifying your service provider classes.
         if (is_string($provider)) {
-            $provider = $this->resolveProviderClass($provider);
+            $provider = $this->resolveProvider($provider);
         }
 
         if (method_exists($provider, 'register')) {
             $provider->register();
         }
 
-        // Once we have registered the service we will iterate through the options
-        // and set each of them on the application so they will be available on
-        // the actual loading of the service objects and for developer usage.
-        foreach ($options as $key => $value) {
-            $this[$key] = $value;
-        }
-
         $this->markAsRegistered($provider);
 
         // If the application has already booted, we will call this boot method on
         // the provider class so it has an opportunity to do its boot logic and
-        // will be ready for any usage by the developer's application logics.
+        // will be ready for any usage by this developer's application logic.
         if ($this->booted) {
             $this->bootProvider($provider);
         }
@@ -622,7 +613,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      * @param  string  $provider
      * @return \Illuminate\Support\ServiceProvider
      */
-    public function resolveProviderClass($provider)
+    public function resolveProvider($provider)
     {
         return new $provider($this);
     }
@@ -635,11 +626,9 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     protected function markAsRegistered($provider)
     {
-        $this['events']->fire($class = get_class($provider), [$provider]);
-
         $this->serviceProviders[] = $provider;
 
-        $this->loadedProviders[$class] = true;
+        $this->loadedProviders[get_class($provider)] = true;
     }
 
     /**
@@ -712,10 +701,9 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      * (Overriding Container::make)
      *
      * @param  string  $abstract
-     * @param  array   $parameters
      * @return mixed
      */
-    public function make($abstract, array $parameters = [])
+    public function make($abstract)
     {
         $abstract = $this->getAlias($abstract);
 
@@ -723,7 +711,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             $this->loadDeferredProvider($abstract);
         }
 
-        return parent::make($abstract, $parameters);
+        return parent::make($abstract);
     }
 
     /**
@@ -846,6 +834,16 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
+     * Get the path to the cached services.php file.
+     *
+     * @return string
+     */
+    public function getCachedServicesPath()
+    {
+        return $this->bootstrapPath().'/cache/services.php';
+    }
+
+    /**
      * Determine if the application configuration is cached.
      *
      * @return bool
@@ -883,26 +881,6 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     public function getCachedRoutesPath()
     {
         return $this->bootstrapPath().'/cache/routes.php';
-    }
-
-    /**
-     * Get the path to the cached "compiled.php" file.
-     *
-     * @return string
-     */
-    public function getCachedCompilePath()
-    {
-        return $this->bootstrapPath().'/cache/compiled.php';
-    }
-
-    /**
-     * Get the path to the cached services.php file.
-     *
-     * @return string
-     */
-    public function getCachedServicesPath()
-    {
-        return $this->bootstrapPath().'/cache/services.php';
     }
 
     /**
@@ -1013,6 +991,17 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     }
 
     /**
+     * Configure the real-time facade namespace.
+     *
+     * @param  string  $namespace
+     * @return void
+     */
+    public function provideFacades($namespace)
+    {
+        AliasLoader::setFacadeNamespace($namespace);
+    }
+
+    /**
      * Define a callback to be used to configure Monolog.
      *
      * @param  callable  $callback
@@ -1067,7 +1056,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
 
         $this['translator']->setLocale($locale);
 
-        $this['events']->fire('locale.changed', [$locale]);
+        $this['events']->fire(new Events\LocaleUpdated($locale));
     }
 
     /**
@@ -1115,11 +1104,11 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
             'queue.connection'     => ['Illuminate\Contracts\Queue\Queue'],
             'queue.failer'         => ['Illuminate\Queue\Failed\FailedJobProviderInterface'],
             'redirect'             => ['Illuminate\Routing\Redirector'],
-            'redis'                => ['Illuminate\Redis\Database', 'Illuminate\Contracts\Redis\Database'],
+            'redis'                => ['Illuminate\Redis\RedisManager', 'Illuminate\Contracts\Redis\Factory'],
             'request'              => ['Illuminate\Http\Request', 'Symfony\Component\HttpFoundation\Request'],
             'router'               => ['Illuminate\Routing\Router', 'Illuminate\Contracts\Routing\Registrar', 'Illuminate\Contracts\Routing\BindingRegistrar'],
             'session'              => ['Illuminate\Session\SessionManager'],
-            'session.store'        => ['Illuminate\Session\Store', 'Symfony\Component\HttpFoundation\Session\SessionInterface'],
+            'session.store'        => ['Illuminate\Session\Store', 'Illuminate\Contracts\Session\Session'],
             'url'                  => ['Illuminate\Routing\UrlGenerator', 'Illuminate\Contracts\Routing\UrlGenerator'],
             'validator'            => ['Illuminate\Validation\Factory', 'Illuminate\Contracts\Validation\Factory'],
             'view'                 => ['Illuminate\View\Factory', 'Illuminate\Contracts\View\Factory'],

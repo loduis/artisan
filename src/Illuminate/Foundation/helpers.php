@@ -28,7 +28,7 @@ if (! function_exists('abort')) {
      */
     function abort($code, $message = '', array $headers = [])
     {
-        return app()->abort($code, $message, $headers);
+        app()->abort($code, $message, $headers);
     }
 }
 
@@ -93,17 +93,16 @@ if (! function_exists('app')) {
     /**
      * Get the available container instance.
      *
-     * @param  string  $make
-     * @param  array   $parameters
+     * @param  string  $abstract
      * @return mixed|\Illuminate\Foundation\Application
      */
-    function app($make = null, $parameters = [])
+    function app($abstract = null)
     {
-        if (is_null($make)) {
+        if (is_null($abstract)) {
             return Container::getInstance();
         }
 
-        return Container::getInstance()->make($make, $parameters);
+        return Container::getInstance()->make($abstract);
     }
 }
 
@@ -157,7 +156,7 @@ if (! function_exists('back')) {
      *
      * @param  int    $status
      * @param  array  $headers
-     * @param  string  $fallback
+     * @param  mixed  $fallback
      * @return \Illuminate\Http\RedirectResponse
      */
     function back($status = 302, $headers = [], $fallback = false)
@@ -328,7 +327,7 @@ if (! function_exists('csrf_token')) {
         $session = app('session');
 
         if (isset($session)) {
-            return $session->getToken();
+            return $session->token();
         }
 
         throw new RuntimeException('Application session store not set.');
@@ -454,10 +453,6 @@ if (! function_exists('env')) {
             case 'null':
             case '(null)':
                 return;
-        }
-
-        if (strpos($value, 'base64:') === 0) {
-            return base64_decode(substr($value, 7));
         }
 
         if (strlen($value) > 1 && Str::startsWith($value, '"') && Str::endsWith($value, '"')) {
@@ -640,12 +635,11 @@ if (! function_exists('resolve')) {
      * Resolve a service from the container.
      *
      * @param  string  $name
-     * @param  array  $parameters
      * @return mixed
      */
-    function resolve($name, $parameters = [])
+    function resolve($name)
     {
-        return app($name, $parameters);
+        return app($name);
     }
 }
 

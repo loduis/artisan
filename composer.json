@@ -14,7 +14,6 @@
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "league/flysystem": "~1.0",
-        "psy/psysh": "0.7.*",
         "monolog/monolog": "~1.11",
         "symfony/console": "~3.2",
         "symfony/finder": "~3.2",
@@ -22,7 +21,8 @@
         "symfony/http-kernel": "~3.2",
         "symfony/process": "~3.2",
         "vlucas/phpdotenv": "~2.2",
-        "paragonie/random_compat": "~1.4|~2.0"
+        "paragonie/random_compat": "~1.4|~2.0",
+        "laravel/tinker": "^1.0@dev"
     },
     "replace": {
         "illuminate/config": "self.version",
