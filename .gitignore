@@ -1,5 +1,6 @@
 .idea
 .tags
+.subsplit
 /vendor
 /tests/5.0/vendor/
 composer.lock

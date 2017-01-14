@@ -11,3 +11,7 @@ git subtree pull --squash --prefix src/Illuminate/Contracts https://github.com/i
 git subtree pull --squash --prefix=src/Illuminate/Routing https://github.com/illuminate/routing.git 5.4
 git subtree pull --squash --prefix=src/Illuminate/Http https://github.com/illuminate/http.git 5.4
 git subtree pull --squash --prefix src/Illuminate/Cache https://github.com/illuminate/cache.git 5.4
+
+./publish-foundation
+
+git subtree pull --squash --prefix src/Illuminate/Foundation https://github.com/loduis/laravel-foundation.git 5.4

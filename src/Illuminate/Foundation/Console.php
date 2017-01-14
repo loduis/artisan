@@ -43,7 +43,8 @@ class Console extends ServiceProvider
      */
     protected $defaultCommands = [
         'command.console.make' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-        'command.environment'  => 'Illuminate\Foundation\Console\EnvironmentCommand'
+        'command.environment'  => 'Illuminate\Foundation\Console\EnvironmentCommand',
+        'ScheduleRun' => 'Illuminate\Console\Scheduling\ScheduleRunCommand'
     ];
 
     /**
@@ -83,9 +84,10 @@ class Console extends ServiceProvider
     /**
      * Start console listen commands
      *
-     * @return void
+     * @param  Closure|null $beforeRun
+     * @return int
      */
-    public function start(Closure $beforeHandler = null)
+    public function start(Closure $beforeRun = null)
     {
         // If has configuration error this report by kernel to console
         if ($this->hasError()) {
@@ -93,14 +95,12 @@ class Console extends ServiceProvider
         }
         $this->useCustomPaths();
         $this->resolveInterfaces();
+        $this->registerCommands();
 
-        // Register the commands
-        $this->register();
+        $kernel = $this->bootstrapKernel();
 
-        $kernel = $this->getKernel();
-
-        if ($beforeHandler instanceof Closure) {
-            call_user_func_array($beforeHandler, [$this->app]);
+        if ($beforeRun instanceof Closure) {
+            call_user_func_array($beforeRun, [$this->app]);
         }
 
         $status = $kernel->handle($this->input, $this->output);
@@ -115,7 +115,7 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function registerCommands()
     {
 
         $commands = [];
@@ -156,7 +156,12 @@ class Console extends ServiceProvider
         return !is_null($this->error);
     }
 
-    private function getKernel()
+    /**
+     * Bootstrap the kernel
+     *
+     * @return \Illuminate\Contracts\Console\Kernel
+     */
+    private function bootstrapKernel()
     {
         $kernel = $this->app->make(ConsoleKernel::class);
         $kernel->bootstrap();
@@ -214,6 +219,11 @@ class Console extends ServiceProvider
         }
     }
 
+    /**
+     * Resolve application interfaces
+     *
+     * @return array
+     */
     private function applicationInterfaces()
     {
         $interfaces     = [];
@@ -227,6 +237,11 @@ class Console extends ServiceProvider
         return $interfaces;
     }
 
+    /**
+     * Resolve interface for custom app or base laravel application
+     *
+     * @return void
+     */
     private function resolveInterfaces()
     {
         foreach ($this->applicationInterfaces() as $name => $value) {
@@ -254,7 +269,7 @@ class Console extends ServiceProvider
      */
     protected function reportError(Exception $e)
     {
-        $this->getKernel();
+        $this->bootstrapKernel();
 
         $handler = $this->app->make(ExceptionHandlerContract::class);
 

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+git subsplit update
+git subsplit publish src/Illuminate/Foundation:git@github.com:loduis/laravel-foundation.git --heads=5.4 --no-tags
+
