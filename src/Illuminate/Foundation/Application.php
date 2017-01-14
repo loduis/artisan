@@ -36,6 +36,24 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
     protected $basePath;
 
     /**
+     * Default paths for the laravel.
+     *
+     * @var array
+     */
+    private static $configPaths = [
+        'path'           => 'app',
+        'path.config'    => 'config',
+        'path.database'  => 'database',
+        'path.bootstrap' => 'bootstrap',
+        'path.lang'      => 'resources/lang',
+        'path.assets'    => 'resources/assets',
+        'path.public'    => 'public',
+        'path.storage'   => 'storage',
+        'path.commands'  => 'app/Console/Commands',
+        'path.resources' => 'resources'
+    ];
+
+    /**
      * Indicates if the application has been bootstrapped before.
      *
      * @var bool
@@ -278,15 +296,11 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     protected function bindPathsInContainer()
     {
-        $this->instance('path', $this->path());
-        $this->instance('path.base', $this->basePath());
-        $this->instance('path.lang', $this->langPath());
-        $this->instance('path.config', $this->configPath());
-        $this->instance('path.public', $this->publicPath());
-        $this->instance('path.storage', $this->storagePath());
-        $this->instance('path.database', $this->databasePath());
-        $this->instance('path.resources', $this->resourcePath());
-        $this->instance('path.bootstrap', $this->bootstrapPath());
+        $this->instance('path.base', $this->basePath);
+
+        foreach (static::$configPaths as $key => $path) {
+            $this->instance($key, $this->basePath . '/' . $path);
+        }
     }
 
     /**
@@ -296,7 +310,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function path()
     {
-        return $this->basePath.DIRECTORY_SEPARATOR.'app';
+        return $this['path'];
     }
 
     /**
@@ -316,7 +330,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function bootstrapPath()
     {
-        return $this->basePath.DIRECTORY_SEPARATOR.'bootstrap';
+        return $this['path.bootstrap'];
     }
 
     /**
@@ -326,7 +340,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function configPath()
     {
-        return $this->basePath.DIRECTORY_SEPARATOR.'config';
+        return $this['path.config'];
     }
 
     /**
@@ -336,7 +350,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function databasePath()
     {
-        return $this->databasePath ?: $this->basePath.DIRECTORY_SEPARATOR.'database';
+        return $this['path.database'];
     }
 
     /**
@@ -361,7 +375,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function langPath()
     {
-        return $this->resourcePath().DIRECTORY_SEPARATOR.'lang';
+        return $this['path.lang'];
     }
 
     /**
@@ -371,7 +385,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function publicPath()
     {
-        return $this->basePath.DIRECTORY_SEPARATOR.'public';
+        return $this['path.public'];
     }
 
     /**
@@ -381,7 +395,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function storagePath()
     {
-        return $this->storagePath ?: $this->basePath.DIRECTORY_SEPARATOR.'storage';
+        return $this['path.storage'];
     }
 
     /**
@@ -406,7 +420,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
      */
     public function resourcePath()
     {
-        return $this->basePath.DIRECTORY_SEPARATOR.'resources';
+        return $this['path.resources'];
     }
 
     /**
