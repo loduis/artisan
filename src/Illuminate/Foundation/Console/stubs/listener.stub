@@ -1,0 +1,34 @@
+<?php
+
+namespace DummyNamespace;
+
+use DummyFullEvent;
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class DummyClass
+{
+    use Queueable;
+
+    /**
+     * Create the event listener.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the event.
+     *
+     * @param  DummyEvent  $event
+     * @return void
+     */
+    public function handle(DummyEvent $event)
+    {
+        //
+    }
+}
