@@ -19,7 +19,6 @@
         "nesbot/carbon": "~1.20",
         "symfony/console": "~3.2",
         "symfony/finder": "~3.2",
-        "symfony/http-foundation": "~3.2",
         "symfony/http-kernel": "~3.2",
         "symfony/process": "~3.2",
         "vlucas/phpdotenv": "~2.2",

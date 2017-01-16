@@ -10,7 +10,7 @@ git subtree add --squash --prefix=src/Illuminate/Log https://github.com/illumina
 git subtree add --squash --prefix=src/Illuminate/Support https://github.com/illuminate/support.git 5.4
 git subtree add --squash --prefix=src/Illuminate/Contracts https://github.com/illuminate/contracts.git 5.4
 git subtree add --squash --prefix=src/Illuminate/Routing https://github.com/illuminate/routing.git 5.4
-git subtree add --squash --prefix=src/Illuminate/Http https://github.com/illuminate/http.git 5.4
+# git subtree add --squash --prefix=src/Illuminate/Http https://github.com/illuminate/http.git 5.4
 git subtree add --squash --prefix=src/Illuminate/Cache https://github.com/illuminate/cache.git 5.4
 
 git subsplit init https://github.com/laravel/framework --no-tags
