@@ -8,7 +8,7 @@ git subtree pull --squash --prefix src/Illuminate/Filesystem https://github.com/
 git subtree pull --squash --prefix src/Illuminate/Log https://github.com/illuminate/log.git 5.4
 git subtree pull --squash --prefix src/Illuminate/Support https://github.com/illuminate/support.git 5.4
 git subtree pull --squash --prefix src/Illuminate/Contracts https://github.com/illuminate/contracts.git 5.4
-git subtree pull --squash --prefix=src/Illuminate/Routing https://github.com/illuminate/routing.git 5.4
+# git subtree pull --squash --prefix=src/Illuminate/Routing https://github.com/illuminate/routing.git 5.4
 # git subtree pull --squash --prefix=src/Illuminate/Http https://github.com/illuminate/http.git 5.4
 git subtree pull --squash --prefix src/Illuminate/Cache https://github.com/illuminate/cache.git 5.4
 
