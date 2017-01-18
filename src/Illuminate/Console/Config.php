@@ -36,10 +36,14 @@ class Config
     public function __construct($basePath)
     {
         $this->basePath = $basePath;
-        $config         = $this->loadFromFile($this->filePath());
-        $this->items    = new Collection($config);
+        $this->items    = new Collection($this->load());
     }
 
+    /**
+     * Get applications from composer file.
+     *
+     * @return \Illuminate\Support\Collection
+     */
     public function applications()
     {
         $apps = $this->items->get('applications');
@@ -60,7 +64,14 @@ class Config
         return $this->basePath . '/composer.json';
     }
 
-    private function application($name, $app)
+    /**
+     * Set required options on application
+     *
+     * @param  string $name
+     * @param  array $app
+     * @return array
+     */
+    private function requiredOptions($name, $app)
     {
         $app['namespace'] = $this->getNamespace($app, $name);
         $app['paths']     = $this->getPaths($app);
@@ -70,15 +81,14 @@ class Config
     }
 
     /**
-     * Load config from file
+     * Load config from composer file
      *
-     * @param  string
      * @return array
      */
-    private function loadFromFile($file)
+    private function load()
     {
         $config = [];
-        if (file_exists($file)) {
+        if (file_exists($file = $this->filePath())) {
             $content    = file_get_contents($file);
             $composer   = json_decode($content, true);
             $config     = (array) Arr::get($composer, 'extra.laravel');
@@ -99,10 +109,11 @@ class Config
     /**
      * Get the namespace for application from namespace or name
      *
-     * @param  array
+     * @param  array $app
+     * @param  string $default
      * @return string
      */
-    private function getNamespace($app, $default)
+    private function getNamespace(array $app, $default)
     {
         $namespace = Arr::get($app, 'namespace', $default);
         $namespace = ucfirst($namespace) . '\\';
@@ -130,13 +141,14 @@ class Config
 
         return $newPaths;
     }
+
     /**
      * Get application commands
      *
      * @param  array $app
      * @return array
      */
-    private function getCommands($app)
+    private function getCommands(array $app)
     {
         $appCommands    = (array) Arr::get($app, 'commands');
         $sharedCommands = (array) data_get($this->items, 'shared.commands');
@@ -144,6 +156,12 @@ class Config
         return array_merge($sharedCommands, $appCommands);
     }
 
+    /**
+     * Get path from namespace.
+     *
+     * @param  string $namespace
+     * @return string
+     */
     private function getPathFromNamespace($namespace)
     {
         if (!Arr::has($this->psr4, $namespace)) {
@@ -153,10 +171,16 @@ class Config
         return rtrim($this->psr4[$namespace]);
     }
 
+    /**
+     * Transfrom array to collection object
+     *
+     * @param  array  $apps
+     * @return \Illuminate\Support\Collection
+     */
     private function transformToCollections(array $apps)
     {
         array_walk($apps, function (&$app, $name) {
-            $app = new Collection($this->application($name, $app));
+            $app = new Collection($this->requiredOptions($name, $app));
         });
 
         return $apps;
