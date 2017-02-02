@@ -23,24 +23,20 @@
         "symfony/process": "~3.2",
         "vlucas/phpdotenv": "~2.2",
         "paragonie/random_compat": "~1.4|~2.0",
-        "laravel/tinker": "^1.0@dev"
-    },
-    "replace": {
-        "illuminate/config": "self.version",
-        "illuminate/console": "self.version",
-        "illuminate/contracts": "self.version",
-        "illuminate/container": "self.version",
-        "illuminate/events": "self.version",
-        "illuminate/exception": "self.version",
-        "illuminate/filesystem": "self.version",
-        "illuminate/log": "self.version",
-        "illuminate/support": "self.version",
-        "illuminate/cache": "self.version"
+        "illuminate/config": "~5.4",
+        "illuminate/contracts": "~5.4",
+        "illuminate/container": "~5.4",
+        "illuminate/events": "~5.4",
+        "illuminate/filesystem": "~5.4",
+        "illuminate/log": "~5.4",
+        "illuminate/support": "~5.4",
+        "illuminate/cache": "~5.4",
+        "illuminate/console": "~5.4",
+        "laravel/tinker": "~1.0"
     },
     "autoload": {
         "files": [
-          "src/Illuminate/Foundation/helpers.php",
-          "src/Illuminate/Support/helpers.php"
+          "src/Illuminate/Foundation/helpers.php"
         ],
         "psr-4": {
           "Illuminate\\": "src/Illuminate/"
