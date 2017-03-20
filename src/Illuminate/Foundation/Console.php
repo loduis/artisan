@@ -2,8 +2,8 @@
 
 namespace Illuminate\Foundation;
 
-use Closure;
 use Exception;
+use Illuminate\Support\Collection;
 use RuntimeException;
 use Illuminate\Support\Str;
 use Illuminate\Console\Config;
@@ -31,9 +31,9 @@ class Console extends ServiceProvider
      * @var array
      */
     private $interfaces = [
-        'Illuminate\Contracts\Http\Kernel'            => 'Illuminate\Foundation\Http\Kernel',
-        'Illuminate\Contracts\Console\Kernel'         => 'Illuminate\Foundation\Console\Kernel',
-        'Illuminate\Contracts\Debug\ExceptionHandler' => 'Illuminate\Foundation\Exceptions\Handler'
+        'Illuminate\Contracts\Http\Kernel'            => Http\Kernel::class,
+        'Illuminate\Contracts\Console\Kernel'         => Console\Kernel::class,
+        'Illuminate\Contracts\Debug\ExceptionHandler' => Exceptions\Handler::class
     ];
 
     /**
@@ -42,9 +42,9 @@ class Console extends ServiceProvider
      * @var array
      */
     protected $defaultCommands = [
-        'command.console.make' => 'Illuminate\Foundation\Console\ConsoleMakeCommand',
-        'command.environment'  => 'Illuminate\Foundation\Console\EnvironmentCommand',
-        'ScheduleRun' => 'Illuminate\Console\Scheduling\ScheduleRunCommand'
+        'command.console.make' => Console\ConsoleMakeCommand::class,
+        'command.environment'  => Console\EnvironmentCommand::class,
+        'schedule:run'          => \Illuminate\Console\Scheduling\ScheduleRunCommand::class
     ];
 
     /**
@@ -84,10 +84,10 @@ class Console extends ServiceProvider
     /**
      * Start console listen commands
      *
-     * @param  Closure|null $beforeRun
-     * @return int
+     * @param  callable|null $beforeHandle
+     * @return null|int
      */
-    public function start(Closure $beforeRun = null)
+    public function start(callable $beforeHandle = null)
     {
         // If has configuration error this report by kernel to console
         if ($this->hasError()) {
@@ -99,8 +99,9 @@ class Console extends ServiceProvider
 
         $kernel = $this->bootstrapKernel();
 
-        if ($beforeRun instanceof Closure) {
-            call_user_func_array($beforeRun, [$this->app]);
+        if (is_callable($beforeHandle)) {
+            // call_user_func_array($beforeHandle, [$this->app]);
+            $this->app->call($beforeHandle);
         }
 
         $status = $kernel->handle($this->input, $this->output);
@@ -131,10 +132,10 @@ class Console extends ServiceProvider
      * Shortcut for run console
      *
      * @param  string $basePath
-     *
-     * @return void
+     * @param callable $beforeHandler
+     * @return int
      */
-    public static function run($basePath, Closure $beforeHandler = null)
+    public static function run($basePath, callable $beforeHandler = null)
     {
         return (new static($basePath))->start($beforeHandler);
     }
@@ -144,11 +145,13 @@ class Console extends ServiceProvider
      *
      * @param  string $string
      *
-     * @return void
+     * @return null
      */
     private function registerError($string)
     {
         $this->error = new RuntimeException($string);
+
+        return;
     }
 
     private function hasError()
@@ -173,7 +176,7 @@ class Console extends ServiceProvider
      * Get the config store on composer file in basePath
      *
      * @param string $basePath
-     * @return \Illuminate\Support\Collection
+     * @return null|\Illuminate\Support\Collection
      */
     private function getConfiguration($basePath)
     {
@@ -195,7 +198,11 @@ class Console extends ServiceProvider
         return $applications->first();
     }
 
-    private function findApplicationFromArgvInput($applications)
+    /**
+     * @param Collection $applications
+     * @return null|string
+     */
+    private function findApplicationFromArgvInput(Collection $applications)
     {
         foreach ($applications->keys() as $appName) {
             if ($this->input->hasParameterOption($appName)) {
@@ -203,6 +210,8 @@ class Console extends ServiceProvider
                 return $appName;
             }
         }
+
+        return null;
     }
 
     /**
@@ -265,10 +274,11 @@ class Console extends ServiceProvider
      * Report the exception to the exception handler.
      *
      * @param  \Exception  $e
-     * @return void
+     * @return int
      */
-    protected function reportError(Exception $e)
+    protected function reportError(Exception $e = null)
     {
+        $e = $e ?: $this->error;
         $this->bootstrapKernel();
 
         $handler = $this->app->make(ExceptionHandlerContract::class);

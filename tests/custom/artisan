@@ -38,4 +38,6 @@ $basePath = getcwd();
 |
 */
 
-exit(Illuminate\Foundation\Console::run($basePath));
+exit(Illuminate\Foundation\Console::run($basePath, function(Illuminate\Contracts\Foundation\Application $app) {
+    // RUN here any code before handle application
+}));
