@@ -19,6 +19,7 @@ class TransformsRequest
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
+     * @param  array  ...$attributes
      * @return mixed
      */
     public function handle($request, Closure $next, ...$attributes)
@@ -40,10 +41,10 @@ class TransformsRequest
     {
         $this->cleanParameterBag($request->query);
 
-        $this->cleanParameterBag($request->request);
-
         if ($request->isJson()) {
             $this->cleanParameterBag($request->json());
+        } elseif ($request->request !== $request->query) {
+            $this->cleanParameterBag($request->request);
         }
     }
 

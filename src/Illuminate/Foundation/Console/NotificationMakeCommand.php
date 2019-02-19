@@ -33,9 +33,9 @@ class NotificationMakeCommand extends GeneratorCommand
      *
      * @return void
      */
-    public function fire()
+    public function handle()
     {
-        if (parent::fire() === false) {
+        if (parent::handle() === false && ! $this->option('force')) {
             return;
         }
 
@@ -108,7 +108,9 @@ class NotificationMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
-            ['markdown', 'm', InputOption::VALUE_OPTIONAL, 'Create a new Markdown template for the notification.'],
+            ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the notification already exists'],
+
+            ['markdown', 'm', InputOption::VALUE_OPTIONAL, 'Create a new Markdown template for the notification'],
         ];
     }
 }
