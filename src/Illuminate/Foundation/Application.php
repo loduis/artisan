@@ -15,6 +15,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\CacheServiceProvider;
 use Illuminate\Events\EventServiceProvider;
 use Illuminate\Filesystem\FilesystemServiceProvider;
+use Illuminate\Translation\TranslationServiceProvider;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
@@ -213,6 +214,7 @@ class Application extends Container implements ApplicationContract, HttpKernelIn
         $this->register(new LogServiceProvider($this));
         $this->register(new CacheServiceProvider($this));
         $this->register(new FilesystemServiceProvider($this));
+        $this->register(new TranslationServiceProvider($this));
     }
 
     /**
