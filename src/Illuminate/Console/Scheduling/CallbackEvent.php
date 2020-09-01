@@ -2,9 +2,9 @@
 
 namespace Illuminate\Console\Scheduling;
 
-use LogicException;
-use InvalidArgumentException;
 use Illuminate\Contracts\Container\Container;
+use InvalidArgumentException;
+use LogicException;
 
 class CallbackEvent extends Event
 {
@@ -28,11 +28,12 @@ class CallbackEvent extends Event
      * @param  \Illuminate\Console\Scheduling\EventMutex  $mutex
      * @param  string  $callback
      * @param  array  $parameters
+     * @param  \DateTimeZone|string|null  $timezone
      * @return void
      *
      * @throws \InvalidArgumentException
      */
-    public function __construct(EventMutex $mutex, $callback, array $parameters = [])
+    public function __construct(EventMutex $mutex, $callback, array $parameters = [], $timezone = null)
     {
         if (! is_string($callback) && ! is_callable($callback)) {
             throw new InvalidArgumentException(
@@ -43,6 +44,7 @@ class CallbackEvent extends Event
         $this->mutex = $mutex;
         $this->callback = $callback;
         $this->parameters = $parameters;
+        $this->timezone = $timezone;
     }
 
     /**
@@ -90,7 +92,7 @@ class CallbackEvent extends Event
      */
     protected function removeMutex()
     {
-        if ($this->description) {
+        if ($this->description && $this->withoutOverlapping) {
             $this->mutex->forget($this);
         }
     }
