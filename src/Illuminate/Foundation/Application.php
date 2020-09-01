@@ -229,9 +229,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
     {
         $this->register(new EventServiceProvider($this));
         $this->register(new LogServiceProvider($this));
-        // $this->register(new CacheServiceProvider($this));
         $this->register(new FilesystemServiceProvider($this));
-        // $this->register(new TranslationServiceProvider($this));
     }
 
     /**
@@ -376,7 +374,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function bootstrapPath($path = '')
     {
-        return $this['path.bootstrap'];
+        return $this['path.bootstrap'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -387,7 +385,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function configPath($path = '')
     {
-        return $this['path.config'];
+        return $this['path.config'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -398,7 +396,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function databasePath($path = '')
     {
-        return $this['path.database'];
+        return $this['path.database'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -464,11 +462,12 @@ class Application extends Container implements ApplicationContract, CachesConfig
     /**
      * Get the path to the resources directory.
      *
+     * @param  string  $path
      * @return string
      */
     public function resourcePath($path = '')
     {
-        return $this['path.resources'];
+        return $this['path.resources'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
