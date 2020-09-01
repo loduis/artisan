@@ -3,13 +3,13 @@
 namespace Illuminate\Foundation;
 
 use Exception;
-use Illuminate\Support\Collection;
 use RuntimeException;
 use Illuminate\Support\Str;
 use Illuminate\Console\Config;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Console\ArgvInput;
+use Illuminate\Support\Collection;
 use Illuminate\Console\ResolveCommands;
+use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
@@ -43,8 +43,7 @@ class Console extends ServiceProvider
      */
     protected $defaultCommands = [
         'command.console.make' => Console\ConsoleMakeCommand::class,
-        'command.environment'  => Console\EnvironmentCommand::class,
-        'schedule:run'          => \Illuminate\Console\Scheduling\ScheduleRunCommand::class
+        'command.environment'  => Console\EnvironmentCommand::class
     ];
 
     /**
@@ -100,7 +99,6 @@ class Console extends ServiceProvider
         $kernel = $this->bootstrapKernel();
 
         if (is_callable($beforeHandle)) {
-            // call_user_func_array($beforeHandle, [$this->app]);
             $this->app->call($beforeHandle);
         }
 
@@ -224,7 +222,7 @@ class Console extends ServiceProvider
         foreach ($this->config->get('paths', []) as $key => $path) {
             $key             = $key == 'path' ? $key : 'path.' . $key;
             $path            = realpath($this->app->basePath() . '/' . $path);
-            $this->app[$key] = $path;
+            $this->app->setPath($key, $path);
         }
     }
 
