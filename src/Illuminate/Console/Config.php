@@ -134,7 +134,7 @@ class Config
         $newPaths = [];
 
         foreach ($paths as $key => $path) {
-            $newPaths[$key] = Str::contains($path, '.') ? $path : ($appPath . '/' . $path);
+            $newPaths[$key] = Str::contains($path, '.') ? $path : ($appPath . $path);
         }
 
         $newPaths['path'] = $appPath;

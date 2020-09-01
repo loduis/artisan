@@ -390,7 +390,6 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function configPath($path = '')
     {
-        echo 'CONF: ', $this->paths['path.config'], PHP_EOL;
         return $this->paths['path.config'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
