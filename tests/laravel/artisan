@@ -38,4 +38,4 @@ $basePath = getcwd();
 |
 */
 
-exit(Illuminate\Foundation\Console::run($basePath));
+exit(Artisan\Console::run($basePath));

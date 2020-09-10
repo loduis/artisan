@@ -1,14 +1,14 @@
 <?php
 
-namespace Illuminate\Console;
+namespace Artisan\Command;
 
 use ReflectionClass;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Symfony\Component\Finder\Finder;
-use Illuminate\Console\Command\Source as CommandSource;
+use Artisan\Command\Source as CommandSource;
 
-trait ResolveCommands
+trait Resolve
 {
     /**
      * Register command in container

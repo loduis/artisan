@@ -10,36 +10,38 @@
         }
     ],
     "require": {
-        "php": "^7.2.5",
+        "php": "^7.3",
+        "ext-json": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "league/flysystem": "^1.0.34",
         "monolog/monolog": "^2.0",
         "dragonmantank/cron-expression": "^2.0",
         "nesbot/carbon": "^2.17",
-        "symfony/console": "^5.0",
-        "symfony/finder": "^5.0",
-        "symfony/http-kernel": "^5.0",
-        "symfony/process": "^5.0",
-        "illuminate/config": "7.2.*",
-        "illuminate/contracts": "7.2.*",
-        "illuminate/container": "7.2.*",
-        "illuminate/events": "7.2.*",
-        "illuminate/filesystem": "7.2.*",
-        "illuminate/log": "7.2.*",
-        "illuminate/support": "7.2.*",
-        "illuminate/cache": "7.2.*",
-        "illuminate/console": "7.2.*",
-        "illuminate/translation": "7.2.*",
+        "symfony/console": "^5.1",
+        "symfony/finder": "^5.1",
+        "symfony/http-kernel": "^5.1",
+        "symfony/process": "^5.1",
+        "illuminate/config": "8.0.*",
+        "illuminate/contracts": "8.0.*",
+        "illuminate/container": "8.0.*",
+        "illuminate/events": "8.0.*",
+        "illuminate/filesystem": "8.0.*",
+        "illuminate/log": "8.0.*",
+        "illuminate/support": "8.0.*",
+        "illuminate/cache": "8.0.*",
+        "illuminate/console": "8.0.*",
+        "illuminate/translation": "8.0.*",
         "laravel/tinker": "^2.0",
-        "vlucas/phpdotenv": "^4.0"
+        "vlucas/phpdotenv": "^5.0"
     },
     "autoload": {
         "files": [
           "src/Illuminate/Foundation/helpers.php"
         ],
         "psr-4": {
-          "Illuminate\\": "src/Illuminate/"
+          "Illuminate\\": "src/Illuminate/",
+          "Artisan\\": "src/Artisan/"
         }
     },
     "bin": [
@@ -47,7 +49,7 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-master": "7.x-dev"
+            "dev-master": "8.x-dev"
         }
     },
     "config": {

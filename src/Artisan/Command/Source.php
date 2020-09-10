@@ -1,6 +1,6 @@
 <?php
 
-namespace Illuminate\Console\Command;
+namespace Artisan\Command;
 
 use Closure;
 use Illuminate\Support\Str;

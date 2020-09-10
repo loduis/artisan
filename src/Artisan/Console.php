@@ -1,15 +1,18 @@
 <?php
 
-namespace Illuminate\Foundation;
+namespace Artisan;
 
 use Exception;
 use RuntimeException;
 use Illuminate\Support\Str;
-use Illuminate\Console\Config;
-use Illuminate\Console\ArgvInput;
+use Artisan\Console\Config;
+use Artisan\Console\ArgvInput;
 use Illuminate\Support\Collection;
-use Illuminate\Console\ResolveCommands;
+use Illuminate\Foundation\Console as BaseConsole;
+use Illuminate\Foundation\Http;
+use Illuminate\Foundation\Exceptions;
 use Illuminate\Support\ServiceProvider;
+use Artisan\Command\Resolve as ResolveCommands;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
@@ -42,8 +45,8 @@ class Console extends ServiceProvider
      * @var array
      */
     protected $defaultCommands = [
-        'command.console.make' => Console\ConsoleMakeCommand::class,
-        'command.environment'  => Console\EnvironmentCommand::class
+        'command.console.make' => BaseConsole\ConsoleMakeCommand::class,
+        'command.environment'  => BaseConsole\EnvironmentCommand::class
     ];
 
     /**

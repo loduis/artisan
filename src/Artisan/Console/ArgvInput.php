@@ -1,6 +1,6 @@
 <?php
 
-namespace Illuminate\Console;
+namespace Artisan\Console;
 
 use Symfony\Component\Console\Input\ArgvInput as ConsoleArgvInput;
 

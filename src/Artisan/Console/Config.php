@@ -1,6 +1,6 @@
 <?php
 
-namespace Illuminate\Console;
+namespace Artisan\Console;
 
 use OutOfBoundsException;
 use Illuminate\Support\Arr;

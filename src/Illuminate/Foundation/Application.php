@@ -12,13 +12,13 @@ use Illuminate\Events\EventServiceProvider;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
 use Illuminate\Foundation\Events\LocaleUpdated;
+use Illuminate\Http\Request;
 use Illuminate\Log\LogServiceProvider;
 use Illuminate\Routing\RoutingServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Filesystem\FilesystemServiceProvider;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
@@ -33,7 +33,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      *
      * @var string
      */
-    const VERSION = '7.26.1';
+    const VERSION = '8.0.3';
 
     /**
      * The base path for the Laravel installation.
@@ -41,24 +41,6 @@ class Application extends Container implements ApplicationContract, CachesConfig
      * @var string
      */
     protected $basePath;
-
-    /**
-     * Default paths for the laravel.
-     *
-     * @var array
-     */
-    private $paths = [
-        'path'           => 'app',
-        'path.lang'      => 'resources/lang',
-        'path.config'    => 'config',
-        'path.public'    => 'public',
-        'path.storage'   => 'storage',
-        'path.database'  => 'database',
-        'path.bootstrap' => 'bootstrap',
-        'path.resources' => 'resources',
-        'path.bootstrap' => 'bootstrap',
-        'path.commands'  => 'app/Console/Commands',
-    ];
 
     /**
      * Indicates if the application has been bootstrapped before.
@@ -229,7 +211,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
     {
         $this->register(new EventServiceProvider($this));
         $this->register(new LogServiceProvider($this));
-        $this->register(new FilesystemServiceProvider($this));
+        $this->register(new RoutingServiceProvider($this));
     }
 
     /**
@@ -320,10 +302,15 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     protected function bindPathsInContainer()
     {
-        foreach ($this->paths as $key => $path) {
-            $this->setPath($key, $this->basePath . '/' . $path);
-        }
-        $this->setPath('path.base', $this->basePath);
+        $this->instance('path', $this->path());
+        $this->instance('path.base', $this->basePath());
+        $this->instance('path.lang', $this->langPath());
+        $this->instance('path.config', $this->configPath());
+        $this->instance('path.public', $this->publicPath());
+        $this->instance('path.storage', $this->storagePath());
+        $this->instance('path.database', $this->databasePath());
+        $this->instance('path.resources', $this->resourcePath());
+        $this->instance('path.bootstrap', $this->bootstrapPath());
     }
 
     /**
@@ -337,12 +324,6 @@ class Application extends Container implements ApplicationContract, CachesConfig
         $appPath = $this->appPath ?: $this->basePath.DIRECTORY_SEPARATOR.'app';
 
         return $appPath.($path ? DIRECTORY_SEPARATOR.$path : $path);
-    }
-
-    public function setPath($key, $value)
-    {
-        $this->paths[$key] = $value;
-        $this->instance($key, $value);
     }
 
     /**
@@ -379,7 +360,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function bootstrapPath($path = '')
     {
-        return $this->paths['path.bootstrap'].($path ? DIRECTORY_SEPARATOR.$path : $path);
+        return $this->basePath.DIRECTORY_SEPARATOR.'bootstrap'.($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -390,7 +371,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function configPath($path = '')
     {
-        return $this->paths['path.config'].($path ? DIRECTORY_SEPARATOR.$path : $path);
+        return $this->basePath.DIRECTORY_SEPARATOR.'config'.($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -401,7 +382,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function databasePath($path = '')
     {
-        return $this->paths['path.database'].($path ? DIRECTORY_SEPARATOR.$path : $path);
+        return ($this->databasePath ?: $this->basePath.DIRECTORY_SEPARATOR.'database').($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -426,7 +407,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function langPath()
     {
-        return $this->paths['path.lang'];
+        return $this->resourcePath().DIRECTORY_SEPARATOR.'lang';
     }
 
     /**
@@ -436,7 +417,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function publicPath()
     {
-        return $this->options['path.public'];
+        return $this->basePath.DIRECTORY_SEPARATOR.'public';
     }
 
     /**
@@ -446,7 +427,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function storagePath()
     {
-        return $this->paths['path.storage'];
+        return $this->storagePath ?: $this->basePath.DIRECTORY_SEPARATOR.'storage';
     }
 
     /**
@@ -472,7 +453,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function resourcePath($path = '')
     {
-        return $this->paths['path.resources'].($path ? DIRECTORY_SEPARATOR.$path : $path);
+        return $this->basePath.DIRECTORY_SEPARATOR.'resources'.($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
 
     /**
@@ -878,13 +859,17 @@ class Application extends Container implements ApplicationContract, CachesConfig
      * Boot the given service provider.
      *
      * @param  \Illuminate\Support\ServiceProvider  $provider
-     * @return mixed
+     * @return void
      */
     protected function bootProvider(ServiceProvider $provider)
     {
+        $provider->callBootingCallbacks();
+
         if (method_exists($provider, 'boot')) {
-            return $this->call([$provider, 'boot']);
+            $this->call([$provider, 'boot']);
         }
+
+        $provider->callBootedCallbacks();
     }
 
     /**
@@ -972,7 +957,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function configurationIsCached()
     {
-        return file_exists($this->getCachedConfigPath());
+        return is_file($this->getCachedConfigPath());
     }
 
     /**
@@ -1063,7 +1048,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     public function isDownForMaintenance()
     {
-        return file_exists($this->storagePath().'/framework/down');
+        return is_file($this->storagePath().'/framework/down');
     }
 
     /**
