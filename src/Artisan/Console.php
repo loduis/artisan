@@ -34,7 +34,6 @@ class Console extends ServiceProvider
      * @var array
      */
     private $interfaces = [
-        'Illuminate\Contracts\Http\Kernel'            => Http\Kernel::class,
         'Illuminate\Contracts\Console\Kernel'         => Console\Kernel::class,
         'Illuminate\Contracts\Debug\ExceptionHandler' => Exceptions\Handler::class
     ];
