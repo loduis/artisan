@@ -222,9 +222,14 @@ class Console extends ServiceProvider
     private function useCustomPaths()
     {
         foreach ($this->config->get('paths', []) as $key => $path) {
-            $key             = $key == 'path' ? $key : 'path.' . $key;
-            $path            = realpath($this->app->basePath() . '/' . $path);
-            $this->app->setPath($key, $path);
+            $isApp = $key == 'path';
+            $key  = $isApp ? $key : 'path.' . $key;
+            $path = realpath($this->app->basePath() . '/' . $path);
+            if ($isApp) {
+                $this->app->useAppPath($path);
+            } else {
+                $this->app->setPath($key, $path);
+            }
         }
     }
 
