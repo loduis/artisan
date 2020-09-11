@@ -43,9 +43,6 @@
           "Artisan\\": "src/Artisan/"
         }
     },
-    "bin": [
-        "artisan"
-    ],
     "extra": {
         "branch-alias": {
             "dev-master": "8.x-dev"
