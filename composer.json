@@ -35,9 +35,6 @@
         "vlucas/phpdotenv": "^5.0"
     },
     "autoload": {
-        "files": [
-          "src/Illuminate/Foundation/helpers.php"
-        ],
         "psr-4": {
           "Illuminate\\": "src/Illuminate/",
           "Artisan\\": "src/Artisan/"
