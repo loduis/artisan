@@ -14,7 +14,6 @@ use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
 use Illuminate\Foundation\Events\LocaleUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Log\LogServiceProvider;
-use Illuminate\Routing\RoutingServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
@@ -193,7 +192,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
         $this->instance('app', $this);
 
         $this->instance(Container::class, $this);
-        $this->singleton(Mix::class);
+        // $this->singleton(Mix::class);
 
         $this->singleton(PackageManifest::class, function () {
             return new PackageManifest(
@@ -211,7 +210,6 @@ class Application extends Container implements ApplicationContract, CachesConfig
     {
         $this->register(new EventServiceProvider($this));
         $this->register(new LogServiceProvider($this));
-        $this->register(new RoutingServiceProvider($this));
     }
 
     /**
