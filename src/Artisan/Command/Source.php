@@ -40,7 +40,7 @@ class Source
     public static function fromFile($file)
     {
         if (!$file instanceof SplFileInfo) {
-            $file = new SplFileInfo($file, null, null);
+            $file = new SplFileInfo($file, '', '');
         }
 
         return new static($file);

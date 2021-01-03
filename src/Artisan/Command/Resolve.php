@@ -4,6 +4,7 @@ namespace Artisan\Command;
 
 use ReflectionClass;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Symfony\Component\Finder\Finder;
 use Artisan\Command\Source as CommandSource;

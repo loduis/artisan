@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables;
 use Illuminate\Foundation\Events\LocaleUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Log\LogServiceProvider;
+use Illuminate\Routing\RoutingServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Env;
@@ -32,7 +33,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      *
      * @var string
      */
-    const VERSION = '8.0.3';
+    const VERSION = '8.20.1';
 
     /**
      * The base path for the Laravel installation.
@@ -149,7 +150,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
     /**
      * The prefixes of absolute cache paths for use during normalization.
      *
-     * @var array
+     * @var string[]
      */
     protected $absoluteCachePathPrefixes = ['/', '\\'];
 
@@ -192,7 +193,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
         $this->instance('app', $this);
 
         $this->instance(Container::class, $this);
-        // $this->singleton(Mix::class);
+        $this->singleton(Mix::class);
 
         $this->singleton(PackageManifest::class, function () {
             return new PackageManifest(
@@ -210,6 +211,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
     {
         $this->register(new EventServiceProvider($this));
         $this->register(new LogServiceProvider($this));
+        $this->register(new RoutingServiceProvider($this));
     }
 
     /**
@@ -1180,6 +1182,16 @@ class Application extends Container implements ApplicationContract, CachesConfig
     }
 
     /**
+     * Get the current application locale.
+     *
+     * @return string
+     */
+    public function currentLocale()
+    {
+        return $this->getLocale();
+    }
+
+    /**
      * Get the current application fallback locale.
      *
      * @return string
@@ -1299,8 +1311,11 @@ class Application extends Container implements ApplicationContract, CachesConfig
         $this->serviceProviders = [];
         $this->resolvingCallbacks = [];
         $this->terminatingCallbacks = [];
+        $this->beforeResolvingCallbacks = [];
         $this->afterResolvingCallbacks = [];
+        $this->globalBeforeResolvingCallbacks = [];
         $this->globalResolvingCallbacks = [];
+        $this->globalAfterResolvingCallbacks = [];
     }
 
     /**

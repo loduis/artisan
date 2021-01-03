@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 
 if (! function_exists('app')) {
     /**
@@ -82,5 +83,18 @@ if (! function_exists('storage_path')) {
     function storage_path($path = '')
     {
         return app('path.storage').($path ? DIRECTORY_SEPARATOR.$path : $path);
+    }
+}
+
+if (! function_exists('report')) {
+    /**
+     * Report an exception.
+     *
+     * @param  \Throwable  $exception
+     * @return void
+     */
+    function report(Throwable $exception)
+    {
+        app(ExceptionHandler::class)->report($exception);
     }
 }

@@ -9,7 +9,6 @@ use Artisan\Console\Config;
 use Artisan\Console\ArgvInput;
 use Illuminate\Support\Collection;
 use Illuminate\Foundation\Console as BaseConsole;
-use Illuminate\Foundation\Http;
 use Illuminate\Foundation\Exceptions;
 use Illuminate\Support\ServiceProvider;
 use Artisan\Command\Resolve as ResolveCommands;
@@ -35,7 +34,7 @@ class Console extends ServiceProvider
      */
     private $interfaces = [
         'Illuminate\Contracts\Console\Kernel'         => Console\Kernel::class,
-        'Illuminate\Contracts\Debug\ExceptionHandler' => Exceptions\Handler::class
+        'Illuminate\Contracts\Debug\ExceptionHandler' => Exceptions\Handler::class,
     ];
 
     /**
@@ -45,7 +44,6 @@ class Console extends ServiceProvider
      */
     protected $defaultCommands = [
         'command.console.make' => BaseConsole\ConsoleMakeCommand::class,
-        'command.environment'  => BaseConsole\EnvironmentCommand::class
     ];
 
     /**
@@ -98,7 +96,7 @@ class Console extends ServiceProvider
         $this->resolveInterfaces();
         $this->registerCommands();
 
-        $kernel = $this->bootstrapKernel();
+        $kernel = $this->makeKernel();
 
         if (is_callable($beforeHandle)) {
             $this->app->call($beforeHandle);
@@ -164,12 +162,9 @@ class Console extends ServiceProvider
      *
      * @return \Illuminate\Contracts\Console\Kernel
      */
-    private function bootstrapKernel()
+    private function makeKernel()
     {
-        $kernel = $this->app->make(ConsoleKernel::class);
-        $kernel->bootstrap();
-
-        return $kernel;
+        return $this->app->make(ConsoleKernel::class);
     }
 
     /**
@@ -284,7 +279,7 @@ class Console extends ServiceProvider
     protected function reportError(Exception $e = null)
     {
         $e = $e ?: $this->error;
-        $this->bootstrapKernel();
+        $this->makeKernel()->bootstrap();
 
         $handler = $this->app->make(ExceptionHandlerContract::class);
 
