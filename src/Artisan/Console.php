@@ -12,7 +12,7 @@ use Illuminate\Foundation\Exceptions;
 use Illuminate\Support\ServiceProvider;
 use Artisan\Command\Resolve as ResolveCommands;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Input\ArgvInput as ConsoleInput;
+use Artisan\Console\ArgvInput as ConsoleInput;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 
