@@ -32,7 +32,7 @@ class Application extends BaseApplication
      *
      * @return void
      */
-    protected function registerBaseServiceProviders()
+    protected function registerBaseServiceProviders(): void
     {
         $this->register(new EventServiceProvider($this));
         $this->register(new LogServiceProvider($this));
@@ -44,7 +44,7 @@ class Application extends BaseApplication
      *
      * @return void
      */
-    protected function bindPathsInContainer()
+    protected function bindPathsInContainer(): void
     {
         foreach ($this->paths as $key => $path) {
             $this->setPath($key, $this->basePath . '/' . $path);
@@ -52,7 +52,7 @@ class Application extends BaseApplication
         $this->setPath('path.base', $this->basePath);
     }
 
-    public function setPath($key, $value)
+    public function setPath($key, $value): void
     {
         $this->paths[$key] = $value;
         $this->instance($key, $value);
@@ -64,7 +64,7 @@ class Application extends BaseApplication
      * @param  string  $path Optionally, a path to append to the bootstrap path
      * @return string
      */
-    public function bootstrapPath($path = '')
+    public function bootstrapPath($path = ''): string
     {
         return $this->paths['path.bootstrap'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
@@ -75,7 +75,7 @@ class Application extends BaseApplication
      * @param  string  $path Optionally, a path to append to the config path
      * @return string
      */
-    public function configPath($path = '')
+    public function configPath($path = ''): string
     {
         return $this->paths['path.config'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
@@ -86,7 +86,7 @@ class Application extends BaseApplication
      * @param  string  $path Optionally, a path to append to the database path
      * @return string
      */
-    public function databasePath($path = '')
+    public function databasePath($path = ''): string
     {
         return $this->paths['path.database'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }
@@ -96,7 +96,7 @@ class Application extends BaseApplication
      *
      * @return string
      */
-    public function langPath()
+    public function langPath(): string
     {
         return $this->paths['path.lang'];
     }
@@ -106,7 +106,7 @@ class Application extends BaseApplication
      *
      * @return string
      */
-    public function publicPath()
+    public function publicPath(): string
     {
         return $this->options['path.public'];
     }
@@ -116,7 +116,7 @@ class Application extends BaseApplication
      *
      * @return string
      */
-    public function storagePath()
+    public function storagePath(): string
     {
         return $this->paths['path.storage'];
     }
@@ -127,7 +127,7 @@ class Application extends BaseApplication
      * @param  string  $path
      * @return string
      */
-    public function resourcePath($path = '')
+    public function resourcePath($path = ''): string
     {
         return $this->paths['path.resources'].($path ? DIRECTORY_SEPARATOR.$path : $path);
     }

@@ -6,13 +6,13 @@ use Exception;
 use RuntimeException;
 use Illuminate\Support\Str;
 use Artisan\Console\Config;
-use Artisan\Console\ArgvInput;
 use Illuminate\Support\Collection;
 use Illuminate\Foundation\Console as BaseConsole;
 use Illuminate\Foundation\Exceptions;
 use Illuminate\Support\ServiceProvider;
 use Artisan\Command\Resolve as ResolveCommands;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Input\ArgvInput as ConsoleInput;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 
@@ -33,8 +33,8 @@ class Console extends ServiceProvider
      * @var array
      */
     private $interfaces = [
-        'Illuminate\Contracts\Console\Kernel'         => Console\Kernel::class,
-        'Illuminate\Contracts\Debug\ExceptionHandler' => Exceptions\Handler::class,
+        ConsoleKernel::class => Console\Kernel::class,
+        ExceptionHandlerContract::class => Exceptions\Handler::class,
     ];
 
     /**
@@ -72,10 +72,10 @@ class Console extends ServiceProvider
      *
      * @param string $basePath
      */
-    public function __construct($basePath)
+    public function __construct(string $basePath)
     {
         parent::__construct(new Application($basePath));
-        $this->input  = new ArgvInput;
+        $this->input  = new ConsoleInput;
         $this->output = new ConsoleOutput;
         $this->config = $this->getConfiguration($basePath);
     }
@@ -84,9 +84,9 @@ class Console extends ServiceProvider
      * Start console listen commands
      *
      * @param  callable|null $beforeHandle
-     * @return null|int
+     * @return int
      */
-    public function start(callable $beforeHandle = null)
+    public function start(callable $beforeHandle = null): int
     {
         // If has configuration error this report by kernel to console
         if ($this->hasError()) {
@@ -114,9 +114,8 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    public function registerCommands()
+    public function registerCommands(): void
     {
-
         $commands = [];
 
         foreach ($this->getAllCommands() as $name => $command) {
@@ -133,7 +132,7 @@ class Console extends ServiceProvider
      * @param callable $beforeHandler
      * @return int
      */
-    public static function run($basePath, callable $beforeHandler = null)
+    public static function run(string $basePath, callable $beforeHandler = null): int
     {
         return (new static($basePath))->start($beforeHandler);
     }
@@ -145,16 +144,16 @@ class Console extends ServiceProvider
      *
      * @return null
      */
-    private function registerError($string)
+    private function registerError(string $string): ?int
     {
         $this->error = new RuntimeException($string);
 
-        return;
+        return null;
     }
 
-    private function hasError()
+    private function hasError(): bool
     {
-        return !is_null($this->error);
+        return $this->error !== null;
     }
 
     /**
@@ -162,7 +161,7 @@ class Console extends ServiceProvider
      *
      * @return \Illuminate\Contracts\Console\Kernel
      */
-    private function makeKernel()
+    private function makeKernel(): Console\Kernel
     {
         return $this->app->make(ConsoleKernel::class);
     }
@@ -173,7 +172,7 @@ class Console extends ServiceProvider
      * @param string $basePath
      * @return null|\Illuminate\Support\Collection
      */
-    private function getConfiguration($basePath)
+    private function getConfiguration(string $basePath): ?Collection
     {
         $config       = new Config($basePath);
         $applications = $config->applications();
@@ -197,7 +196,7 @@ class Console extends ServiceProvider
      * @param Collection $applications
      * @return null|string
      */
-    private function findApplicationFromArgvInput(Collection $applications)
+    private function findApplicationFromArgvInput(Collection $applications): ?string
     {
         foreach ($applications->keys() as $appName) {
             if ($this->input->hasParameterOption($appName)) {
@@ -214,7 +213,7 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    private function useCustomPaths()
+    private function useCustomPaths(): void
     {
         foreach ($this->config->get('paths', []) as $key => $path) {
             $isApp = $key == 'path';
@@ -233,7 +232,7 @@ class Console extends ServiceProvider
      *
      * @return array
      */
-    private function applicationInterfaces()
+    private function applicationInterfaces(): iterable
     {
         $interfaces     = [];
         $namespace = $this->app->getNamespace();
@@ -251,21 +250,21 @@ class Console extends ServiceProvider
      *
      * @return void
      */
-    private function resolveInterfaces()
+    private function resolveInterfaces(): void
     {
         foreach ($this->applicationInterfaces() as $name => $value) {
             $this->app->singleton($name, $value);
         }
     }
 
-    private function getClassPath($className)
+    private function getClassPath(string $className): string
     {
         $className = str_replace('\\', '/', Str::camel($className));
 
         return $this->app->basePath() . '/' . $className . '.php';
     }
 
-    private function resolveApplicationClassName($namespace, $className)
+    private function resolveApplicationClassName(string $namespace, string $className): string
     {
         return str_replace('Illuminate\\Foundation\\', $namespace, $className);
     }
@@ -276,7 +275,7 @@ class Console extends ServiceProvider
      * @param  \Exception  $e
      * @return int
      */
-    protected function reportError(Exception $e = null)
+    protected function reportError(Exception $e = null): int
     {
         $e = $e ?: $this->error;
         $this->makeKernel()->bootstrap();

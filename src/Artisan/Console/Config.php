@@ -33,7 +33,7 @@ class Config
     /**
      * Create a new Illuminate Artisan config instance.
      */
-    public function __construct($basePath)
+    public function __construct(string $basePath)
     {
         $this->basePath = $basePath;
         $this->items    = new Collection($this->load());
@@ -44,7 +44,7 @@ class Config
      *
      * @return \Illuminate\Support\Collection
      */
-    public function applications()
+    public function applications(): Collection
     {
         $apps = $this->items->get('applications');
         if (is_array($apps)) {
@@ -59,7 +59,7 @@ class Config
      *
      * @return string
      */
-    public function filePath()
+    public function filePath(): string
     {
         return $this->basePath . '/composer.json';
     }
@@ -71,7 +71,7 @@ class Config
      * @param  array $app
      * @return array
      */
-    private function requiredOptions($name, $app)
+    private function requiredOptions($name, $app): iterable
     {
         $app['namespace'] = $this->getNamespace($app, $name);
         $app['paths']     = $this->getPaths($app);
@@ -85,7 +85,7 @@ class Config
      *
      * @return array
      */
-    private function load()
+    private function load(): iterable
     {
         $config = [];
         if (file_exists($file = $this->filePath())) {
@@ -113,7 +113,7 @@ class Config
      * @param  string $default
      * @return string
      */
-    private function getNamespace(array $app, $default)
+    private function getNamespace(array $app, $default): string
     {
         $namespace = Arr::get($app, 'namespace', $default);
         $namespace = ucfirst($namespace) . '\\';
@@ -127,7 +127,7 @@ class Config
      * @param  array $app
      * @return array
      */
-    private function getPaths($app)
+    private function getPaths($app): iterable
     {
         $appPath  = $this->getPathFromNamespace($app['namespace']);
         $paths    = array_merge((array) data_get($this->items, 'shared.paths'), (array) Arr::get($app, 'paths'));
@@ -148,7 +148,7 @@ class Config
      * @param  array $app
      * @return array
      */
-    private function getCommands(array $app)
+    private function getCommands(iterable $app): iterable
     {
         $appCommands    = (array) Arr::get($app, 'commands');
         $sharedCommands = (array) data_get($this->items, 'shared.commands');
@@ -162,7 +162,7 @@ class Config
      * @param  string $namespace
      * @return string
      */
-    private function getPathFromNamespace($namespace)
+    private function getPathFromNamespace(string $namespace): string
     {
         if (!Arr::has($this->psr4, $namespace)) {
             throw new OutOfBoundsException('Not can find namespace: ' . $namespace . ' in composer psr4');
@@ -177,7 +177,7 @@ class Config
      * @param  array  $apps
      * @return \Illuminate\Support\Collection
      */
-    private function transformToCollections(array $apps)
+    private function transformToCollections(iterable $apps): iterable
     {
         array_walk($apps, function (&$app, $name) {
             $app = new Collection($this->requiredOptions($name, $app));

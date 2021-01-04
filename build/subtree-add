@@ -1,7 +1,0 @@
-#!/bin/bash
-
-git subsplit init https://github.com/laravel/framework --no-tags
-
-./publish-foundation
-
-git subtree add --squash --prefix src/Illuminate/Foundation https://github.com/loduis/laravel-foundation.git 5.4
